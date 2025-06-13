@@ -1,0 +1,132 @@
+/* General Base Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0; padding: 0; line-height: 1.6;
+    background-color: var(--main-bg);
+    padding-top: 56px; /* Height of fixed-top navbar */
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+a { text-decoration: none; }
+
+.navbar-brand-icon {
+    height: 30px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Theme Variables */
+:root, html[data-bs-theme="dark"] {
+    --primary-color: #7f5af0; --primary-light: #9d8bf5; --secondary-color: #2cb67d;
+    --main-bg: #16161a; --content-bg: #242629;
+    --sidebar-bg: #1f2029;
+    --text-color: #c3c3c3; --text-secondary: #94a1b2; --border-color: #43454b;
+    --bs-body-color: var(--text-color); --bs-body-bg: var(--main-bg);
+}
+html[data-bs-theme="light"] {
+    --primary-color: #6200ea; --primary-light: #7e3ff2; --secondary-color: #007bff;
+    --main-bg: #f4f6f8; --content-bg: #ffffff;
+    --sidebar-bg: #f8f9fa;
+    --text-color: #212529; --text-secondary: #495057; --border-color: #dee2e6;
+    --bs-body-color: var(--text-color); --bs-body-bg: var(--main-bg);
+}
+
+/* --- Core Layout --- */
+.app-body-container { display: flex; flex-grow: 1; }
+.content-wrapper {
+    display: flex; flex-direction: column; flex-grow: 1;
+    transition: margin-left 0.25s ease-in-out;
+    margin-left: 75px;
+}
+.content-wrapper.full-width {
+    margin-left: 260px;
+}
+
+/* --- Sidebar Styles --- */
+.sidebar {
+    width: 75px;
+    background-color: var(--sidebar-bg);
+    display: flex; flex-direction: column;
+    position: fixed; top: 56px; left: 0; height: calc(100vh - 56px);
+    z-index: 1020; border-right: 1px solid var(--border-color);
+    overflow-x: hidden;
+    transition: width 0.25s ease-in-out, transform 0.25s ease-in-out;
+}
+
+/* Sidebar States */
+.sidebar.desktop-full-open { width: 260px; }
+.sidebar.desktop-icon-only .sidebar-nav .label,
+.sidebar.desktop-icon-only .sidebar-nav .arrow,
+.sidebar.desktop-icon-only .sidebar-footer { opacity: 0; visibility: hidden; width: 0; }
+.sidebar.desktop-icon-only .sidebar-nav li a { justify-content: center; }
+
+/* Hover-to-expand state */
+.sidebar.desktop-icon-only:hover {
+    width: 260px;
+    box-shadow: 3px 0 10px rgba(0,0,0,0.1); z-index: 1025;
+}
+.sidebar.desktop-icon-only:hover .sidebar-nav .label,
+.sidebar.desktop-icon-only:hover .sidebar-nav .arrow,
+.sidebar.desktop-icon-only:hover .sidebar-footer {
+    opacity: 1; visibility: visible; width: auto;
+    transition: opacity 0.2s ease-in 0.1s;
+}
+.sidebar.desktop-icon-only:hover .sidebar-nav li a { justify-content: flex-start; }
+
+/* --- Sidebar Navigation Items --- */
+.sidebar-nav { overflow-y: auto; flex-grow: 1; padding-top: 0.75rem; }
+.sidebar-nav ul { list-style: none; padding: 0; margin: 0; }
+.sidebar-nav li a {
+    display: flex; align-items: center; padding: 12px 25px;
+    color: var(--text-secondary); white-space: nowrap; overflow: hidden;
+    transition: background-color 0.2s, color 0.2s, justify-content 0.25s;
+    border-left: 4px solid transparent;
+}
+html[data-bs-theme="dark"] .sidebar-nav li a:hover,
+html[data-bs-theme="dark"] .sidebar-nav li a.active {
+    color: #fff; background-color: rgba(255, 255, 255, 0.05);
+    border-left-color: var(--secondary-color);
+}
+.sidebar-nav li a .icon { width: 20px; text-align: center; font-size: 1.1em; transition: margin-right 0.25s ease-in-out; }
+.sidebar.desktop-full-open .sidebar-nav li a .icon,
+.sidebar.desktop-icon-only:hover .sidebar-nav li a .icon {
+    margin-right: 15px;
+}
+.sidebar.desktop-icon-only .sidebar-nav li a .icon { margin-right: 0; }
+.sidebar-nav li a .label { flex-grow: 1; }
+.sidebar-nav li a .arrow { margin-left: auto; transition: transform 0.3s ease; }
+
+/* Submenu Styles */
+.sidebar-nav .submenu { list-style: none; padding-left: 0; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; background-color: rgba(0,0,0,0.2); }
+.sidebar-nav .submenu.open { max-height: 500px; }
+.sidebar-nav .submenu li a { padding-left: 25px; font-size: 0.9em; border-left: 4px solid transparent; }
+.sidebar-nav .submenu li a:hover, .sidebar-nav .submenu li a.active { color: #fff; background-color: rgba(0,0,0,0.3); border-left-color: var(--secondary-color); }
+
+/* Hide submenu when sidebar is icon-only, but show it on hover */
+.sidebar.desktop-icon-only .submenu.open { max-height: 0; }
+.sidebar.desktop-icon-only:hover .submenu.open { max-height: 500px; }
+
+
+.sidebar-footer { padding: 15px 25px; text-align: center; margin-top: auto; border-top: 1px solid var(--border-color); white-space: nowrap; overflow: hidden; }
+.main-content { flex-grow: 1; }
+.footer { background-color: var(--content-bg); border-top: 1px solid var(--border-color); }
+
+/* --- Mobile-Specific Overrides --- */
+@media (max-width: 991.98px) {
+    .content-wrapper, .content-wrapper.full-width { margin-left: 0; }
+    .sidebar { transform: translateX(-100%); width: 260px; z-index: 1040; }
+    .sidebar.mobile-open { transform: translateX(0); }
+
+    /* THIS IS THE FIX for showing text on the mobile sidebar */
+    .sidebar.mobile-open .sidebar-nav .label,
+    .sidebar.mobile-open .sidebar-nav .arrow {
+        opacity: 1;
+        visibility: visible;
+        width: auto;
+    }
+    .sidebar.mobile-open .sidebar-nav li a {
+        justify-content: flex-start;
+    }
+    .sidebar.mobile-open .sidebar-nav li a .icon {
+        margin-right: 15px;
+    }
+}
