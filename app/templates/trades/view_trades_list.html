@@ -9,147 +9,551 @@
 {% block page_header %}
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
         <h1>My Trades</h1>
-        <div class="d-flex gap-2 mt-2 mt-md-0">
-            <a href="{{ url_for('trades.add_trade') }}" class="btn btn-success"><i class="fas fa-plus me-1"></i> Log New Trade</a>
-            <a href="{{ url_for('trades.import_trades') }}" class="btn btn-info"><i class="fas fa-upload me-1"></i> Import</a>
-            <a href="{{ url_for('trades.export_trades_csv', **request.args) }}" class="btn btn-secondary"><i class="fas fa-download me-1"></i> Export</a>
-        </div>
     </div>
 {% endblock %}
 
 {% block content %}
-{# This new "row" div creates the two-column layout #}
-<div class="row">
-
-    {# --- COLUMN 1: FILTER FORM --- #}
-    <div class="col-lg-3">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-filter me-1"></i> Filter Trades</h5>
+{# Display flashed messages for trade operations #}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message|safe }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <div class="card-body">
-                <form method="GET" action="{{ url_for('trades.view_trades_list') }}" id="filterForm">
-                    {# The form fields are now stacked vertically for the sidebar layout #}
-                    <div class="mb-3">
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+{# Collapsible Filter Section #}
+<div class="collapse mb-4" id="filterCollapse">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-filter me-1"></i> Filter Trades</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('trades.view_trades_list') }}" id="filterForm">
+                <div class="row">
+                    <div class="col-md-6 col-lg-4 mb-3">
                         {{ forms.render_field(filter_form.start_date, input_class="form-control form-control-sm", label_visible=true) }}
                     </div>
-                    <div class="mb-3">
+                    <div class="col-md-6 col-lg-4 mb-3">
                         {{ forms.render_field(filter_form.end_date, input_class="form-control form-control-sm", label_visible=true) }}
                     </div>
-                    <div class="mb-3">
+                    <div class="col-md-6 col-lg-4 mb-3">
                         {{ forms.render_field(filter_form.instrument, input_class="form-select form-select-sm", label_visible=true) }}
                     </div>
-                    <div class="mb-3">
+                    <div class="col-md-6 col-lg-4 mb-3">
                         {{ forms.render_field(filter_form.direction, input_class="form-select form-select-sm", label_visible=true) }}
                     </div>
-                    <div class="mb-3">
+                    <div class="col-md-6 col-lg-4 mb-3">
                         {{ forms.render_field(filter_form.trading_model_id, input_class="form-select form-select-sm", label_visible=true) }}
                     </div>
-                    <div class="mb-3">
+                    <div class="col-md-6 col-lg-4 mb-3">
                         {{ forms.render_field(filter_form.tags, input_class="form-select form-select-sm", label_visible=true) }}
                     </div>
+                </div>
 
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-sm btn-primary">Apply Filter</button>
-                        <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
-                    </div>
-                </form>
-            </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-search me-1"></i> Apply Filters
+                    </button>
+                    <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-times me-1"></i> Clear All
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    {# --- COLUMN 2: TRADES LIST --- #}
-    <div class="col-lg-9">
-        <div class="card">
-            <div class="card-body">
-                {% if trades %}
-                <form method="POST" action="{{ url_for('trades.bulk_delete_trades') }}" id="bulkDeleteForm" onsubmit="return confirm('Are you sure you want to delete the selected trades?');">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
-                    <div class="mb-3 d-flex align-items-center">
-                        <div class="form-check me-3">
-                            <input class="form-check-input" type="checkbox" id="selectAllTrades">
-                            <label class="form-check-label" for="selectAllTrades">Select All</label>
-                        </div>
-                        <button type="submit" class="btn btn-sm btn-danger">
-                            <i class="fas fa-trash-alt me-1"></i> Delete Selected
-                        </button>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped">
-                            <thead>
-                                <tr>
-                                    <th><i class="fas fa-check-square"></i></th>
-                                    <th>Date</th><th>Instrument</th><th>Direction</th><th>P&L</th>
-                                    <th>R-Value</th><th>Model</th><th>Tags</th><th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for trade in trades %}
-                                <tr>
-                                    <td><input class="form-check-input trade-checkbox" type="checkbox" name="trade_ids" value="{{ trade.id }}" form="bulkDeleteForm"></td>
-                                    <td>{{ trade.trade_date|format_date('%d-%b-%y') }}</td>
-                                    <td>{{ trade.instrument }}</td>
-                                    <td>
-                                        {% if trade.direction == 'Long' %}<span class="badge bg-success">{{ trade.direction }}</span>
-                                        {% elif trade.direction == 'Short' %}<span class="badge bg-danger">{{ trade.direction }}</span>
-                                        {% else %}{{ trade.direction }}{% endif %}
-                                    </td>
-                                    <td class="{{ 'text-success' if trade.gross_pnl > 0 else ('text-danger' if trade.gross_pnl < 0 else '') }}">
-                                        {{ "$%.2f"|format(trade.gross_pnl) if trade.gross_pnl is not none else '$0.00' }}
-                                    </td>
-                                    <td>
-                                        {% if trade.pnl_in_r is not none %}<span class="{{ 'text-success' if trade.pnl_in_r > 0 else ('text-danger' if trade.pnl_in_r < 0 else '') }}">{{ "%.2f"|format(trade.pnl_in_r) }}R</span>
-                                        {% else %} N/A {% endif %}
-                                    </td>
-                                    <td>{{ trade.trading_model.name if trade.trading_model else 'N/A' }}</td>
-                                    <td>
-                                        {% if trade.tags %}<span class="badge bg-secondary">{{ trade.tags }}</span>
-                                        {% else %} N/A {% endif %}
-                                    </td>
-                                    <td>
-                                        <a href="{{ url_for('trades.view_trade_detail', trade_id=trade.id) }}" class="btn btn-sm btn-info mb-1" title="View Details"><i class="fas fa-eye"></i></a>
-                                        <a href="{{ url_for('trades.edit_trade', trade_id=trade.id) }}" class="btn btn-sm btn-warning mb-1" title="Edit"><i class="fas fa-edit"></i></a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </form>
-                {% else %}
-                <div class="alert alert-info">
-                    No trades found matching your criteria. <a href="{{ url_for('trades.add_trade') }}">Log your first trade.</a>
-                </div>
-                {% endif %}
+{# Main Content Area - Trades List #}
+<div class="row">
+    <div class="col-12">
+        {% if trades %}
+            {# Results Summary #}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted">
+                    Showing {{ pagination.per_page * (pagination.page - 1) + 1 }} -
+                    {{ pagination.per_page * (pagination.page - 1) + trades|length }} of {{ pagination.total }} trades
+                </span>
             </div>
-        </div>
 
-        {# Pagination #}
-        {% if pagination and pagination.pages > 1 %}
-        <div class="mt-4">
-            {{ pagi.render_pagination(pagination, 'trades.view_trades_list', query_params=request.args) }}
-        </div>
+            {# Single Action Bar with All Controls #}
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    {# Select All Checkbox #}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAllTrades">
+                        <label class="form-check-label" for="selectAllTrades">Select All</label>
+                    </div>
+
+                    {# Active Filter Indicators #}
+                    {% set active_filters = [] %}
+                    {% if filter_form.start_date.data %}{% set _ = active_filters.append('Start Date') %}{% endif %}
+                    {% if filter_form.end_date.data %}{% set _ = active_filters.append('End Date') %}{% endif %}
+                    {% if filter_form.instrument.data %}{% set _ = active_filters.append('Instrument') %}{% endif %}
+                    {% if filter_form.direction.data %}{% set _ = active_filters.append('Direction') %}{% endif %}
+                    {% if filter_form.trading_model_id.data and filter_form.trading_model_id.data != 0 %}{% set _ = active_filters.append('Trading Model') %}{% endif %}
+                    {% if filter_form.tags.data %}{% set _ = active_filters.append('Tags') %}{% endif %}
+
+                    {% if active_filters %}
+                        <div class="action-btn btn-outline-info active-filters-indicator">
+                            <i class="fas fa-filter me-1"></i>
+                            {{ active_filters|length }} filter(s) active
+                        </div>
+                        <a href="{{ url_for('trades.view_trades_list') }}" class="action-btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Clear All
+                        </a>
+                    {% endif %}
+                </div>
+
+                {# Action Buttons - Moved to Right Side #}
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('trades.add_trade') }}" class="action-btn btn-outline-success">
+                        <i class="fas fa-plus me-1"></i> Log New Trade
+                    </a>
+                    <a href="{{ url_for('trades.import_trades') }}" class="action-btn btn-outline-info">
+                        <i class="fas fa-upload me-1"></i> Import
+                    </a>
+                    {% set current_args = request.args.to_dict() %}
+                    {% set _ = current_args.pop('sort', None) %}
+                    <a href="{{ url_for('trades.export_trades_csv', **current_args) }}" class="action-btn btn-outline-secondary">
+                        <i class="fas fa-download me-1"></i> Export
+                    </a>
+
+                    <button class="action-btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                        <i class="fas fa-filter me-1"></i>
+                        <span id="filterToggleText">Show Filters</span>
+                        <i class="fas fa-chevron-down ms-1" id="filterToggleIcon"></i>
+                    </button>
+
+                    <div class="dropdown">
+                        <button class="action-btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-sort me-1"></i> Sort
+                        </button>
+                        <ul class="dropdown-menu">
+                            {% set sort_args = request.args.to_dict() %}
+                            {% set _ = sort_args.pop('sort', None) %}
+                            <li><a class="dropdown-item" href="{{ url_for('trades.view_trades_list', sort='date_desc', **sort_args) }}">Date (Newest First)</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('trades.view_trades_list', sort='date_asc', **sort_args) }}">Date (Oldest First)</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('trades.view_trades_list', sort='pnl_desc', **sort_args) }}">P&L (Highest First)</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('trades.view_trades_list', sort='pnl_asc', **sort_args) }}">P&L (Lowest First)</a></li>
+                        </ul>
+                    </div>
+
+                    {# Delete Selected Button - At the end #}
+                    <button type="button" onclick="confirmBulkDelete()" class="action-btn btn-outline-danger">
+                        <i class="fas fa-trash-alt me-1"></i> Delete Selected
+                    </button>
+                </div>
+            </div>
+
+            {# Bulk Delete Form #}
+            <form method="POST" action="{{ url_for('trades.bulk_delete_trades') }}" id="bulkDeleteForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+
+                {# Trades Table #}
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th><i class="fas fa-check-square"></i></th>
+                                        <th>Date</th>
+                                        <th>Instrument</th>
+                                        <th>Direction</th>
+                                        <th>Model</th>
+                                        <th>Entry</th>
+                                        <th>Exit</th>
+                                        <th>Contracts</th>
+                                        <th>P&L</th>
+                                        <th>R Multiple</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for trade in trades %}
+                                    <tr class="{% if trade.gross_pnl > 0 %}table-success-subtle{% elif trade.gross_pnl < 0 %}table-danger-subtle{% endif %}">
+                                        <td>
+                                            <div class="form-check">
+                                                <input class="form-check-input trade-checkbox" type="checkbox" name="trade_ids" value="{{ trade.id }}" id="trade_{{ trade.id }}">
+                                                <label class="form-check-label" for="trade_{{ trade.id }}"></label>
+                                            </div>
+                                        </td>
+                                        <td>{{ trade.trade_date.strftime('%m/%d/%Y') }}</td>
+                                        <td><strong>{{ trade.instrument }}</strong></td>
+                                        <td>
+                                            <span class="badge {% if trade.direction == 'Long' %}bg-success{% elif trade.direction == 'Short' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                                {{ trade.direction }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if trade.trading_model %}
+                                                <small class="text-muted">{{ trade.trading_model.name }}</small>
+                                            {% else %}
+                                                <small class="text-muted">N/A</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if trade.average_entry_price is not none %}
+                                                {{ "%.2f"|format(trade.average_entry_price) }}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if trade.average_exit_price is not none %}
+                                                {{ "%.2f"|format(trade.average_exit_price) }}
+                                            {% else %}
+                                                <span class="text-warning">Open</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ trade.total_contracts_entered }}</td>
+                                        <td>
+                                            <span class="{% if trade.gross_pnl > 0 %}text-success{% elif trade.gross_pnl < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                                ${{ "%.2f"|format(trade.gross_pnl) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if trade.pnl_in_r is not none %}
+                                                <span class="{% if trade.pnl_in_r > 0 %}text-success{% elif trade.pnl_in_r < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                                    {{ "%.2f"|format(trade.pnl_in_r) }}R
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('trades.view_trade_detail', trade_id=trade.id) }}"
+                                                   class="btn btn-outline-primary btn-sm me-1" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ url_for('trades.edit_trade', trade_id=trade.id) }}"
+                                                   class="btn btn-outline-warning btn-sm" title="Edit Trade">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            {# Pagination #}
+            {% if pagination.pages > 1 %}
+                <div class="mt-4">
+                    {{ pagi.render_pagination(pagination, 'trades.view_trades_list', query_params=request.args) }}
+                </div>
+            {% endif %}
+
+        {% else %}
+            {# No Trades Message with Action Buttons #}
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    {# Active Filter Indicators - Even when no trades #}
+                    {% set active_filters = [] %}
+                    {% if filter_form.start_date.data %}{% set _ = active_filters.append('Start Date') %}{% endif %}
+                    {% if filter_form.end_date.data %}{% set _ = active_filters.append('End Date') %}{% endif %}
+                    {% if filter_form.instrument.data %}{% set _ = active_filters.append('Instrument') %}{% endif %}
+                    {% if filter_form.direction.data %}{% set _ = active_filters.append('Direction') %}{% endif %}
+                    {% if filter_form.trading_model_id.data and filter_form.trading_model_id.data != 0 %}{% set _ = active_filters.append('Trading Model') %}{% endif %}
+                    {% if filter_form.tags.data %}{% set _ = active_filters.append('Tags') %}{% endif %}
+
+                    {% if active_filters %}
+                        <div class="action-btn btn-outline-info active-filters-indicator">
+                            <i class="fas fa-filter me-1"></i>
+                            {{ active_filters|length }} filter(s) active
+                        </div>
+                        <a href="{{ url_for('trades.view_trades_list') }}" class="action-btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Clear All
+                        </a>
+                    {% endif %}
+                </div>
+
+                {# Action Buttons - Always shown on right #}
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('trades.add_trade') }}" class="action-btn btn-outline-success">
+                        <i class="fas fa-plus me-1"></i> Log New Trade
+                    </a>
+                    <a href="{{ url_for('trades.import_trades') }}" class="action-btn btn-outline-info">
+                        <i class="fas fa-upload me-1"></i> Import
+                    </a>
+
+                    <button class="action-btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
+                        <i class="fas fa-filter me-1"></i>
+                        <span id="filterToggleText">Show Filters</span>
+                        <i class="fas fa-chevron-down ms-1" id="filterToggleIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center py-5">
+                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No Trades Found</h4>
+                <p class="text-muted">
+                    {% if active_filters %}
+                        No trades match your current filter criteria. Try adjusting your filters or
+                        <a href="{{ url_for('trades.view_trades_list') }}">clear all filters</a>.
+                    {% else %}
+                        You haven't logged any trades yet.
+                    {% endif %}
+                </p>
+                <a href="{{ url_for('trades.add_trade') }}" class="btn btn-success">
+                    <i class="fas fa-plus me-1"></i> Log Your First Trade
+                </a>
+            </div>
         {% endif %}
     </div>
 </div>
-{% endblock %}
 
-{% block scripts_extra %}
-{{ super() }}
+{# JavaScript for Filter Toggle and Bulk Delete #}
 <script>
-// "Select All" checkbox logic
 document.addEventListener('DOMContentLoaded', function() {
+    // Filter toggle functionality
+    const filterCollapse = document.getElementById('filterCollapse');
+    const filterToggleText = document.getElementById('filterToggleText');
+    const filterToggleIcon = document.getElementById('filterToggleIcon');
+
+    if (filterCollapse && filterToggleText && filterToggleIcon) {
+        // Handle filter collapse show event
+        filterCollapse.addEventListener('show.bs.collapse', function() {
+            filterToggleText.textContent = 'Hide Filters';
+            filterToggleIcon.classList.remove('fa-chevron-down');
+            filterToggleIcon.classList.add('fa-chevron-up');
+        });
+
+        // Handle filter collapse hide event
+        filterCollapse.addEventListener('hide.bs.collapse', function() {
+            filterToggleText.textContent = 'Show Filters';
+            filterToggleIcon.classList.remove('fa-chevron-up');
+            filterToggleIcon.classList.add('fa-chevron-down');
+        });
+    }
+
+    // Auto-show filters if any filters are currently active
+    {% set auto_show_filters = [] %}
+    {% if filter_form.start_date.data %}{% set _ = auto_show_filters.append('1') %}{% endif %}
+    {% if filter_form.end_date.data %}{% set _ = auto_show_filters.append('1') %}{% endif %}
+    {% if filter_form.instrument.data %}{% set _ = auto_show_filters.append('1') %}{% endif %}
+    {% if filter_form.direction.data %}{% set _ = auto_show_filters.append('1') %}{% endif %}
+    {% if filter_form.trading_model_id.data and filter_form.trading_model_id.data != 0 %}{% set _ = auto_show_filters.append('1') %}{% endif %}
+    {% if filter_form.tags.data %}{% set _ = auto_show_filters.append('1') %}{% endif %}
+
+    {% if auto_show_filters %}
+        if (filterCollapse && !filterCollapse.classList.contains('show')) {
+            const filterToggleButton = document.querySelector('[data-bs-target="#filterCollapse"]');
+            if (filterToggleButton) {
+                filterToggleButton.click();
+            }
+        }
+    {% endif %}
+
+    // Bulk delete checkbox functionality
     const selectAllCheckbox = document.getElementById('selectAllTrades');
     const tradeCheckboxes = document.querySelectorAll('.trade-checkbox');
 
-    if (selectAllCheckbox) {
+    if (selectAllCheckbox && tradeCheckboxes.length > 0) {
+        // Handle "Select All" checkbox change
         selectAllCheckbox.addEventListener('change', function() {
-            tradeCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
+            tradeCheckboxes.forEach(function(checkbox) {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+        });
+
+        // Handle individual checkbox changes to update "Select All" state
+        tradeCheckboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                const checkedBoxes = document.querySelectorAll('.trade-checkbox:checked');
+                selectAllCheckbox.checked = checkedBoxes.length === tradeCheckboxes.length;
+                selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < tradeCheckboxes.length;
+            });
+        });
+    }
+
+    // Optional: Auto-submit form when date inputs change
+    const dateInputs = document.querySelectorAll('#filterForm input[type="date"]');
+    if (dateInputs.length > 0) {
+        dateInputs.forEach(function(input) {
+            input.addEventListener('change', function() {
+                // Uncomment the line below to enable auto-submit on date change
+                // document.getElementById('filterForm').submit();
             });
         });
     }
 });
+
+// Enhanced bulk delete confirmation function
+function confirmBulkDelete() {
+    const checkedBoxes = document.querySelectorAll('.trade-checkbox:checked');
+
+    if (checkedBoxes.length === 0) {
+        // Custom alert for no selection
+        showCustomAlert('No Trades Selected', 'Please select at least one trade to delete.', 'warning');
+        return;
+    }
+
+    // Get details of selected trades for the confirmation
+    const selectedTrades = [];
+    checkedBoxes.forEach(function(checkbox) {
+        const row = checkbox.closest('tr');
+        const date = row.querySelector('td:nth-child(2)').textContent.trim();
+        const instrument = row.querySelector('td:nth-child(3)').textContent.trim();
+        const direction = row.querySelector('td:nth-child(4) .badge').textContent.trim();
+        selectedTrades.push(`${date} - ${instrument} (${direction})`);
+    });
+
+    // Create detailed confirmation message
+    const count = checkedBoxes.length;
+    const tradeWord = count === 1 ? 'trade' : 'trades';
+
+    let message = `You are about to permanently delete ${count} ${tradeWord} and all associated data:\n\n`;
+
+    // Show first 5 trades, then indicate if there are more
+    const displayTrades = selectedTrades.slice(0, 5);
+    message += displayTrades.join('\n');
+
+    if (selectedTrades.length > 5) {
+        message += `\n... and ${selectedTrades.length - 5} more ${selectedTrades.length - 5 === 1 ? 'trade' : 'trades'}`;
+    }
+
+    message += '\n\nThis will delete:\n';
+    message += '• All entry and exit points\n';
+    message += '• Trade notes and analysis\n';
+    message += '• Screenshots and attachments\n';
+    message += '• Rating and performance data\n';
+    message += '• All associated trade history\n\n';
+    message += '⚠️ THIS ACTION CANNOT BE UNDONE ⚠️\n\n';
+    message += 'Are you absolutely sure you want to proceed?';
+
+    // Show enhanced confirmation dialog
+    showCustomConfirm(
+        'Confirm Bulk Trade Deletion',
+        message,
+        function() {
+            // User confirmed - submit the form
+            document.getElementById('bulkDeleteForm').submit();
+        },
+        function() {
+            // User cancelled - do nothing
+            console.log('Bulk delete cancelled by user');
+        }
+    );
+}
+
+// Custom alert function with better styling
+function showCustomAlert(title, message, type = 'info') {
+    const alertType = type === 'warning' ? 'warning' : 'info';
+    const iconClass = type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+
+    const modalHtml = `
+        <div class="modal fade" id="customAlertModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-${alertType} text-white">
+                        <h5 class="modal-title">
+                            <i class="fas ${iconClass} me-2"></i>${title}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0">${message}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById('customAlertModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('customAlertModal'));
+    modal.show();
+
+    // Clean up when modal is hidden
+    document.getElementById('customAlertModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+// Custom confirmation dialog with better styling and trade details
+function showCustomConfirm(title, message, confirmCallback, cancelCallback) {
+    const modalHtml = `
+        <div class="modal fade" id="customConfirmModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle me-2"></i>${title}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger border-0">
+                            <pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">${message}</pre>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelBtn">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-danger" id="confirmBtn">
+                            <i class="fas fa-trash-alt me-1"></i> Yes, Delete All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById('customConfirmModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Get modal elements
+    const modal = new bootstrap.Modal(document.getElementById('customConfirmModal'));
+    const confirmBtn = document.getElementById('confirmBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    // Set up event listeners
+    confirmBtn.addEventListener('click', function() {
+        modal.hide();
+        if (confirmCallback) confirmCallback();
+    });
+
+    cancelBtn.addEventListener('click', function() {
+        modal.hide();
+        if (cancelCallback) cancelCallback();
+    });
+
+    // Clean up when modal is hidden
+    document.getElementById('customConfirmModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+
+    // Show modal
+    modal.show();
+}
 </script>
 {% endblock %}
