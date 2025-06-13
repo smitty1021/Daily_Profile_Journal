@@ -65,14 +65,10 @@ def _populate_filter_form_choices(filter_form):
 
 
 # --- VIEW TRADES LIST ---
-# In your app/blueprints/trades_bp.py file, find the view_trades_list function
-# and replace the query ordering section with this updated code:
-
 @trades_bp.route('/', methods=['GET'])
 @login_required
 def view_trades_list():
     from flask_wtf.csrf import generate_csrf
-    from sqlalchemy import case, func
 
     filter_form = TradeFilterForm(request.args)
     _populate_filter_form_choices(filter_form)
@@ -93,73 +89,44 @@ def view_trades_list():
     if filter_form.tags.data:
         query = query.filter(Trade.tags == filter_form.tags.data)
 
-    # Handle sorting - UPDATED VERSION WITH P&L FIX
-    sort_param = request.args.get('sort', 'date_desc')
+    # Handle sorting
+    sort_by = request.args.get('sort', 'date_desc')
 
-    if sort_param == 'date_asc':
-        query = query.order_by(Trade.trade_date.asc(), Trade.id.asc())
-    elif sort_param == 'date_desc':
+    if sort_by == 'pnl_desc':
+        # Filter to only include trades with exits (closed trades) when sorting by PnL
+        query = query.filter(Trade.exits.any())
+        # Order by date first, we'll sort by PnL in Python after pagination
         query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
-    elif sort_param == 'pnl_asc':
-        # Calculate P&L using database fields and handle nulls
-        pnl_calc = case(
-            [
-                # If we have average_exit_price and point_value, calculate P&L
-                (
-                    (Trade.average_exit_price.isnot(None)) &
-                    (Trade.average_entry_price.isnot(None)) &
-                    (Trade.point_value.isnot(None)) &
-                    (Trade.total_contracts_exited > 0),
-                    case(
-                        [
-                            (Trade.direction == 'Long',
-                             (Trade.average_exit_price - Trade.average_entry_price) *
-                             Trade.total_contracts_exited * Trade.point_value),
-                            (Trade.direction == 'Short',
-                             (Trade.average_entry_price - Trade.average_exit_price) *
-                             Trade.total_contracts_exited * Trade.point_value)
-                        ],
-                        else_=0.0
-                    )
-                )
-            ],
-            else_=0.0
-        )
-        query = query.order_by(pnl_calc.asc(), Trade.trade_date.desc())
-    elif sort_param == 'pnl_desc':
-        # Same P&L calculation for descending order
-        pnl_calc = case(
-            [
-                # If we have average_exit_price and point_value, calculate P&L
-                (
-                    (Trade.average_exit_price.isnot(None)) &
-                    (Trade.average_entry_price.isnot(None)) &
-                    (Trade.point_value.isnot(None)) &
-                    (Trade.total_contracts_exited > 0),
-                    case(
-                        [
-                            (Trade.direction == 'Long',
-                             (Trade.average_exit_price - Trade.average_entry_price) *
-                             Trade.total_contracts_exited * Trade.point_value),
-                            (Trade.direction == 'Short',
-                             (Trade.average_entry_price - Trade.average_exit_price) *
-                             Trade.total_contracts_exited * Trade.point_value)
-                        ],
-                        else_=0.0
-                    )
-                )
-            ],
-            else_=0.0
-        )
-        query = query.order_by(pnl_calc.desc(), Trade.trade_date.desc())
+    elif sort_by == 'pnl_asc':
+        # Filter to only include trades with exits (closed trades) when sorting by PnL
+        query = query.filter(Trade.exits.any())
+        # Order by date first, we'll sort by PnL in Python after pagination
+        query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
+    elif sort_by == 'date_asc':
+        # Sort by date ascending
+        query = query.order_by(Trade.trade_date.asc(), Trade.id.asc())
+    elif sort_by == 'date_desc':
+        # Sort by date descending
+        query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
     else:
-        # Default fallback
+        # Default sorting by date descending
         query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
 
     page = request.args.get('page', 1, type=int)
     per_page = current_app.config.get('PER_PAGE_TRADES', 10)
 
     trades_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # Only sort in Python if we're sorting by PnL (which can't be done in SQL due to calculated properties)
+    if sort_by == 'pnl_desc':
+        trades_pagination.items = sorted(trades_pagination.items,
+                                         key=lambda t: t.gross_pnl if t.gross_pnl is not None else 0,
+                                         reverse=True)
+    elif sort_by == 'pnl_asc':
+        trades_pagination.items = sorted(trades_pagination.items,
+                                         key=lambda t: t.gross_pnl if t.gross_pnl is not None else 0,
+                                         reverse=False)
+    # For date sorting, we let the database ORDER BY handle it (no Python sorting needed)
 
     return render_template("trades/view_trades_list.html",
                            title="Trades List",
