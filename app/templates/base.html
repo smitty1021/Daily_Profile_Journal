@@ -7,7 +7,114 @@
     <title>{% block title %}Trading Journal{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- QUILL EDITOR CDN -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- GLOBAL QUILL DARK MODE STYLES -->
+    <style>
+        /* Quill Editor Dark Mode Styles - Global for all pages */
+        [data-bs-theme="dark"] .ql-toolbar.ql-snow {
+            background-color: var(--bs-dark) !important;
+            border: 1px solid var(--bs-border-color) !important;
+            border-bottom: none !important;
+        }
+
+        [data-bs-theme="dark"] .ql-container.ql-snow {
+            background-color: var(--bs-body-bg) !important;
+            border: 1px solid var(--bs-border-color) !important;
+            color: var(--bs-body-color) !important;
+        }
+
+        /* Make toolbar icons visible in dark mode */
+        [data-bs-theme="dark"] .ql-snow .ql-stroke {
+            stroke: #e9ecef !important;
+        }
+
+        [data-bs-theme="dark"] .ql-snow .ql-fill {
+            fill: #e9ecef !important;
+        }
+
+        [data-bs-theme="dark"] .ql-snow .ql-picker-label::before {
+            color: #e9ecef !important;
+        }
+
+        [data-bs-theme="dark"] .ql-snow .ql-picker-label {
+            color: #e9ecef !important;
+        }
+
+        /* Hover states for better visibility */
+        [data-bs-theme="dark"] .ql-snow .ql-toolbar button:hover .ql-stroke,
+        [data-bs-theme="dark"] .ql-snow .ql-toolbar button:focus .ql-stroke {
+            stroke: #fff !important;
+        }
+
+        [data-bs-theme="dark"] .ql-snow .ql-toolbar button:hover .ql-fill,
+        [data-bs-theme="dark"] .ql-snow .ql-toolbar button:focus .ql-fill {
+            fill: #fff !important;
+        }
+
+        /* Active button states */
+        [data-bs-theme="dark"] .ql-snow .ql-toolbar button.ql-active .ql-stroke {
+            stroke: var(--bs-primary) !important;
+        }
+
+        [data-bs-theme="dark"] .ql-snow .ql-toolbar button.ql-active .ql-fill {
+            fill: var(--bs-primary) !important;
+        }
+
+        /* Dropdown menus in dark mode */
+        [data-bs-theme="dark"] .ql-snow .ql-picker-options {
+            background-color: var(--bs-dark) !important;
+            border: 1px solid var(--bs-border-color) !important;
+        }
+
+        [data-bs-theme="dark"] .ql-snow .ql-picker-options .ql-picker-item {
+            color: var(--bs-body-color) !important;
+        }
+
+        [data-bs-theme="dark"] .ql-snow .ql-picker-options .ql-picker-item:hover {
+            background-color: var(--bs-primary) !important;
+            color: white !important;
+        }
+
+        /* Placeholder text visibility - lighter gray for better readability */
+        [data-bs-theme="dark"] .ql-editor.ql-blank::before {
+            color: #adb5bd !important;
+            opacity: 0.8;
+        }
+
+        /* Editor text color */
+        [data-bs-theme="dark"] .ql-editor {
+            color: var(--bs-body-color) !important;
+        }
+
+        /* Light mode adjustments */
+        [data-bs-theme="light"] .ql-toolbar.ql-snow {
+            background-color: #f8f9fa !important;
+            border: 1px solid var(--bs-border-color) !important;
+        }
+
+        [data-bs-theme="light"] .ql-container.ql-snow {
+            background-color: white !important;
+            border: 1px solid var(--bs-border-color) !important;
+        }
+
+        [data-bs-theme="light"] .ql-editor.ql-blank::before {
+            color: #6c757d !important;
+            opacity: 0.7;
+        }
+
+        /* Global Quill container styling */
+        .quill-editor-container {
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+    </style>
+
     {% block head_extra %}{% endblock %}
 </head>
 <body class="d-flex flex-column min-vh-100">

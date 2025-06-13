@@ -2,13 +2,13 @@
 {% import "macros/_form_helpers.html" as forms %}
 
 {% block title %}
-    Add New Trade - Combined Trading Journal
+    Add New Trade - Trading Journal
 {% endblock %}
 
 {% block head_extra %}
 {{ super() }}
 <style>
-    /* General Styles from your file */
+    /* Page-specific styles for add_trade.html only */
     label { display: block; margin-top: 12px; font-weight: bold; }
 
     .form-section {
@@ -45,14 +45,16 @@
         display: none; /* Hide labels for subsequent rows */
     }
 
-    .quill-editor-container { /* Unchanged */
+    /* Quill container specific to this page */
+    .quill-editor-container {
         height: 250px;
         background-color: var(--bs-body-bg);
         color: var(--bs-body-color);
         border: 1px solid var(--bs-border-color);
         border-radius: .25rem;
     }
-    .form-buttons-container { /* Unchanged */
+
+    .form-buttons-container {
         display: flex;
         justify-content: flex-end;
         gap: 0.5rem;
@@ -60,17 +62,26 @@
         margin-bottom: 20px;
     }
 
+    /* Grid layouts */
     .grid-2-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
     .grid-3-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
     .grid-4-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-    .grid-5-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+    .grid-5-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="container mt-4">
-    <h1>Log New Trade</h1>
+{% block page_header %}
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+        <h1>Log New Trade</h1>
+        <div class="d-flex gap-2 mt-2 mt-md-0">
+            <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-outline-secondary"><i class="fas fa-list me-1"></i> Back to Trades List</a>
+            <a href="{{ url_for('trades.import_trades') }}" class="btn btn-outline-info"><i class="fas fa-upload me-1"></i> Import</a>
+        </div>
+    </div>
+{% endblock %}
 
+{% block content %}
+<div class="container-fluid">
     <form method="POST" action="{{ url_for('trades.add_trade') }}" id="tradeForm" novalidate enctype="multipart/form-data">
         {{ form.hidden_tag() }}
 
@@ -109,22 +120,23 @@
                         </div>
                         {% endfor %}
                     </div>
-                    <button type="button" id="add-entry-button" class="btn btn-success btn-sm mt-2">+ Add Entry</button>
+                    <button type="button" class="btn btn-sm btn-success mt-2" id="add-entry-button" title="Add Entry"><i class="fas fa-plus"></i> Add Entry</button>
                 </div>
             </div>
+
             <div class="col-md-6">
                 <div class="form-section">
                     <h3>Exit Points</h3>
                     <div id="exit-points-container">
-                         {% for exit_form_field in form.exits %}
-                         <div class="entry-exit-item">
+                        {% for exit_form_field in form.exits %}
+                        <div class="entry-exit-item">
                             <div class="entry-exit-row">
                                 {{ forms.render_field(exit_form_field.exit_time, input_class="form-control form-control-sm", type="time") }}
                                 {{ forms.render_field(exit_form_field.contracts, input_class="form-control form-control-sm", type="number") }}
                                 {{ forms.render_field(exit_form_field.exit_price, input_class="form-control form-control-sm", type="number", step="any") }}
 
                                 <div>
-                                {% if loop.index > 1 %}
+                                {% if loop.index > form.exits.min_entries %}
                                     <button type="button" class="btn btn-sm btn-danger remove-exit-btn" title="Remove Exit"><i class="fas fa-trash-alt"></i></button>
                                 {% endif %}
                                 </div>
@@ -132,7 +144,7 @@
                         </div>
                         {% endfor %}
                     </div>
-                    <button type="button" id="add-exit-button" class="btn btn-success btn-sm mt-2">+ Add Exit</button>
+                    <button type="button" class="btn btn-sm btn-success mt-2" id="add-exit-button" title="Add Exit"><i class="fas fa-plus"></i> Add Exit</button>
                 </div>
             </div>
         </div>
@@ -162,8 +174,7 @@
                     {{ forms.render_field(form.psych_scored_lowest, input_class="form-control", rows="2") }}
                 </div>
                 <div class="col-lg-4">
-                    {# ADDED: Canvas for the radar chart #}
-                    <div style="max-width: 950px; margin: auto;">
+                    <div style="max-width: 350px; margin: auto;">
                         <canvas id="psychRadarChart"></canvas>
                     </div>
                 </div>
@@ -172,7 +183,6 @@
 
         <div class="form-section">
             <h3>Trade Analysis, Notes & Tags</h3>
-            {# Quill RTE sections remain the same #}
             <div class="form-group mb-3">
                 {{ form.trade_notes.label(class="form-label") }}
                 <div id="trade_notes_editor" class="quill-editor-container"></div>
@@ -207,8 +217,8 @@
         </div>
 
         <div class="form-buttons-container">
-            {{ form.submit(class="btn btn-primary btn-lg") }}
-            <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-secondary btn-lg">Cancel</a>
+            <button type="submit" class="btn btn-outline-success"><i class="fas fa-plus me-1"></i> Log Trade</button>
+            <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-outline-secondary"><i class="fas fa-times me-1"></i> Cancel</a>
         </div>
     </form>
 </div>
@@ -254,10 +264,9 @@
 
 {% endblock %}
 
-
 {% block scripts_extra %}
 {{ super() if super }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> {# Ensure Chart.js CDN is included #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Default date logic...
@@ -314,9 +323,9 @@ document.addEventListener('DOMContentLoaded', function() {
         addRemoveButtonListeners(container);
     }
     initializeDynamicFields('entry-points-container', 'add-entry-button', 'entry-template', 'entry-exit-item', 'remove-entry-btn', 'entries', parseInt('{{ form.entries.min_entries|default(1) }}', 10));
-    initializeDynamicFields('exit-points-container', 'add-exit-button', 'exit-template', 'entry-exit-item', 'remove-exit-btn', 'exits', parseInt('{{ form.exits.min_entries|default(0) }}', 10));
+    initializeDynamicFields('exit-points-container', 'add-exit-button', 'exit-template', 'entry-exit-item', 'remove-exit-btn', 'exits', parseInt('{{ form.exits.min_entries|default(1) }}', 10));
 
-    // Quill Initialization (no changes needed here)
+    // Quill Initialization
     const quillToolbarOptions = [
         [{ 'header': [1, 2, 3, 4, false] }], ['bold', 'italic', 'underline', 'strike'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }], [{ 'script': 'sub'}, { 'script': 'super' }],
@@ -368,7 +377,6 @@ document.addEventListener('DOMContentLoaded', function() {
             'Prep'
         ];
 
-        // MODIFIED: Define colors based on the current theme
         const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
         const gridColor = currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
         const textColor = currentTheme === 'dark' ? '#ced4da' : '#666';
@@ -391,27 +399,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 }]
             },
             options: {
-                // MODIFIED: Updated scales options for dark mode
                 scales: {
                     r: {
                         angleLines: {
-                            color: gridColor // Color for radial lines from center
+                            color: gridColor
                         },
                         grid: {
-                            color: gridColor // Color for the web-like grid lines
+                            color: gridColor
                         },
                         suggestedMin: 0,
                         suggestedMax: 5,
                         pointLabels: {
-                             color: pointLabelColor, // Color for "Rules", "Management", etc.
+                             color: pointLabelColor,
                              font: {
                                  size: 14
                              }
                         },
                         ticks: {
                             stepSize: 1,
-                            color: textColor, // Color for the numbers 1, 2, 3, 4, 5
-                            backdropColor: 'rgba(0, 0, 0, 0)' // Make tick background transparent
+                            color: textColor,
+                            backdropColor: 'rgba(0, 0, 0, 0)'
                         }
                     }
                 },
@@ -432,7 +439,7 @@ document.addEventListener('DOMContentLoaded', function() {
             selector.addEventListener('change', updateRadarChart);
         });
 
-        updateRadarChart(); // Initial draw
+        updateRadarChart();
     }
 });
 </script>
