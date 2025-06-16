@@ -3,112 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="csrf-token" content="{{ csrf_token.current_token }}">
     <title>{% block title %}Trading Journal{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-    <!-- QUILL EDITOR CDN -->
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
-    <!-- GLOBAL QUILL DARK MODE STYLES -->
     <style>
+        /* MODIFICATION: Repositioned the flash container to the bottom-right */
+        .flash-popup-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 100%;
+            max-width: 450px;
+            z-index: 1056;
+        }
+
         /* Quill Editor Dark Mode Styles - Global for all pages */
         [data-bs-theme="dark"] .ql-toolbar.ql-snow {
             background-color: var(--bs-dark) !important;
             border: 1px solid var(--bs-border-color) !important;
             border-bottom: none !important;
         }
-
         [data-bs-theme="dark"] .ql-container.ql-snow {
             background-color: var(--bs-body-bg) !important;
             border: 1px solid var(--bs-border-color) !important;
             color: var(--bs-body-color) !important;
         }
-
-        /* Make toolbar icons visible in dark mode */
-        [data-bs-theme="dark"] .ql-snow .ql-stroke {
-            stroke: #e9ecef !important;
-        }
-
-        [data-bs-theme="dark"] .ql-snow .ql-fill {
-            fill: #e9ecef !important;
-        }
-
-        [data-bs-theme="dark"] .ql-snow .ql-picker-label::before {
-            color: #e9ecef !important;
-        }
-
-        [data-bs-theme="dark"] .ql-snow .ql-picker-label {
-            color: #e9ecef !important;
-        }
-
-        /* Hover states for better visibility */
+        [data-bs-theme="dark"] .ql-snow .ql-stroke { stroke: #e9ecef !important; }
+        [data-bs-theme="dark"] .ql-snow .ql-fill { fill: #e9ecef !important; }
+        [data-bs-theme="dark"] .ql-snow .ql-picker-label::before { color: #e9ecef !important; }
+        [data-bs-theme="dark"] .ql-snow .ql-picker-label { color: #e9ecef !important; }
         [data-bs-theme="dark"] .ql-snow .ql-toolbar button:hover .ql-stroke,
-        [data-bs-theme="dark"] .ql-snow .ql-toolbar button:focus .ql-stroke {
-            stroke: #fff !important;
-        }
-
+        [data-bs-theme="dark"] .ql-snow .ql-toolbar button:focus .ql-stroke { stroke: #fff !important; }
         [data-bs-theme="dark"] .ql-snow .ql-toolbar button:hover .ql-fill,
-        [data-bs-theme="dark"] .ql-snow .ql-toolbar button:focus .ql-fill {
-            fill: #fff !important;
-        }
-
-        /* Active button states */
-        [data-bs-theme="dark"] .ql-snow .ql-toolbar button.ql-active .ql-stroke {
-            stroke: var(--bs-primary) !important;
-        }
-
-        [data-bs-theme="dark"] .ql-snow .ql-toolbar button.ql-active .ql-fill {
-            fill: var(--bs-primary) !important;
-        }
-
-        /* Dropdown menus in dark mode */
+        [data-bs-theme="dark"] .ql-snow .ql-toolbar button:focus .ql-fill { fill: #fff !important; }
+        [data-bs-theme="dark"] .ql-snow .ql-toolbar button.ql-active .ql-stroke { stroke: var(--bs-primary) !important; }
+        [data-bs-theme="dark"] .ql-snow .ql-toolbar button.ql-active .ql-fill { fill: var(--bs-primary) !important; }
         [data-bs-theme="dark"] .ql-snow .ql-picker-options {
             background-color: var(--bs-dark) !important;
             border: 1px solid var(--bs-border-color) !important;
         }
-
-        [data-bs-theme="dark"] .ql-snow .ql-picker-options .ql-picker-item {
-            color: var(--bs-body-color) !important;
-        }
-
+        [data-bs-theme="dark"] .ql-snow .ql-picker-options .ql-picker-item { color: var(--bs-body-color) !important; }
         [data-bs-theme="dark"] .ql-snow .ql-picker-options .ql-picker-item:hover {
             background-color: var(--bs-primary) !important;
             color: white !important;
         }
-
-        /* Placeholder text visibility - lighter gray for better readability */
         [data-bs-theme="dark"] .ql-editor.ql-blank::before {
             color: #adb5bd !important;
             opacity: 0.8;
         }
-
-        /* Editor text color */
-        [data-bs-theme="dark"] .ql-editor {
-            color: var(--bs-body-color) !important;
-        }
-
-        /* Light mode adjustments */
+        [data-bs-theme="dark"] .ql-editor { color: var(--bs-body-color) !important; }
         [data-bs-theme="light"] .ql-toolbar.ql-snow {
             background-color: #f8f9fa !important;
             border: 1px solid var(--bs-border-color) !important;
         }
-
         [data-bs-theme="light"] .ql-container.ql-snow {
             background-color: white !important;
             border: 1px solid var(--bs-border-color) !important;
         }
-
         [data-bs-theme="light"] .ql-editor.ql-blank::before {
             color: #6c757d !important;
             opacity: 0.7;
         }
-
-        /* Global Quill container styling */
         .quill-editor-container {
             border-radius: 0.375rem;
             overflow: hidden;
@@ -118,83 +80,62 @@
         .flash-message {
             margin-bottom: 0.5rem;
             border-left: 4px solid;
-            animation: slideInFromTop 0.3s ease-out;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: slideInFromTop 0.3s ease-out; /* This animation name is fine, direction is controlled by container */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            color: var(--bs-body-color); /* Ensure text is readable */
         }
 
+        /* MODIFICATION: Made backgrounds more solid for readability */
         .alert-success {
             border-left-color: #198754;
-            background-color: rgba(25, 135, 84, 0.1);
+            background-color: #d1e7dd;
         }
-
         .alert-danger {
             border-left-color: #dc3545;
-            background-color: rgba(220, 53, 69, 0.1);
+            background-color: #f8d7da;
         }
-
         .alert-warning {
             border-left-color: #ffc107;
-            background-color: rgba(255, 193, 7, 0.1);
+            background-color: #fff3cd;
         }
-
         .alert-info {
             border-left-color: #0dcaf0;
-            background-color: rgba(13, 202, 240, 0.1);
+            background-color: #cff4fc;
         }
 
         [data-bs-theme="dark"] .flash-message {
-            box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            color: var(--bs-light); /* Light text for dark backgrounds */
         }
 
+        /* MODIFICATION: Dark theme alerts with more solid, theme-appropriate backgrounds */
         [data-bs-theme="dark"] .alert-success {
-            background-color: rgba(25, 135, 84, 0.2);
-            border-color: rgba(25, 135, 84, 0.3);
+            background-color: #0a3622;
+            border-left-color: #34a853;
         }
-
         [data-bs-theme="dark"] .alert-danger {
-            background-color: rgba(220, 53, 69, 0.2);
-            border-color: rgba(220, 53, 69, 0.3);
+            background-color: #4a1a21;
+            border-left-color: #ea4335;
         }
-
         [data-bs-theme="dark"] .alert-warning {
-            background-color: rgba(255, 193, 7, 0.2);
-            border-color: rgba(255, 193, 7, 0.3);
+            background-color: #594203;
+            border-left-color: #fbbc05;
         }
-
         [data-bs-theme="dark"] .alert-info {
-            background-color: rgba(13, 202, 240, 0.2);
-            border-color: rgba(13, 202, 240, 0.3);
+            background-color: #053b4b;
+            border-left-color: #4285f4;
         }
 
         @keyframes slideInFromTop {
-            from {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
-
         .flash-message.fade-out {
-            animation: slideOutToTop 0.3s ease-in forwards;
+            animation: slideOutToBottom 0.3s ease-in forwards;
         }
-
-        @keyframes slideOutToTop {
-            from {
-                transform: translateY(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateY(-100%);
-                opacity: 0;
-            }
-        }
-
-        #flash-messages-container {
-            position: relative;
-            z-index: 1040;
+        @keyframes slideOutToBottom {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
         }
     </style>
 
@@ -252,41 +193,39 @@
         </div>
     </nav>
 
-    <!-- Enhanced Flash Messages Section -->
-    <div class="container-fluid mt-3" style="padding-top: 56px;">
+    <div class="flash-popup-container" id="flash-messages-container">
         {% with messages = smart_flashed_messages %}
             {% if messages %}
-                <div id="flash-messages-container">
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show flash-message"
-                             role="alert" data-auto-dismiss="true">
-                            <div class="d-flex align-items-center">
-                                {% if category == 'success' %}
-                                    <i class="fas fa-check-circle me-2 text-success"></i>
-                                {% elif category == 'danger' or category == 'error' %}
-                                    <i class="fas fa-exclamation-triangle me-2 text-danger"></i>
-                                {% elif category == 'warning' %}
-                                    <i class="fas fa-exclamation-circle me-2 text-warning"></i>
-                                {% elif category == 'info' %}
-                                    <i class="fas fa-info-circle me-2 text-info"></i>
-                                {% else %}
-                                    <i class="fas fa-bell me-2"></i>
-                                {% endif %}
-                                <span class="flex-grow-1">{{ message }}</span>
-                            </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show flash-message"
+                         role="alert" data-auto-dismiss="true">
+                        <div class="d-flex align-items-center">
+                            {% if category == 'success' %}
+                                <i class="fas fa-check-circle me-2 text-success"></i>
+                            {% elif category == 'danger' or category == 'error' %}
+                                <i class="fas fa-exclamation-triangle me-2 text-danger"></i>
+                            {% elif category == 'warning' %}
+                                <i class="fas fa-exclamation-circle me-2 text-warning"></i>
+                            {% elif category == 'info' %}
+                                <i class="fas fa-info-circle me-2 text-info"></i>
+                            {% else %}
+                                <i class="fas fa-bell me-2"></i>
+                            {% endif %}
+                            <span class="flex-grow-1">{{ message }}</span>
                         </div>
-                    {% endfor %}
-                </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
             {% endif %}
         {% endwith %}
     </div>
 
-    <div class="app-body-container">
+    {% include 'partials/_confirmation_modal.html' %}
+
+    <div class="app-body-container" style="padding-top: 56px;">
         {% if current_user.is_authenticated %}
         <aside class="sidebar desktop-icon-only">
             <nav class="sidebar-nav">
-                {# This menu has been fully restored to its original state #}
                 <ul>
                     <li><a class="nav-link {{ 'active' if request.endpoint == 'main.index' else '' }}" href="{{ url_for('main.index') }}"><span class="icon"><i class="fas fa-tachometer-alt"></i></span><span class="label">Dashboard</span></a></li>
                     <li class="has-submenu">
@@ -363,17 +302,12 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
-    <!-- Enhanced Flash Message JavaScript -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Enhanced flash message handling
         function initFlashMessages() {
             const flashMessages = document.querySelectorAll('.flash-message[data-auto-dismiss="true"]');
-
             flashMessages.forEach(function(message, index) {
-                // Auto-hide after delay (staggered for multiple messages)
-                const delay = 4000 + (index * 1000); // 4s, 5s, 6s for multiple messages
-
+                const delay = 4000 + (index * 1000);
                 setTimeout(function() {
                     if (message && message.parentNode && !message.classList.contains('fade-out')) {
                         message.classList.add('fade-out');
@@ -386,11 +320,7 @@
                 }, delay);
             });
         }
-
-        // Initialize flash messages
         initFlashMessages();
-
-        // Also handle messages that might be added dynamically
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.type === 'childList') {
@@ -402,7 +332,6 @@
                 }
             });
         });
-
         const flashContainer = document.getElementById('flash-messages-container');
         if (flashContainer) {
             observer.observe(flashContainer, { childList: true, subtree: true });
@@ -411,5 +340,6 @@
     </script>
 
     {% block scripts_extra %}{% endblock %}
+
 </body>
 </html>

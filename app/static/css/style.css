@@ -443,3 +443,27 @@ html[data-bs-theme="light"] .table-dark {
         min-height: 2rem !important;
     }
 }
+/*
+================================================
+Custom Flash Message (Notification) Styles
+================================================
+*/
+.flash-message-container {
+    position: fixed;
+    top: 80px; /* Position below the navbar */
+    right: 20px;
+    width: 100%;
+    max-width: 450px; /* Set a max width for the notifications */
+    z-index: 1056; /* Ensure it appears above other content */
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Adds space between multiple notifications */
+}
+
+/* Override Bootstrap's default margin for alerts inside our container */
+.flash-message-container .alert {
+    margin-top: 0;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Add a subtle shadow for depth */
+    border: none;
+}
