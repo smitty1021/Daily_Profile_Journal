@@ -7,7 +7,7 @@ import enum
 import uuid
 import os
 import statistics
-
+from sqlalchemy import ForeignKey
 from app import db
 
 # --- Constants for Models (QUARTER_NAMES etc. as before) ---
@@ -270,7 +270,8 @@ class TradeImage(db.Model): # ... (Keep as previously corrected) ...
 class Trade(db.Model): # ... (Keep as previously corrected) ...
     __tablename__ = 'trade'
     id = db.Column(db.Integer, primary_key=True)
-    instrument = db.Column(db.String(10), nullable=False)
+    instrument_id = db.Column(db.Integer, db.ForeignKey('instrument.id', name='fk_trade_instrument'), nullable=True)
+    instrument_legacy = db.Column(db.String(20), nullable=True, index=True)  # For backward compatibility
     trade_date = db.Column(db.Date, nullable=False, default=py_date.today)
     direction = db.Column(db.String(5), nullable=False)
     point_value = db.Column(db.Float, nullable=True)
@@ -367,6 +368,37 @@ class Trade(db.Model): # ... (Keep as previously corrected) ...
         if self.total_contracts_exited > 0 and self.how_closed not in ["Still Open", None, '']: return pnl_dollars / initial_risk_dollars
         return None
     def __repr__(self): return f"<Trade {self.id} {self.instrument} on {self.trade_date} (User: {self.user_id})>"
+
+    @property
+    def instrument(self):
+        """Get instrument symbol - checks new relationship first, then legacy field"""
+        if self.instrument_obj:
+            return self.instrument_obj.symbol
+        return self.instrument_legacy
+
+    @instrument.setter
+    def instrument(self, value):
+        """Set instrument by symbol - tries to find in Instrument table first"""
+        if isinstance(value, str):
+            instr = Instrument.query.filter_by(symbol=value.upper(), is_active=True).first()
+            if instr:
+                self.instrument_id = instr.id
+                self.instrument_legacy = None
+            else:
+                self.instrument_legacy = value.upper()
+                self.instrument_id = None
+
+    @property
+    def point_value(self):
+        """Get point value from Instrument table or fallback to legacy values"""
+        if self.instrument_obj:
+            return self.instrument_obj.point_value
+
+        # Fallback to legacy hardcoded values
+        legacy_values = {
+            'ENQ': 5.0, 'EES': 12.5, 'EYM': 12.5, 'ERX': 6.25
+        }
+        return legacy_values.get(self.instrument_legacy, 1.0)
 
 
 class EntryPoint(db.Model): # ... (Keep as previously corrected) ...
@@ -700,3 +732,44 @@ class AccountSetting(db.Model): # ... (Keep as previously corrected) ...
     value_bool = db.Column(db.Boolean, nullable=True)
     description = db.Column(db.Text, nullable=True)
     def __repr__(self): return f"<AccountSetting '{self.setting_name}'>"
+
+
+class Instrument(db.Model):
+    """Model for trading instruments with their specifications"""
+    __tablename__ = 'instrument'
+
+    id = db.Column(db.Integer, primary_key=True)
+    symbol = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
+    exchange = db.Column(db.String(50), nullable=False)
+    asset_class = db.Column(db.String(50), nullable=False)  # e.g., "Equity Index", "Currency", "Commodity"
+    product_group = db.Column(db.String(50), nullable=False)  # e.g., "E-mini Futures", "Forex", "Crypto"
+    point_value = db.Column(db.Float, nullable=False, default=1.0)
+    tick_size = db.Column(db.Float, nullable=True)  # Minimum price movement
+    currency = db.Column(db.String(3), nullable=False, default='USD')
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    trades = db.relationship('Trade', backref='instrument_obj', lazy='dynamic')
+
+    @classmethod
+    def get_active_instruments(cls):
+        """Return all active instruments for dropdowns"""
+        return cls.query.filter_by(is_active=True).order_by(cls.symbol.asc()).all()
+
+    @classmethod
+    def get_point_value(cls, symbol):
+        """Get point value for a specific instrument symbol"""
+        instrument = cls.query.filter_by(symbol=symbol, is_active=True).first()
+        return instrument.point_value if instrument else 1.0
+
+    @classmethod
+    def get_instrument_choices(cls):
+        """Return choices for form SelectFields"""
+        instruments = cls.get_active_instruments()
+        return [(instr.symbol, f"{instr.symbol} - {instr.name}") for instr in instruments]
+
+    def __repr__(self):
+        return f'<Instrument {self.symbol} ({self.name})>'

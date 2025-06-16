@@ -7,6 +7,9 @@ from app.models import User, UserRole, Activity  # Ensure Activity is imported f
 from app.forms import AdminCreateUserForm, AdminEditUserForm
 from app.utils import admin_required, record_activity, generate_token, send_email  # Added generate_token, send_email
 
+from app.models import Instrument  # Add to existing imports
+from app.forms import InstrumentForm, InstrumentFilterForm  # Add to existing imports
+
 admin_bp = Blueprint('admin', __name__,
                      template_folder='../templates/admin',
                      url_prefix='/admin')
@@ -310,3 +313,239 @@ def admin_bulk_delete_users():
 
     flash(message, status if status == 'success' and deleted_count > 0 else ('warning' if skipped_count > 0 else 'danger'))
     return jsonify({'status': status, 'message': message, 'deleted_count': deleted_count, 'skipped_count': skipped_count, 'skipped_info': skipped_users_info})
+
+
+@admin_bp.route('/system-config')
+@login_required
+@admin_required
+def system_config():
+    """System configuration dashboard"""
+    try:
+        # Get some basic stats for the dashboard
+        total_instruments = Instrument.query.count()
+        active_instruments = Instrument.query.filter_by(is_active=True).count()
+        inactive_instruments = total_instruments - active_instruments
+
+        # Get instruments by asset class for overview
+        instruments_by_class = db.session.query(
+            Instrument.asset_class,
+            db.func.count(Instrument.id).label('count')
+        ).filter_by(is_active=True).group_by(Instrument.asset_class).all()
+
+        current_app.logger.info(f"Admin {current_user.username} accessed system configuration.")
+
+        return render_template('system_config.html',
+                               title='System Configuration',
+                               total_instruments=total_instruments,
+                               active_instruments=active_instruments,
+                               inactive_instruments=inactive_instruments,
+                               instruments_by_class=instruments_by_class)
+    except Exception as e:
+        current_app.logger.error(f"Error loading system config: {e}", exc_info=True)
+        flash("Could not load system configuration.", "danger")
+        return redirect(url_for('admin.show_admin_dashboard'))
+
+
+@admin_bp.route('/instruments')
+@login_required
+@admin_required
+def instruments_list():
+    """List all instruments with filtering"""
+    filter_form = InstrumentFilterForm(request.args, meta={'csrf': False})
+
+    try:
+        # Build query with filters
+        query = Instrument.query
+
+        # Search filter
+        if filter_form.search.data:
+            search_term = f"%{filter_form.search.data}%"
+            query = query.filter(
+                db.or_(
+                    Instrument.symbol.ilike(search_term),
+                    Instrument.name.ilike(search_term)
+                )
+            )
+
+        # Exchange filter
+        if filter_form.exchange.data:
+            query = query.filter(Instrument.exchange == filter_form.exchange.data)
+
+        # Asset class filter
+        if filter_form.asset_class.data:
+            query = query.filter(Instrument.asset_class == filter_form.asset_class.data)
+
+        # Status filter
+        if filter_form.status.data == 'active':
+            query = query.filter(Instrument.is_active == True)
+        elif filter_form.status.data == 'inactive':
+            query = query.filter(Instrument.is_active == False)
+
+        # Pagination
+        page = request.args.get('page', 1, type=int)
+        per_page = current_app.config.get('ITEMS_PER_PAGE', 25)
+
+        instruments_pagination = query.order_by(
+            Instrument.is_active.desc(),  # Active instruments first
+            Instrument.symbol.asc()
+        ).paginate(page=page, per_page=per_page, error_out=False)
+
+        current_app.logger.info(f"Admin {current_user.username} accessed instruments list.")
+
+        return render_template('instruments_list.html',
+                               title='Instrument Management',
+                               instruments=instruments_pagination.items,
+                               pagination=instruments_pagination,
+                               filter_form=filter_form,
+                               total_count=instruments_pagination.total)
+
+    except Exception as e:
+        current_app.logger.error(f"Error loading instruments list: {e}", exc_info=True)
+        flash("Could not load instruments list.", "danger")
+        return redirect(url_for('admin.system_config'))
+
+
+@admin_bp.route('/instruments/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_instrument():
+    """Create a new instrument"""
+    form = InstrumentForm()
+
+    if form.validate_on_submit():
+        try:
+            # Check if symbol already exists
+            existing_instrument = Instrument.query.filter_by(symbol=form.symbol.data.upper()).first()
+            if existing_instrument:
+                flash(f'Instrument with symbol "{form.symbol.data.upper()}" already exists.', 'danger')
+                return render_template('create_instrument.html', title='Create Instrument', form=form)
+
+            # Create new instrument
+            instrument = Instrument(
+                symbol=form.symbol.data.upper(),
+                name=form.name.data,
+                exchange=form.exchange.data,
+                asset_class=form.asset_class.data,
+                product_group=form.product_group.data,
+                point_value=form.point_value.data,
+                tick_size=form.tick_size.data,
+                currency=form.currency.data,
+                is_active=form.is_active.data
+            )
+
+            db.session.add(instrument)
+            db.session.commit()
+
+            flash(f'Instrument "{instrument.symbol}" created successfully!', 'success')
+            current_app.logger.info(f"Admin {current_user.username} created instrument {instrument.symbol}.")
+
+            return redirect(url_for('admin.instruments_list'))
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating instrument: {e}", exc_info=True)
+            flash('An error occurred while creating the instrument.', 'danger')
+
+    return render_template('create_instrument.html', title='Create Instrument', form=form)
+
+
+@admin_bp.route('/instruments/<int:instrument_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_instrument(instrument_id):
+    """Edit an existing instrument"""
+    instrument = Instrument.query.get_or_404(instrument_id)
+    form = InstrumentForm(obj=instrument)
+
+    if form.validate_on_submit():
+        try:
+            # Check if changing symbol to an existing one
+            if form.symbol.data.upper() != instrument.symbol:
+                existing_instrument = Instrument.query.filter_by(symbol=form.symbol.data.upper()).first()
+                if existing_instrument:
+                    flash(f'Instrument with symbol "{form.symbol.data.upper()}" already exists.', 'danger')
+                    return render_template('edit_instrument.html',
+                                           title=f'Edit Instrument - {instrument.symbol}',
+                                           form=form, instrument=instrument)
+
+            # Update instrument
+            instrument.symbol = form.symbol.data.upper()
+            instrument.name = form.name.data
+            instrument.exchange = form.exchange.data
+            instrument.asset_class = form.asset_class.data
+            instrument.product_group = form.product_group.data
+            instrument.point_value = form.point_value.data
+            instrument.tick_size = form.tick_size.data
+            instrument.currency = form.currency.data
+            instrument.is_active = form.is_active.data
+            instrument.updated_at = datetime.utcnow()
+
+            db.session.commit()
+
+            flash(f'Instrument "{instrument.symbol}" updated successfully!', 'success')
+            current_app.logger.info(f"Admin {current_user.username} updated instrument {instrument.symbol}.")
+
+            return redirect(url_for('admin.instruments_list'))
+
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error updating instrument {instrument_id}: {e}", exc_info=True)
+            flash('An error occurred while updating the instrument.', 'danger')
+
+    return render_template('edit_instrument.html',
+                           title=f'Edit Instrument - {instrument.symbol}',
+                           form=form, instrument=instrument)
+
+
+@admin_bp.route('/instruments/<int:instrument_id>/toggle-status', methods=['POST'])
+@login_required
+@admin_required
+def toggle_instrument_status(instrument_id):
+    """Toggle instrument active/inactive status"""
+    try:
+        instrument = Instrument.query.get_or_404(instrument_id)
+        instrument.is_active = not instrument.is_active
+        instrument.updated_at = datetime.utcnow()
+
+        db.session.commit()
+
+        status = "activated" if instrument.is_active else "deactivated"
+        flash(f'Instrument "{instrument.symbol}" {status} successfully!', 'success')
+        current_app.logger.info(f"Admin {current_user.username} {status} instrument {instrument.symbol}.")
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error toggling instrument status {instrument_id}: {e}", exc_info=True)
+        flash('An error occurred while updating the instrument status.', 'danger')
+
+    return redirect(url_for('admin.instruments_list'))
+
+
+@admin_bp.route('/instruments/<int:instrument_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_instrument(instrument_id):
+    """Delete an instrument (only if no trades exist)"""
+    try:
+        instrument = Instrument.query.get_or_404(instrument_id)
+
+        # Check if any trades exist for this instrument
+        trades_count = instrument.trades.count()
+        if trades_count > 0:
+            flash(f'Cannot delete instrument "{instrument.symbol}". It has {trades_count} associated trades. '
+                  f'Deactivate it instead if you want to stop using it.', 'warning')
+            return redirect(url_for('admin.instruments_list'))
+
+        symbol = instrument.symbol
+        db.session.delete(instrument)
+        db.session.commit()
+
+        flash(f'Instrument "{symbol}" deleted successfully!', 'success')
+        current_app.logger.info(f"Admin {current_user.username} deleted instrument {symbol}.")
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting instrument {instrument_id}: {e}", exc_info=True)
+        flash('An error occurred while deleting the instrument.', 'danger')
+
+    return redirect(url_for('admin.instruments_list'))

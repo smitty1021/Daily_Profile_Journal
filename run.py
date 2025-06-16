@@ -1,5 +1,6 @@
 import os
 from app import create_app, db # Import db if you plan to add CLI commands that use it
+import click
 # from app.models import User, TradingModel # etc. - Import models if needed for CLI commands
 
 # Create the Flask app instance using the app factory
@@ -19,6 +20,7 @@ def make_shell_context():
     from app import models
     return {'db': db, 'User': models.User, 'TradingModel': models.TradingModel,
             'Trade': models.Trade, 'DailyJournal': models.DailyJournal,
+            'Instrument': models.Instrument,  # ADD THIS LINE
             # Add other models here as needed
            }
 
@@ -32,6 +34,48 @@ def init_db_command():
     # You could call a function here to seed initial data if desired
     # E.g., from app.models import seed_initial_data; seed_initial_data()
     # The initial data setup in app/__init__.py will run on app creation context.
+
+
+@app.cli.command("seed-instruments")
+def seed_instruments_command():
+    """Seed default instruments if none exist."""
+    import click
+    from app.models import Instrument
+    from datetime import datetime
+
+    if Instrument.query.count() > 0:
+        click.echo("Instruments already exist. Skipping seed.")
+        return
+
+    instruments_data = [
+        {
+            'symbol': 'ENQ', 'name': 'E-mini NASDAQ-100', 'exchange': 'CME',
+            'asset_class': 'Equity Index', 'product_group': 'E-mini Futures',
+            'point_value': 5.0, 'tick_size': 0.25, 'currency': 'USD'
+        },
+        {
+            'symbol': 'EES', 'name': 'E-mini S&P 500', 'exchange': 'CME',
+            'asset_class': 'Equity Index', 'product_group': 'E-mini Futures',
+            'point_value': 12.5, 'tick_size': 0.25, 'currency': 'USD'
+        },
+        {
+            'symbol': 'EYM', 'name': 'E-mini Dow Jones', 'exchange': 'CME',
+            'asset_class': 'Equity Index', 'product_group': 'E-mini Futures',
+            'point_value': 12.5, 'tick_size': 1.0, 'currency': 'USD'
+        },
+        {
+            'symbol': 'ERX', 'name': 'E-mini Russell 2000', 'exchange': 'CME',
+            'asset_class': 'Equity Index', 'product_group': 'E-mini Futures',
+            'point_value': 6.25, 'tick_size': 0.1, 'currency': 'USD'
+        }
+    ]
+
+    for data in instruments_data:
+        instrument = Instrument(**data)
+        db.session.add(instrument)
+
+    db.session.commit()
+    click.echo(f"Created {len(instruments_data)} default instruments.")
 
 # Example: Command to create a default admin user (if not already present)
 # @app.cli.command("create-admin")

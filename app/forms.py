@@ -7,6 +7,7 @@ from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional, N
 from app.models import UserRole  # Assuming UserRole is used elsewhere or for consistency
 
 
+
 # Custom coerce function for optional integer select fields
 def coerce_int_optional(value):
     if value == '':
@@ -570,3 +571,111 @@ class DailyJournalForm(FlaskForm):
                                              coerce=coerce_int_optional, validators=[Optional()])
 
     submit = SubmitField('Save Daily Journal')
+
+
+class InstrumentForm(FlaskForm):
+    """Form for creating/editing instruments"""
+    symbol = StringField('Symbol',
+                         validators=[DataRequired(), Length(min=1, max=20)],
+                         render_kw={"placeholder": "e.g., ENQ, EES, EURUSD"})
+
+    name = StringField('Full Name',
+                       validators=[DataRequired(), Length(min=1, max=100)],
+                       render_kw={"placeholder": "e.g., E-mini NASDAQ-100"})
+
+    exchange = SelectField('Exchange',
+                           validators=[DataRequired()],
+                           choices=[
+                               ('CME', 'Chicago Mercantile Exchange (CME)'),
+                               ('CBOT', 'Chicago Board of Trade (CBOT)'),
+                               ('NYMEX', 'New York Mercantile Exchange (NYMEX)'),
+                               ('FOREX', 'Foreign Exchange Market'),
+                               ('CRYPTO', 'Cryptocurrency Exchange'),
+                               ('NYSE', 'New York Stock Exchange'),
+                               ('NASDAQ', 'NASDAQ'),
+                               ('OTHER', 'Other')
+                           ])
+
+    asset_class = SelectField('Asset Class',
+                              validators=[DataRequired()],
+                              choices=[
+                                  ('Equity Index', 'Equity Index'),
+                                  ('Currency', 'Currency'),
+                                  ('Commodity', 'Commodity'),
+                                  ('Interest Rate', 'Interest Rate'),
+                                  ('Energy', 'Energy'),
+                                  ('Agricultural', 'Agricultural'),
+                                  ('Metals', 'Metals'),
+                                  ('Cryptocurrency', 'Cryptocurrency'),
+                                  ('Stock', 'Individual Stock'),
+                                  ('Bond', 'Bond'),
+                                  ('Other', 'Other')
+                              ])
+
+    product_group = SelectField('Product Group',
+                                validators=[DataRequired()],
+                                choices=[
+                                    ('E-mini Futures', 'E-mini Futures'),
+                                    ('Standard Futures', 'Standard Futures'),
+                                    ('Micro Futures', 'Micro Futures'),
+                                    ('Forex Spot', 'Forex Spot'),
+                                    ('Forex Futures', 'Forex Futures'),
+                                    ('Options', 'Options'),
+                                    ('Stocks', 'Stocks'),
+                                    ('ETFs', 'ETFs'),
+                                    ('Cryptocurrencies', 'Cryptocurrencies'),
+                                    ('Commodities', 'Commodities'),
+                                    ('Other', 'Other')
+                                ])
+
+    point_value = FloatField('Point Value ($)',
+                             validators=[DataRequired(), NumberRange(min=0.01)],
+                             render_kw={"placeholder": "e.g., 5.0, 12.5, 1.0", "step": "0.01"})
+
+    tick_size = FloatField('Tick Size',
+                           validators=[Optional(), NumberRange(min=0.0001)],
+                           render_kw={"placeholder": "e.g., 0.25, 0.1, 0.0001", "step": "0.0001"})
+
+    currency = SelectField('Currency',
+                           validators=[DataRequired()],
+                           choices=[
+                               ('USD', 'US Dollar (USD)'),
+                               ('EUR', 'Euro (EUR)'),
+                               ('GBP', 'British Pound (GBP)'),
+                               ('JPY', 'Japanese Yen (JPY)'),
+                               ('CAD', 'Canadian Dollar (CAD)'),
+                               ('AUD', 'Australian Dollar (AUD)'),
+                               ('CHF', 'Swiss Franc (CHF)'),
+                               ('NZD', 'New Zealand Dollar (NZD)'),
+                               ('OTHER', 'Other')
+                           ],
+                           default='USD')
+
+    is_active = BooleanField('Active', default=True)
+
+    submit = SubmitField('Save Instrument')
+
+
+class InstrumentFilterForm(FlaskForm):
+    """Form for filtering instruments in admin list"""
+    search = StringField('Search',
+                         render_kw={"placeholder": "Search by symbol or name..."})
+
+    exchange = SelectField('Exchange',
+                           choices=[('', 'All Exchanges')] + [
+                               ('CME', 'CME'), ('CBOT', 'CBOT'), ('NYMEX', 'NYMEX'),
+                               ('FOREX', 'FOREX'), ('CRYPTO', 'CRYPTO'),
+                               ('NYSE', 'NYSE'), ('NASDAQ', 'NASDAQ'), ('OTHER', 'Other')
+                           ])
+
+    asset_class = SelectField('Asset Class',
+                              choices=[('', 'All Asset Classes')] + [
+                                  ('Equity Index', 'Equity Index'), ('Currency', 'Currency'),
+                                  ('Commodity', 'Commodity'), ('Interest Rate', 'Interest Rate'),
+                                  ('Energy', 'Energy'), ('Agricultural', 'Agricultural'),
+                                  ('Metals', 'Metals'), ('Cryptocurrency', 'Cryptocurrency'),
+                                  ('Stock', 'Stock'), ('Bond', 'Bond'), ('Other', 'Other')
+                              ])
+
+    status = SelectField('Status',
+                         choices=[('', 'All'), ('active', 'Active Only'), ('inactive', 'Inactive Only')])
