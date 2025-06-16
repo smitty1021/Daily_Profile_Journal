@@ -287,106 +287,66 @@ class PasswordReset(db.Model):
 # --- Instrument Model (Fixed and consolidated) ---
 class Instrument(db.Model):
     """
-    Instrument model for Random's trading system
-    Supports his primary instruments: NQ, ES, YM and their micro versions
+    Instrument model for Random's trading system.
+    This version removes all hardcoded fallback logic.
+    Data is sourced exclusively from the database.
     """
     __tablename__ = 'instrument'
 
     id = db.Column(db.Integer, primary_key=True)
-    symbol = db.Column(db.String(10), unique=True, nullable=False, index=True)
+    symbol = db.Column(db.String(20), unique=True, nullable=False, index=True)
     name = db.Column(db.String(100), nullable=False)
-    point_value = db.Column(db.Float, nullable=False, default=1.0)
-    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    exchange = db.Column(db.String(50), nullable=True)
+    asset_class = db.Column(db.String(50), nullable=True, index=True)
+    product_group = db.Column(db.String(50), nullable=True)
+    point_value = db.Column(db.Float, nullable=False)
+    tick_size = db.Column(db.Float, nullable=True)
+    currency = db.Column(db.String(10), nullable=False, default='USD')
+    is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationship to trades
-    trades = db.relationship('Trade', backref='instrument_obj', lazy='dynamic')
+    trades = db.relationship('Trade', back_populates='instrument_obj', lazy='dynamic')
 
     def __repr__(self):
-        return f"<Instrument {self.symbol}: {self.name} (${self.point_value}/point)>"
+        return f"<Instrument {self.symbol}: {self.name}>"
 
     @classmethod
     def get_instrument_choices(cls):
-        """Returns choices for form SelectField"""
+        """Returns choices for form SelectField, strictly from the database."""
+        choices = [('', 'Select Instrument')]
         try:
+            # Query only active instruments and order them for consistency
             instruments = cls.query.filter_by(is_active=True).order_by(cls.symbol).all()
-            choices = [('', 'Select Instrument')]
             for instrument in instruments:
                 choice_text = f"{instrument.symbol} ({instrument.name})"
-                choices.append((instrument.symbol, choice_text))
-            choices.append(('Other', 'Other (Specify)'))
-            return choices
-        except Exception:
-            # Fallback to Random's common instruments
-            return [
-                ('', 'Select Instrument'),
-                ('NQ', 'NQ (Nasdaq 100 E-mini)'),
-                ('ES', 'ES (S&P 500 E-mini)'),
-                ('YM', 'YM (Dow Jones E-mini)'),
-                ('MNQ', 'MNQ (Micro Nasdaq)'),
-                ('MES', 'MES (Micro S&P)'),
-                ('MYM', 'MYM (Micro Dow)'),
-                ('Other', 'Other (Specify)')
-            ]
+                choices.append((str(instrument.id), choice_text)) # Use ID for value
+        except Exception as e:
+            # If the database query fails, log it and return an empty list
+            current_app.logger.error(f"Could not load instrument choices from database: {e}")
+            return [('', 'DB Error - No Instruments Found')]
+        return choices
 
     @classmethod
-    def get_point_value(cls, symbol):
-        """Get point value for a specific instrument symbol"""
+    def get_point_value(cls, instrument_id):
+        """Get point value for a specific instrument ID, strictly from the database."""
         try:
-            instrument = cls.query.filter_by(symbol=symbol, is_active=True).first()
-            return instrument.point_value if instrument else cls._get_fallback_point_value(symbol)
-        except Exception:
-            return cls._get_fallback_point_value(symbol)
-
-    @classmethod
-    def _get_fallback_point_value(cls, symbol):
-        """Fallback point values for Random's instruments"""
-        fallback_values = {
-            'NQ': 20.0,  # Random's primary instrument - CORRECTED
-            'ES': 50.0,  # E-mini S&P 500
-            'YM': 5.0,   # E-mini Dow Jones
-            'MNQ': 2.0,  # Micro Nasdaq
-            'MES': 5.0,  # Micro S&P
-            'MYM': 0.5,  # Micro Dow
-            'Other': 1.0  # Default fallback
-        }
-        return fallback_values.get(symbol, 1.0)
+            instrument = cls.query.get(instrument_id)
+            return instrument.point_value if instrument else None
+        except Exception as e:
+            current_app.logger.error(f"Could not get point value for instrument ID {instrument_id}: {e}")
+            return None
 
     @classmethod
     def get_instrument_point_values(cls):
-        """
-        MISSING METHOD - Returns dictionary of all active instruments with their point values.
-        This method was referenced in your code but missing from the Instrument class.
-        """
+        """Returns a dictionary of all active instruments with their point values."""
         try:
             instruments = cls.query.filter_by(is_active=True).all()
-            point_values = {instrument.symbol: instrument.point_value for instrument in instruments}
-
-            # Add fallback values for backward compatibility
-            fallback_values = {
-                'NQ': 20.0,   # Random's primary - CORRECTED
-                'ES': 50.0,   # E-mini S&P 500
-                'YM': 5.0,    # E-mini Dow Jones
-                'MNQ': 2.0,   # Micro Nasdaq
-                'MES': 5.0,   # Micro S&P
-                'MYM': 0.5,   # Micro Dow
-                'Other': 1.0  # Default fallback
-            }
-
-            # Merge (database values take priority)
-            fallback_values.update(point_values)
-            return fallback_values
-
-        except Exception:
-            # Full fallback if database fails
-            return {
-                'NQ': 20.0,   # Random's primary - CORRECTED
-                'ES': 50.0,   # E-mini S&P 500
-                'YM': 5.0,    # E-mini Dow Jones
-                'MNQ': 2.0,   # Micro Nasdaq
-                'MES': 5.0,   # Micro S&P
-                'MYM': 0.5,   # Micro Dow
-                'Other': 1.0  # Default fallback
-            }
+            return {instrument.symbol: instrument.point_value for instrument in instruments}
+        except Exception as e:
+            current_app.logger.error(f"Could not load instrument point values dictionary: {e}")
+            return {}
 
 
 # --- Trading Models ---
@@ -500,6 +460,7 @@ class Trade(db.Model):
 
     # Instrument fields (consolidated approach)
     instrument_id = db.Column(db.Integer, db.ForeignKey('instrument.id', name='fk_trade_instrument'), nullable=True)
+    instrument_obj = db.relationship('Instrument', back_populates='trades')
     instrument_legacy = db.Column(db.String(20), nullable=True, index=True)  # Backward compatibility
     point_value = db.Column(db.Float, nullable=True)  # Direct storage for manual overrides
 
@@ -569,33 +530,20 @@ class Trade(db.Model):
     @property
     def point_value_safe(self):
         """
-        Consolidated point value logic - single source of truth
-        Priority: 1) Manual override, 2) Instrument table, 3) Fallback values
+        Consolidated point value logic - single source of truth from the database.
+        Priority: 1) Manual override on the trade, 2) Instrument table value.
+        Returns None if no instrument is linked and no override is set.
         """
         # Check for manual override first
         if self.point_value is not None and self.point_value > 0:
             return self.point_value
 
-        # Try to get from instrument relationship
+        # Try to get from the instrument relationship
         if self.instrument_obj and hasattr(self.instrument_obj, 'point_value'):
             return self.instrument_obj.point_value
 
-        # Try instrument table lookup by symbol
-        try:
-            return Instrument.get_point_value(self.instrument or 'Other')
-        except:
-            pass
-
-        # Final fallback for Random's common instruments
-        fallback_values = {
-            'NQ': 20.0,  # Random's primary
-            'ES': 50.0,
-            'YM': 5.0,
-            'MNQ': 2.0,
-            'MES': 5.0,
-            'MYM': 0.5
-        }
-        return fallback_values.get(self.instrument, 1.0)
+        # If no override and no linked instrument, there is no valid point value
+        return None
 
     @property
     def total_contracts_entered(self):
@@ -635,7 +583,11 @@ class Trade(db.Model):
         contracts_exited = self.total_contracts_exited
         pv = self.point_value_safe
 
-        if avg_entry is None or avg_exit is None or contracts_exited == 0 or pv is None or pv == 0:
+        # If point value could not be determined, PnL is zero.
+        if pv is None or pv == 0:
+            return 0.0
+
+        if avg_entry is None or avg_exit is None or contracts_exited == 0:
             return 0.0
 
         pnl_per_contract_in_points = 0.0
@@ -1003,18 +955,3 @@ class AccountSetting(db.Model):
         return f"<AccountSetting '{self.setting_name}'>"
 
 
-# --- Helper Functions ---
-def get_instrument_point_values():
-    """
-    Backwards compatible function for getting point values
-    Used throughout the codebase for Random's instruments
-    """
-    return Instrument.get_instrument_point_values() if hasattr(Instrument, 'get_instrument_point_values') else {
-        'NQ': 20.0,  # Random's primary
-        'ES': 50.0,
-        'YM': 5.0,
-        'MNQ': 2.0,
-        'MES': 5.0,
-        'MYM': 0.5,
-        'Other': 1.0
-    }
