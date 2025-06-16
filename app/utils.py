@@ -6,7 +6,8 @@ from functools import wraps
 from flask import current_app, render_template, request, flash, redirect, url_for
 from flask_login import current_user as flask_login_current_user
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
-
+from flask import flash as flask_flash, session, request
+from urllib.parse import urlparse
 
 # flask_mail.Message will be imported locally in send_email
 
@@ -169,3 +170,30 @@ def format_date_filter(value, date_format='%Y-%m-%d %H:%M'):  # Assuming this is
     if isinstance(value, (dt_datetime, py_date, py_time)):
         return value.strftime(date_format)
     return str(value)
+
+
+def flash_for_page(message, category='message', page_pattern=None):
+    """
+    Flash a message that's tied to a specific page or pattern.
+
+    Args:
+        message: The flash message
+        category: Flash category (success, danger, warning, info)
+        page_pattern: URL pattern to match (e.g., '/admin/instruments', 'instruments')
+                     If None, uses current request path
+    """
+    if page_pattern is None:
+        page_pattern = request.path
+
+    # Store the target page with the flash message
+    flask_flash(message, category)
+    session['_flash_target_page'] = page_pattern
+
+
+def smart_flash(message, category='message'):
+    """
+    Smart flash that auto-expires if not displayed on the same page type.
+    """
+    current_path = request.path
+    flask_flash(message, category)
+    session['_flash_source_page'] = current_path

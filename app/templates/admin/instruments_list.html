@@ -152,20 +152,18 @@
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <button type="submit" 
                                             class="btn btn-outline-{{ 'warning' if instrument.is_active else 'success' }}"
-                                            title="{{ 'Deactivate' if instrument.is_active else 'Activate' }}"
-                                            onclick="return confirm('Are you sure you want to {{ 'deactivate' if instrument.is_active else 'activate' }} this instrument?')">
+                                            title="{{ 'Deactivate' if instrument.is_active else 'Activate' }}">
                                         <i class="fas fa-{{ 'pause' if instrument.is_active else 'play' }}"></i>
                                     </button>
                                 </form>
 
                                 <!-- Delete Form -->
-                                <form method="POST" action="{{ url_for('admin.delete_instrument', instrument_id=instrument.id) }}" 
+                                <form method="POST" action="{{ url_for('admin.delete_instrument', instrument_id=instrument.id) }}"
                                       style="display: inline;">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                    <button type="submit" 
+                                    <button type="submit"
                                             class="btn btn-outline-danger"
-                                            title="Delete"
-                                            onclick="return confirm('Are you sure you want to delete this instrument? This action cannot be undone and will only work if no trades exist for this instrument.')">
+                                            title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
@@ -210,19 +208,78 @@ document.addEventListener('DOMContentLoaded', function() {
             this.form.submit();
         });
     });
-    
-    // Add some visual feedback for form submissions
+
+    // Improved form submission handling to prevent navigation during processing
     const forms = document.querySelectorAll('form[method="POST"]');
     forms.forEach(function(form) {
-        form.addEventListener('submit', function() {
+        form.addEventListener('submit', function(e) {
             const submitBtn = form.querySelector('button[type="submit"]');
             if (submitBtn) {
+                // Disable the button immediately
                 submitBtn.disabled = true;
-                const spinner = document.createElement('i');
-                spinner.className = 'fas fa-spinner fa-spin me-1';
-                submitBtn.insertBefore(spinner, submitBtn.firstChild);
+
+                // Add loading spinner
+                const originalHTML = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Processing...';
+
+                // Disable all navigation links temporarily
+                const navLinks = document.querySelectorAll('a:not([href^="#"])');
+                navLinks.forEach(link => {
+                    link.style.pointerEvents = 'none';
+                    link.style.opacity = '0.6';
+                });
+
+                // Re-enable after a short delay (in case there's an error)
+                setTimeout(function() {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalHTML;
+                    }
+                    navLinks.forEach(link => {
+                        link.style.pointerEvents = '';
+                        link.style.opacity = '';
+                    });
+                }, 3000);
             }
         });
+    });
+
+    // Add confirmation dialogs for destructive actions
+    const deleteButtons = document.querySelectorAll('form[action*="/delete"] button[type="submit"]');
+    deleteButtons.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            if (!confirm('Are you sure you want to delete this instrument? This action cannot be undone and will only work if no trades exist for this instrument.')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+
+    const toggleButtons = document.querySelectorAll('form[action*="/toggle-status"] button[type="submit"]');
+    toggleButtons.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            const action = btn.title.includes('Deactivate') ? 'deactivate' : 'activate';
+            if (!confirm(`Are you sure you want to ${action} this instrument?`)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+
+    // Flash message auto-hide after 5 seconds
+    const flashMessages = document.querySelectorAll('.alert');
+    flashMessages.forEach(function(alert) {
+        setTimeout(function() {
+            if (alert && alert.parentNode) {
+                alert.style.transition = 'opacity 0.5s';
+                alert.style.opacity = '0';
+                setTimeout(function() {
+                    if (alert && alert.parentNode) {
+                        alert.remove();
+                    }
+                }, 500);
+            }
+        }, 5000);
     });
 });
 </script>

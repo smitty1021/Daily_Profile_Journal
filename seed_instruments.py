@@ -9,27 +9,22 @@ app.app_context().push()
 if Instrument.query.count() > 0:
     print("Instruments already exist. Skipping seed.")
 else:
-    # Create default instruments
+    # Create default instruments with CORRECT symbols
     instruments_data = [
         {
-            'symbol': 'ENQ', 'name': 'E-mini NASDAQ-100', 'exchange': 'CME',
+            'symbol': 'NQ', 'name': 'E-mini NASDAQ-100', 'exchange': 'CME',
             'asset_class': 'Equity Index', 'product_group': 'E-mini Futures',
             'point_value': 5.0, 'tick_size': 0.25, 'currency': 'USD'
         },
         {
-            'symbol': 'EES', 'name': 'E-mini S&P 500', 'exchange': 'CME',
+            'symbol': 'ES', 'name': 'E-mini S&P 500', 'exchange': 'CME',
             'asset_class': 'Equity Index', 'product_group': 'E-mini Futures',
             'point_value': 12.5, 'tick_size': 0.25, 'currency': 'USD'
         },
         {
-            'symbol': 'EYM', 'name': 'E-mini Dow Jones', 'exchange': 'CME',
+            'symbol': 'YM', 'name': 'E-mini Dow Jones', 'exchange': 'CME',
             'asset_class': 'Equity Index', 'product_group': 'E-mini Futures',
-            'point_value': 12.5, 'tick_size': 1.0, 'currency': 'USD'
-        },
-        {
-            'symbol': 'ERX', 'name': 'E-mini Russell 2000', 'exchange': 'CME',
-            'asset_class': 'Equity Index', 'product_group': 'E-mini Futures',
-            'point_value': 6.25, 'tick_size': 0.1, 'currency': 'USD'
+            'point_value': 5.0, 'tick_size': 1.0, 'currency': 'USD'
         }
     ]
 

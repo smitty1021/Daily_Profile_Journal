@@ -154,6 +154,65 @@ def create_app(config_class=None):
             theme_to_apply = 'dark'
         return dict(theme=theme_to_apply)
 
+    @app.context_processor
+    def inject_smart_flash_messages():
+        """
+        Enhanced flash message handling that prevents messages from showing on wrong pages
+        """
+        from flask import get_flashed_messages, session, request
+
+        # Get current page info
+        current_path = request.path
+        current_endpoint = request.endpoint
+
+        # Get regular flash messages
+        messages = get_flashed_messages(with_categories=True)
+
+        # Check if we have a target page set
+        flash_target = session.pop('_flash_target_page', None)
+        flash_source = session.pop('_flash_source_page', None)
+
+        filtered_messages = []
+
+        for category, message in messages:
+            show_message = True
+
+            # If we have a target page, only show on that page
+            if flash_target:
+                if flash_target not in current_path:
+                    show_message = False
+
+            # If we have a source page, check if we're on a related page
+            elif flash_source:
+                # Define page families that should share flash messages
+                page_families = {
+                    'admin': ['/admin/', 'admin.'],
+                    'trades': ['/trades/', 'trades.'],
+                    'journal': ['/journal/', 'journal.'],
+                    'files': ['/files/', 'files.'],
+                    'auth': ['/auth/', 'auth.']
+                }
+
+                source_family = None
+                current_family = None
+
+                # Find which family the source and current pages belong to
+                for family, patterns in page_families.items():
+                    if any(pattern in flash_source for pattern in patterns):
+                        source_family = family
+                    if any(pattern in current_path for pattern in patterns) or \
+                            any(pattern in (current_endpoint or '') for pattern in patterns):
+                        current_family = family
+
+                # Only show message if we're in the same family or on a general page
+                if source_family and current_family and source_family != current_family:
+                    show_message = False
+
+            if show_message:
+                filtered_messages.append((category, message))
+
+        return {'smart_flashed_messages': filtered_messages}
+
     with app.app_context():
         from . import models  # Import models after db is initialized and within app context
 

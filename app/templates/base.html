@@ -113,6 +113,89 @@
             border-radius: 0.375rem;
             overflow: hidden;
         }
+
+        /* Enhanced Flash Messages Styling */
+        .flash-message {
+            margin-bottom: 0.5rem;
+            border-left: 4px solid;
+            animation: slideInFromTop 0.3s ease-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .alert-success {
+            border-left-color: #198754;
+            background-color: rgba(25, 135, 84, 0.1);
+        }
+
+        .alert-danger {
+            border-left-color: #dc3545;
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+
+        .alert-warning {
+            border-left-color: #ffc107;
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+
+        .alert-info {
+            border-left-color: #0dcaf0;
+            background-color: rgba(13, 202, 240, 0.1);
+        }
+
+        [data-bs-theme="dark"] .flash-message {
+            box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);
+        }
+
+        [data-bs-theme="dark"] .alert-success {
+            background-color: rgba(25, 135, 84, 0.2);
+            border-color: rgba(25, 135, 84, 0.3);
+        }
+
+        [data-bs-theme="dark"] .alert-danger {
+            background-color: rgba(220, 53, 69, 0.2);
+            border-color: rgba(220, 53, 69, 0.3);
+        }
+
+        [data-bs-theme="dark"] .alert-warning {
+            background-color: rgba(255, 193, 7, 0.2);
+            border-color: rgba(255, 193, 7, 0.3);
+        }
+
+        [data-bs-theme="dark"] .alert-info {
+            background-color: rgba(13, 202, 240, 0.2);
+            border-color: rgba(13, 202, 240, 0.3);
+        }
+
+        @keyframes slideInFromTop {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .flash-message.fade-out {
+            animation: slideOutToTop 0.3s ease-in forwards;
+        }
+
+        @keyframes slideOutToTop {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+        }
+
+        #flash-messages-container {
+            position: relative;
+            z-index: 1040;
+        }
     </style>
 
     {% block head_extra %}{% endblock %}
@@ -168,6 +251,36 @@
             </div>
         </div>
     </nav>
+
+    <!-- Enhanced Flash Messages Section -->
+    <div class="container-fluid mt-3" style="padding-top: 56px;">
+        {% with messages = smart_flashed_messages %}
+            {% if messages %}
+                <div id="flash-messages-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show flash-message"
+                             role="alert" data-auto-dismiss="true">
+                            <div class="d-flex align-items-center">
+                                {% if category == 'success' %}
+                                    <i class="fas fa-check-circle me-2 text-success"></i>
+                                {% elif category == 'danger' or category == 'error' %}
+                                    <i class="fas fa-exclamation-triangle me-2 text-danger"></i>
+                                {% elif category == 'warning' %}
+                                    <i class="fas fa-exclamation-circle me-2 text-warning"></i>
+                                {% elif category == 'info' %}
+                                    <i class="fas fa-info-circle me-2 text-info"></i>
+                                {% else %}
+                                    <i class="fas fa-bell me-2"></i>
+                                {% endif %}
+                                <span class="flex-grow-1">{{ message }}</span>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
 
     <div class="app-body-container">
         {% if current_user.is_authenticated %}
@@ -249,6 +362,54 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    <!-- Enhanced Flash Message JavaScript -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enhanced flash message handling
+        function initFlashMessages() {
+            const flashMessages = document.querySelectorAll('.flash-message[data-auto-dismiss="true"]');
+
+            flashMessages.forEach(function(message, index) {
+                // Auto-hide after delay (staggered for multiple messages)
+                const delay = 4000 + (index * 1000); // 4s, 5s, 6s for multiple messages
+
+                setTimeout(function() {
+                    if (message && message.parentNode && !message.classList.contains('fade-out')) {
+                        message.classList.add('fade-out');
+                        setTimeout(() => {
+                            if (message && message.parentNode) {
+                                message.remove();
+                            }
+                        }, 300);
+                    }
+                }, delay);
+            });
+        }
+
+        // Initialize flash messages
+        initFlashMessages();
+
+        // Also handle messages that might be added dynamically
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1 && node.classList && node.classList.contains('flash-message')) {
+                            initFlashMessages();
+                        }
+                    });
+                }
+            });
+        });
+
+        const flashContainer = document.getElementById('flash-messages-container');
+        if (flashContainer) {
+            observer.observe(flashContainer, { childList: true, subtree: true });
+        }
+    });
+    </script>
+
     {% block scripts_extra %}{% endblock %}
 </body>
 </html>

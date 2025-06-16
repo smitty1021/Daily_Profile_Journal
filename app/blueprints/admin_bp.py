@@ -3,9 +3,11 @@ from flask import (Blueprint, render_template, current_app, request,
 from flask_login import login_required, current_user
 
 from app import db
-from app.models import User, UserRole, Activity  # Ensure Activity is imported for deletion
-from app.forms import AdminCreateUserForm, AdminEditUserForm
-from app.utils import admin_required, record_activity, generate_token, send_email  # Added generate_token, send_email
+from app.utils import admin_required, record_activity, generate_token, send_email, smart_flash  # Added generate_token, send_email
+
+from datetime import datetime
+from app.models import User, UserRole, Activity, Instrument  # Add Instrument
+from app.forms import AdminCreateUserForm, AdminEditUserForm, InstrumentForm, InstrumentFilterForm  # Add Instrument forms
 
 from app.models import Instrument  # Add to existing imports
 from app.forms import InstrumentForm, InstrumentFilterForm  # Add to existing imports
@@ -322,6 +324,7 @@ def system_config():
     """System configuration dashboard"""
     try:
         # Get some basic stats for the dashboard
+        from app.models import Instrument
         total_instruments = Instrument.query.count()
         active_instruments = Instrument.query.filter_by(is_active=True).count()
         inactive_instruments = total_instruments - active_instruments
@@ -351,9 +354,12 @@ def system_config():
 @admin_required
 def instruments_list():
     """List all instruments with filtering"""
-    filter_form = InstrumentFilterForm(request.args, meta={'csrf': False})
-
     try:
+        from app.models import Instrument
+        from app.forms import InstrumentFilterForm
+
+        filter_form = InstrumentFilterForm(request.args, meta={'csrf': False})
+
         # Build query with filters
         query = Instrument.query
 
@@ -410,10 +416,13 @@ def instruments_list():
 @admin_required
 def create_instrument():
     """Create a new instrument"""
-    form = InstrumentForm()
+    try:
+        from app.models import Instrument
+        from app.forms import InstrumentForm
 
-    if form.validate_on_submit():
-        try:
+        form = InstrumentForm()
+
+        if form.validate_on_submit():
             # Check if symbol already exists
             existing_instrument = Instrument.query.filter_by(symbol=form.symbol.data.upper()).first()
             if existing_instrument:
@@ -441,12 +450,13 @@ def create_instrument():
 
             return redirect(url_for('admin.instruments_list'))
 
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"Error creating instrument: {e}", exc_info=True)
-            flash('An error occurred while creating the instrument.', 'danger')
+        return render_template('create_instrument.html', title='Create Instrument', form=form)
 
-    return render_template('create_instrument.html', title='Create Instrument', form=form)
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error in create_instrument: {e}", exc_info=True)
+        flash('An error occurred while creating the instrument.', 'danger')
+        return redirect(url_for('admin.instruments_list'))
 
 
 @admin_bp.route('/instruments/<int:instrument_id>/edit', methods=['GET', 'POST'])
@@ -454,11 +464,14 @@ def create_instrument():
 @admin_required
 def edit_instrument(instrument_id):
     """Edit an existing instrument"""
-    instrument = Instrument.query.get_or_404(instrument_id)
-    form = InstrumentForm(obj=instrument)
+    try:
+        from app.models import Instrument
+        from app.forms import InstrumentForm
 
-    if form.validate_on_submit():
-        try:
+        instrument = Instrument.query.get_or_404(instrument_id)
+        form = InstrumentForm(obj=instrument)
+
+        if form.validate_on_submit():
             # Check if changing symbol to an existing one
             if form.symbol.data.upper() != instrument.symbol:
                 existing_instrument = Instrument.query.filter_by(symbol=form.symbol.data.upper()).first()
@@ -478,6 +491,8 @@ def edit_instrument(instrument_id):
             instrument.tick_size = form.tick_size.data
             instrument.currency = form.currency.data
             instrument.is_active = form.is_active.data
+
+            from datetime import datetime
             instrument.updated_at = datetime.utcnow()
 
             db.session.commit()
@@ -487,14 +502,15 @@ def edit_instrument(instrument_id):
 
             return redirect(url_for('admin.instruments_list'))
 
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"Error updating instrument {instrument_id}: {e}", exc_info=True)
-            flash('An error occurred while updating the instrument.', 'danger')
+        return render_template('edit_instrument.html',
+                               title=f'Edit Instrument - {instrument.symbol}',
+                               form=form, instrument=instrument)
 
-    return render_template('edit_instrument.html',
-                           title=f'Edit Instrument - {instrument.symbol}',
-                           form=form, instrument=instrument)
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error editing instrument {instrument_id}: {e}", exc_info=True)
+        flash('An error occurred while updating the instrument.', 'danger')
+        return redirect(url_for('admin.instruments_list'))
 
 
 @admin_bp.route('/instruments/<int:instrument_id>/toggle-status', methods=['POST'])
@@ -503,15 +519,20 @@ def edit_instrument(instrument_id):
 def toggle_instrument_status(instrument_id):
     """Toggle instrument active/inactive status"""
     try:
+        from app.models import Instrument
+        from datetime import datetime
+
         instrument = Instrument.query.get_or_404(instrument_id)
+        old_status = "active" if instrument.is_active else "inactive"
         instrument.is_active = not instrument.is_active
         instrument.updated_at = datetime.utcnow()
 
         db.session.commit()
 
-        status = "activated" if instrument.is_active else "deactivated"
-        flash(f'Instrument "{instrument.symbol}" {status} successfully!', 'success')
-        current_app.logger.info(f"Admin {current_user.username} {status} instrument {instrument.symbol}.")
+        new_status = "active" if instrument.is_active else "inactive"
+        flash(f'Instrument "{instrument.symbol}" changed from {old_status} to {new_status}!', 'success')
+        current_app.logger.info(
+            f"Admin {current_user.username} toggled instrument {instrument.symbol} status to {new_status}.")
 
     except Exception as e:
         db.session.rollback()
@@ -527,6 +548,8 @@ def toggle_instrument_status(instrument_id):
 def delete_instrument(instrument_id):
     """Delete an instrument (only if no trades exist)"""
     try:
+        from app.models import Instrument
+
         instrument = Instrument.query.get_or_404(instrument_id)
 
         # Check if any trades exist for this instrument
