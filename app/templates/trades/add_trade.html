@@ -418,77 +418,151 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- TRADE STATS DASHBOARD CALCULATIONS ---
     const dashboard = document.getElementById('trade-stats-dashboard');
 
-    // Point values for different instruments
-    const instrumentPointValues = {
-        'ENQ': 5.0,   // E-mini NASDAQ
-        'EES': 12.5,  // E-mini S&P 500
-        'EYM': 12.5,  // E-mini Dow
-        'ERX': 6.25,  // E-mini Russell
-        'Default': 1.0
-    };
+    // Use the dynamic point values passed from backend
+    const instrumentPointValues = {{ instrument_point_values|tojson|safe }};
 
-    // All input fields that should trigger recalculation
-    const watchedFields = [
-        'instrument', 'direction', 'initial_stop_loss', 'terminus_target',
-        'entries-0-entry_time', 'entries-0-contracts', 'entries-0-entry_price',
-        'exits-0-exit_time', 'exits-0-contracts', 'exits-0-exit_price',
-        'preparation_rating', 'rules_rating', 'management_rating', 'target_rating', 'entry_rating'
-    ];
+    // Debug: Log the instrument point values to console
+    console.log('Available instruments and point values:', instrumentPointValues);
 
-    // Add event listeners to all watched fields
-    watchedFields.forEach(fieldName => {
-        const field = document.querySelector(`[name="${fieldName}"], #${fieldName}`);
-        if (field) {
-            field.addEventListener('input', calculateStats);
-            field.addEventListener('change', calculateStats);
-        }
-    });
+    // FIXED: More comprehensive field watching for P&L updates
+    function addCalculationListeners() {
+        // Watch all form fields that affect calculations
+        const fieldsToWatch = [
+            '[name="instrument"]',
+            '[name="direction"]',
+            '[name="initial_stop_loss"]',
+            '[name="terminus_target"]',
+            '[name^="entries-"][name$="-entry_time"]',
+            '[name^="entries-"][name$="-contracts"]',
+            '[name^="entries-"][name$="-entry_price"]',
+            '[name^="exits-"][name$="-exit_time"]',
+            '[name^="exits-"][name$="-contracts"]',
+            '[name^="exits-"][name$="-exit_price"]',
+            '[name$="_rating"]'
+        ];
+
+        fieldsToWatch.forEach(selector => {
+            document.querySelectorAll(selector).forEach(field => {
+                // Remove existing listeners to avoid duplicates
+                field.removeEventListener('input', calculateStats);
+                field.removeEventListener('change', calculateStats);
+
+                // Add listeners
+                field.addEventListener('input', calculateStats);
+                field.addEventListener('change', calculateStats);
+
+                console.log('Added listener to:', field.name || field.id);
+            });
+        });
+    }
 
     // Also watch for dynamically added entry/exit fields
     document.addEventListener('input', function(e) {
         if (e.target.name && (e.target.name.includes('entries-') || e.target.name.includes('exits-'))) {
+            console.log('Dynamic field changed:', e.target.name, 'value:', e.target.value);
+            calculateStats();
+        }
+    });
+
+    // Also watch for change events on select fields
+    document.addEventListener('change', function(e) {
+        if (e.target.name && (
+            e.target.name === 'instrument' ||
+            e.target.name === 'direction' ||
+            e.target.name.includes('entries-') ||
+            e.target.name.includes('exits-') ||
+            e.target.name.includes('_rating')
+        )) {
+            console.log('Field changed:', e.target.name, 'value:', e.target.value);
             calculateStats();
         }
     });
 
     function calculateStats() {
+        console.log('=== Calculating Stats ===');
+
         try {
             const instrument = document.querySelector('[name="instrument"]')?.value || '';
             const direction = document.querySelector('[name="direction"]')?.value || '';
             const stopLoss = parseFloat(document.querySelector('[name="initial_stop_loss"]')?.value || '0');
             const target = parseFloat(document.querySelector('[name="terminus_target"]')?.value || '0');
 
-            // Get first entry data
-            const entryPrice = parseFloat(document.querySelector('[name="entries-0-entry_price"]')?.value || '0');
-            const entryContracts = parseInt(document.querySelector('[name="entries-0-contracts"]')?.value || '0');
-            const entryTime = document.querySelector('[name="entries-0-entry_time"]')?.value || '';
+            console.log('Basic inputs:', { instrument, direction, stopLoss, target });
 
-            // Get first exit data
-            const exitPrice = parseFloat(document.querySelector('[name="exits-0-exit_price"]')?.value || '0');
-            const exitContracts = parseInt(document.querySelector('[name="exits-0-contracts"]')?.value || '0');
-            const exitTime = document.querySelector('[name="exits-0-exit_time"]')?.value || '';
+            // Get ALL entry data (not just first entry)
+            const entryFields = document.querySelectorAll('[name^="entries-"][name$="-entry_price"]');
+            const entryContractFields = document.querySelectorAll('[name^="entries-"][name$="-contracts"]');
+            const entryTimeFields = document.querySelectorAll('[name^="entries-"][name$="-entry_time"]');
 
-            // Point value for calculations
-            const pointValue = instrumentPointValues[instrument] || instrumentPointValues['Default'];
+            let totalEntryContracts = 0;
+            let weightedEntryPrice = 0;
+            let firstEntryTime = '';
+
+            // Calculate weighted average entry price
+            for (let i = 0; i < entryFields.length; i++) {
+                const price = parseFloat(entryFields[i].value || '0');
+                const contracts = parseInt(entryContractFields[i]?.value || '0');
+                const time = entryTimeFields[i]?.value || '';
+
+                if (price > 0 && contracts > 0) {
+                    weightedEntryPrice += price * contracts;
+                    totalEntryContracts += contracts;
+                    if (!firstEntryTime) firstEntryTime = time;
+                }
+            }
+
+            const avgEntryPrice = totalEntryContracts > 0 ? weightedEntryPrice / totalEntryContracts : 0;
+
+            // Get ALL exit data (not just first exit)
+            const exitFields = document.querySelectorAll('[name^="exits-"][name$="-exit_price"]');
+            const exitContractFields = document.querySelectorAll('[name^="exits-"][name$="-contracts"]');
+            const exitTimeFields = document.querySelectorAll('[name^="exits-"][name$="-exit_time"]');
+
+            let totalExitContracts = 0;
+            let weightedExitPrice = 0;
+            let lastExitTime = '';
+
+            // Calculate weighted average exit price
+            for (let i = 0; i < exitFields.length; i++) {
+                const price = parseFloat(exitFields[i].value || '0');
+                const contracts = parseInt(exitContractFields[i]?.value || '0');
+                const time = exitTimeFields[i]?.value || '';
+
+                if (price > 0 && contracts > 0) {
+                    weightedExitPrice += price * contracts;
+                    totalExitContracts += contracts;
+                    lastExitTime = time; // Keep updating to get the last one
+                }
+            }
+
+            const avgExitPrice = totalExitContracts > 0 ? weightedExitPrice / totalExitContracts : 0;
+
+            console.log('Entry data:', { totalEntryContracts, avgEntryPrice, firstEntryTime });
+            console.log('Exit data:', { totalExitContracts, avgExitPrice, lastExitTime });
+
+            // Get point value for calculations
+            const pointValue = instrumentPointValues[instrument] || instrumentPointValues['Other'] || 1.0;
+            console.log('Point value for', instrument, ':', pointValue);
 
             // Show dashboard if we have basic trade data
-            if (entryPrice > 0 && entryContracts > 0) {
+            if (avgEntryPrice > 0 && totalEntryContracts > 0) {
                 dashboard.style.display = 'block';
             } else {
                 dashboard.style.display = 'none';
+                console.log('Hiding dashboard - insufficient entry data');
                 return;
             }
 
             // Calculate Risk:Reward
             let riskRewardText = '--:--';
-            if (entryPrice > 0 && stopLoss > 0 && target > 0) {
+            if (avgEntryPrice > 0 && stopLoss > 0 && target > 0) {
                 let risk, reward;
                 if (direction === 'Long') {
-                    risk = Math.abs(entryPrice - stopLoss);
-                    reward = Math.abs(target - entryPrice);
+                    risk = Math.abs(avgEntryPrice - stopLoss);
+                    reward = Math.abs(target - avgEntryPrice);
                 } else if (direction === 'Short') {
-                    risk = Math.abs(stopLoss - entryPrice);
-                    reward = Math.abs(entryPrice - target);
+                    risk = Math.abs(stopLoss - avgEntryPrice);
+                    reward = Math.abs(avgEntryPrice - target);
                 }
 
                 if (risk > 0) {
@@ -499,9 +573,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Calculate Time in Trade
             let timeInTradeText = '--:--';
-            if (entryTime && exitTime) {
-                const [entryHour, entryMin] = entryTime.split(':').map(Number);
-                const [exitHour, exitMin] = exitTime.split(':').map(Number);
+            if (firstEntryTime && lastExitTime) {
+                const [entryHour, entryMin] = firstEntryTime.split(':').map(Number);
+                const [exitHour, exitMin] = lastExitTime.split(':').map(Number);
 
                 const entryMinutes = entryHour * 60 + entryMin;
                 const exitMinutes = exitHour * 60 + exitMin;
@@ -517,34 +591,44 @@ document.addEventListener('DOMContentLoaded', function() {
             // Calculate Points Risked
             let pointsRiskedText = '--';
             let dollarRiskText = '$--';
-            if (entryPrice > 0 && stopLoss > 0 && entryContracts > 0) {
+            if (avgEntryPrice > 0 && stopLoss > 0 && totalEntryContracts > 0) {
                 let pointsRisk;
                 if (direction === 'Long') {
-                    pointsRisk = Math.abs(entryPrice - stopLoss);
+                    pointsRisk = Math.abs(avgEntryPrice - stopLoss);
                 } else if (direction === 'Short') {
-                    pointsRisk = Math.abs(stopLoss - entryPrice);
+                    pointsRisk = Math.abs(stopLoss - avgEntryPrice);
                 }
 
                 if (pointsRisk > 0) {
                     pointsRiskedText = pointsRisk.toFixed(2);
-                    const dollarRisk = pointsRisk * entryContracts * pointValue;
+                    const dollarRisk = pointsRisk * totalEntryContracts * pointValue;
                     dollarRiskText = `$${dollarRisk.toFixed(2)}`;
                 }
             }
 
-            // Calculate Gross P&L
+            // FIXED: Calculate Gross P&L using all entries and exits
             let grossPnlText = '$--';
             let pnlClass = '';
-            if (entryPrice > 0 && exitPrice > 0 && exitContracts > 0) {
+            if (avgEntryPrice > 0 && avgExitPrice > 0 && totalExitContracts > 0) {
                 let pnlPerContract;
                 if (direction === 'Long') {
-                    pnlPerContract = exitPrice - entryPrice;
+                    pnlPerContract = avgExitPrice - avgEntryPrice;
                 } else if (direction === 'Short') {
-                    pnlPerContract = entryPrice - exitPrice;
+                    pnlPerContract = avgEntryPrice - avgExitPrice;
                 }
 
-                const grossPnl = pnlPerContract * exitContracts * pointValue;
+                const grossPnl = pnlPerContract * totalExitContracts * pointValue;
                 grossPnlText = `$${grossPnl.toFixed(2)}`;
+
+                console.log('P&L Calculation:', {
+                    direction,
+                    avgEntryPrice,
+                    avgExitPrice,
+                    pnlPerContract,
+                    totalExitContracts,
+                    pointValue,
+                    grossPnl
+                });
 
                 if (grossPnl > 0) {
                     pnlClass = 'text-profit';
@@ -553,6 +637,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     pnlClass = 'text-breakeven';
                 }
+            } else {
+                console.log('No P&L calculation - missing exit data');
             }
 
             // Calculate Overall Trade Rating
@@ -584,14 +670,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
             document.getElementById('overall-rating-display').textContent = overallRatingText;
 
+            console.log('Updated display with:', {
+                riskReward: riskRewardText,
+                timeInTrade: timeInTradeText,
+                pointsRisk: pointsRiskedText,
+                dollarRisk: dollarRiskText,
+                grossPnl: grossPnlText
+            });
+
         } catch (error) {
             console.error('Error calculating trade stats:', error);
         }
     }
 
-    // --- EXISTING CODE BELOW (Default date, Dynamic fields, Quill, Radar Chart) ---
+    // --- REST OF EXISTING CODE (Dynamic fields, Quill, etc.) ---
 
-    // Default date logic...
+    // Default date logic
     const tradeDateInput = document.getElementById('{{ form.trade_date.id }}');
     if (tradeDateInput && !tradeDateInput.value) {
         const today = new Date();
@@ -622,7 +716,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const min = parseInt(minEntries, 10);
             if (container.querySelectorAll('.' + itemClass).length > min) {
                 event.target.closest('.' + itemClass).remove();
-                calculateStats(); // Recalculate stats when removing items
+
+                // FIXED: Re-add listeners and recalculate after removing
+                addCalculationListeners();
+                calculateStats();
             } else {
                 alert(`At least ${min} ${fieldListName.slice(0, -1)}(s) must remain.`);
             }
@@ -641,21 +738,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     container.appendChild(newItemElement);
                     addRemoveButtonListeners(newItemElement);
 
-                    // Add event listeners to new fields for stats calculation
-                    newItemElement.querySelectorAll('input').forEach(input => {
-                        input.addEventListener('input', calculateStats);
-                        input.addEventListener('change', calculateStats);
-                    });
+                    // FIXED: Re-add listeners to all fields after adding new ones
+                    addCalculationListeners();
+                    calculateStats();
                 }
             });
         }
         addRemoveButtonListeners(container);
     }
 
+    // Initialize dynamic fields
     initializeDynamicFields('entry-points-container', 'add-entry-button', 'entry-template', 'entry-exit-item', 'remove-entry-btn', 'entries', parseInt('{{ form.entries.min_entries|default(1) }}', 10));
     initializeDynamicFields('exit-points-container', 'add-exit-button', 'exit-template', 'entry-exit-item', 'remove-exit-btn', 'exits', 1);
 
-    // Quill Initialization (only for Pre-Entry and Post-Trade Analysis)
+    // Quill initialization (existing code - unchanged)
     const quillToolbarOptions = [
         [{ 'header': [1, 2, 3, 4, false] }], ['bold', 'italic', 'underline', 'strike'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }], [{ 'script': 'sub'}, { 'script': 'super' }],
@@ -679,7 +775,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    // Only initialize Quill for the analysis fields
+
+    // Initialize Quill editors
     initializeQuill('trade_notes_editor', '{{ form.trade_notes.id }}', 'Enter your pre-entry analysis, setup thoughts, reasoning, chart markups...');
     initializeQuill('overall_analysis_notes_editor', '{{ form.overall_analysis_notes.id }}', 'Enter your post-trade analysis, what happened, lessons learned...');
 
@@ -694,19 +791,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- Radar Chart JavaScript with Dark Mode Support ---
+    // Radar chart (existing code - unchanged)
     const ratingSelectors = document.querySelectorAll('.rating-selector');
     const psychRadarCtx = document.getElementById('psychRadarChart');
 
     if (psychRadarCtx && ratingSelectors.length === 5) {
-        const chartLabels = [
-            'Prep',
-            'Rules',
-            'Mgmt',
-            'Entry',
-            'Targets'
-        ];
-
+        const chartLabels = ['Prep', 'Rules', 'Mgmt', 'Entry', 'Targets'];
         const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
         const gridColor = currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
         const textColor = currentTheme === 'dark' ? '#ced4da' : '#666';
@@ -731,25 +821,12 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 scales: {
                     r: {
-                        angleLines: {
-                            color: gridColor
-                        },
-                        grid: {
-                            color: gridColor
-                        },
+                        angleLines: { color: gridColor },
+                        grid: { color: gridColor },
                         suggestedMin: 0,
                         suggestedMax: 5,
-                        pointLabels: {
-                             color: pointLabelColor,
-                             font: {
-                                 size: 14
-                             }
-                        },
-                        ticks: {
-                            stepSize: 1,
-                            color: textColor,
-                            backdropColor: 'rgba(0, 0, 0, 0)'
-                        }
+                        pointLabels: { color: pointLabelColor, font: { size: 14 } },
+                        ticks: { stepSize: 1, color: textColor, backdropColor: 'rgba(0, 0, 0, 0)' }
                     }
                 },
                 plugins: { legend: { display: false } }
@@ -768,14 +845,15 @@ document.addEventListener('DOMContentLoaded', function() {
         ratingSelectors.forEach(selector => {
             selector.addEventListener('change', function() {
                 updateRadarChart();
-                calculateStats(); // Also trigger stats calculation when ratings change
+                calculateStats();
             });
         });
 
         updateRadarChart();
     }
 
-    // Initial calculation of stats
+    // FIXED: Initial setup
+    addCalculationListeners();
     calculateStats();
 });
 </script>

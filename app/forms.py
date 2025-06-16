@@ -241,12 +241,10 @@ class ExitPointForm(FlaskForm):
     exit_price = FloatField('Price', validators=[Optional()], render_kw={"placeholder": "e.g., 15010.50"})
 
 
+# Updated TradeForm and TradeFilterForm in app/forms.py
+
 class TradeForm(FlaskForm):
-    instrument_choices = [
-        ('', 'Select Instrument'), ('NQ', 'NQ (Nasdaq 100)'), ('ES', 'ES (S&P 500)'), ('YM', 'YM (Dow Jones)'),
-        ('MNQ', 'MNQ (Micro Nasdaq)'), ('MES', 'MES (Micro S&P)'), ('MYM', 'MYM (Micro Dow)'),
-        ('Other', 'Other (Specify)')
-    ]
+    # Remove hardcoded instrument_choices - will be set dynamically
     direction_choices = [('', 'Select Direction'), ('Long', 'Long'), ('Short', 'Short')]
     how_closed_choices = [
         ('', 'Select How Closed'), ('Manual', 'Closed Manually'), ('SL', 'Closed by Stop Loss'),
@@ -271,7 +269,7 @@ class TradeForm(FlaskForm):
         ('NY_PM_Session', 'NY PM Session Trade')
     ]
 
-    instrument = SelectField('Instrument', choices=instrument_choices, validators=[DataRequired()])
+    instrument = SelectField('Instrument', choices=[('', 'Select Instrument')], validators=[DataRequired()])
     trade_date = DateField('Trade Date', validators=[DataRequired(message="Please select a trade date.")],
                            format='%Y-%m-%d', render_kw={"placeholder": "YYYY-MM-DD"})
     direction = SelectField('Direction', choices=direction_choices, validators=[DataRequired()])
@@ -292,13 +290,11 @@ class TradeForm(FlaskForm):
 
     preparation_rating = SelectField('Prep for This Trade', choices=rating_choices, coerce=coerce_int_optional,
                                      validators=[Optional()])
-
     rules_rating = SelectField('Follow My Rules', choices=rating_choices, coerce=coerce_int_optional, validators=[Optional()])
     management_rating = SelectField('Manage the Trade', choices=rating_choices, coerce=coerce_int_optional,
                                     validators=[Optional()])
     target_rating = SelectField('Place Targets', choices=rating_choices, coerce=coerce_int_optional, validators=[Optional()])
     entry_rating = SelectField('Enter the Trade', choices=rating_choices, coerce=coerce_int_optional, validators=[Optional()])
-
 
     trade_notes = TextAreaField('Pre-Entry Analysis', validators=[Optional()],
                                 render_kw={"rows": 4, "placeholder": "Trade context, Consider P12 analysis, 4-steps process, etc..."})
@@ -320,24 +316,57 @@ class TradeForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(TradeForm, self).__init__(*args, **kwargs)
-        # Dynamic choices for trading_model_id and news_event_select are set in the route
+        # Load dynamic instrument choices
+        from app.models import Instrument
+        try:
+            self.instrument.choices = Instrument.get_instrument_choices()
+        except Exception:
+            # Fallback to hardcoded choices if database fails
+            self.instrument.choices = [
+                ('', 'Select Instrument'),
+                ('NQ', 'NQ (Nasdaq 100)'),
+                ('ES', 'ES (S&P 500)'),
+                ('YM', 'YM (Dow Jones)'),
+                ('MNQ', 'MNQ (Micro Nasdaq)'),
+                ('MES', 'MES (Micro S&P)'),
+                ('MYM', 'MYM (Micro Dow)'),
+                ('Other', 'Other (Specify)')
+            ]
 
 
 # Form for filtering trades list
 class TradeFilterForm(FlaskForm):
     start_date = DateField('Start Date', format='%Y-%m-%d', validators=[Optional()])
     end_date = DateField('End Date', format='%Y-%m-%d', validators=[Optional()])
-    instrument = SelectField('Instrument', choices=[('', 'All Instruments')] + TradeForm.instrument_choices[1:],
-                             validators=[Optional()])
+    instrument = SelectField('Instrument', choices=[('', 'All Instruments')], validators=[Optional()])
     direction = SelectField('Direction', choices=[('', 'All Directions')] + TradeForm.direction_choices[1:],
                             validators=[Optional()])
     trading_model_id = SelectField('Trading Model', coerce=int, choices=[(0, 'All Models')],
                                    validators=[Optional()])  # Choices populated in route
     tags = SelectField('Tag', choices=[('', 'All Tags')] + TradeForm.SIMPLE_TAG_CHOICES[1:],
                        validators=[Optional()])  # For single tag filter
-    # You can add more fields like P&L range, R-value range, etc.
     submit = SubmitField('Filter Trades')
     clear = SubmitField('Clear Filters', render_kw={'formnovalidate': True, 'class': 'btn btn-outline-secondary'})
+
+    def __init__(self, *args, **kwargs):
+        super(TradeFilterForm, self).__init__(*args, **kwargs)
+        # Load dynamic instrument choices for filter
+        from app.models import Instrument
+        try:
+            instrument_choices = Instrument.get_instrument_choices()
+            self.instrument.choices = [('', 'All Instruments')] + instrument_choices[1:]  # Skip the 'Select Instrument' option
+        except Exception:
+            # Fallback to hardcoded choices
+            self.instrument.choices = [
+                ('', 'All Instruments'),
+                ('NQ', 'NQ (Nasdaq 100)'),
+                ('ES', 'ES (S&P 500)'),
+                ('YM', 'YM (Dow Jones)'),
+                ('MNQ', 'MNQ (Micro Nasdaq)'),
+                ('MES', 'MES (Micro S&P)'),
+                ('MYM', 'MYM (Micro Dow)'),
+                ('Other', 'Other (Specify)')
+            ]
 
 
 # Form for importing trades

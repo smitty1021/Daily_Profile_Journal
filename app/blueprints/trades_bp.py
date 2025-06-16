@@ -1,7 +1,10 @@
+# Step 1: Update the imports and helper functions in your trades_bp.py
+
+# --- IMPORTS SECTION (Replace the existing imports) ---
 from flask import (Blueprint, render_template, request, redirect,
                    url_for, flash, current_app, Response, abort)
 from ..forms import TradeForm
-from ..models import Trade
+from ..models import Trade, Instrument  # Make sure Instrument is imported
 from .. import db
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
@@ -15,7 +18,7 @@ from datetime import date as py_date, datetime as py_datetime, time as py_time
 from flask_wtf.csrf import generate_csrf
 
 from app import db
-from app.models import Trade, EntryPoint, ExitPoint, TradingModel, NewsEventItem, TradeImage
+from app.models import Trade, EntryPoint, ExitPoint, TradingModel, NewsEventItem, TradeImage, Instrument  # Instrument added
 from app.forms import TradeForm, EntryPointForm, ExitPointForm, TradeFilterForm, ImportTradesForm
 from app.utils import (_parse_form_float, _parse_form_int, _parse_form_time,
                        get_news_event_options, record_activity)
@@ -24,12 +27,28 @@ trades_bp = Blueprint('trades', __name__,
                       template_folder='../templates/trades',
                       url_prefix='/trades')
 
-# --- Helper Functions and Constants ---
-INSTRUMENT_POINT_VALUES = {
-    'NQ': 20.0, 'ES': 50.0, 'YM': 5.0,
-    'MNQ': 2.0, 'MES': 5.0, 'MYM': 0.5,
-    'Other': 1.0
-}
+# --- UPDATED HELPER FUNCTIONS ---
+
+def get_instrument_point_values():
+    """
+    Get current instrument point values from database using the new Instrument model.
+    Falls back to hardcoded values if database fails.
+    """
+    try:
+        # Use the new Instrument model method
+        return Instrument.get_instrument_point_values()
+    except Exception as e:
+        current_app.logger.warning(f"Failed to get instrument point values from database: {e}")
+        # Fallback to Random's common instruments (FIXED VALUES)
+        return {
+            'NQ': 20.0,    # Random's primary instrument - CORRECTED
+            'ES': 50.0,    # E-mini S&P 500
+            'YM': 5.0,     # E-mini Dow Jones
+            'MNQ': 2.0,    # Micro Nasdaq
+            'MES': 5.0,    # Micro S&P
+            'MYM': 0.5,    # Micro Dow
+            'Other': 1.0   # Default fallback
+        }
 
 
 def _is_allowed_image(filename):
@@ -39,6 +58,7 @@ def _is_allowed_image(filename):
 
 
 def _populate_trade_form_choices(form):
+    """Populate dynamic choices for trading models and news events"""
     form.trading_model_id.choices = [(0, 'Select Model')] + \
                                     [(tm.id, tm.name) for tm in
                                      TradingModel.query.filter_by(user_id=current_user.id, is_active=True).order_by(
@@ -50,17 +70,14 @@ def _populate_trade_form_choices(form):
 
 
 def _populate_filter_form_choices(filter_form):
+    """Populate dynamic choices for filter form - instrument choices handled in form __init__"""
     filter_form.trading_model_id.choices = [(0, 'All Models')] + \
                                            [(tm.id, tm.name) for tm in
                                             TradingModel.query.filter_by(user_id=current_user.id,
                                                                          is_active=True).order_by(
                                                 TradingModel.name).all()]
-    if hasattr(TradeForm, 'instrument_choices'):
-        filter_form.instrument.choices = [('', 'All Instruments')] + TradeForm.instrument_choices[1:]
-    if hasattr(TradeForm, 'direction_choices'):
-        filter_form.direction.choices = [('', 'All Directions')] + TradeForm.direction_choices[1:]
-    if hasattr(TradeForm, 'SIMPLE_TAG_CHOICES'):
-        filter_form.tags.choices = [('', 'All Tags')] + TradeForm.SIMPLE_TAG_CHOICES[1:]
+    # Note: Instrument choices are now handled in TradeFilterForm.__init__() method
+    # This removes the dependency on TradeForm.instrument_choices
     return filter_form
 
 
@@ -149,18 +166,24 @@ def add_trade():
 
     _populate_trade_form_choices(form)
 
+    # Get dynamic instrument point values for frontend JavaScript calculations
+    instrument_point_values = get_instrument_point_values()
+
     if form.validate_on_submit():
         try:
             instrument = form.instrument.data
-            point_value_for_trade = INSTRUMENT_POINT_VALUES.get(instrument, 1.0)
+
+            # FIXED: Use the consolidated Instrument.get_point_value method
+            point_value_for_trade = Instrument.get_point_value(instrument)
             tag_value = form.tags.data if form.tags.data and form.tags.data != '' else None
 
             new_trade = Trade(user_id=current_user.id)
 
-            # Populate trade object from form data where names match
-            new_trade.instrument = instrument
+            # Populate trade object from form data
+            new_trade.instrument = instrument  # This uses the setter method
             new_trade.trade_date = form.trade_date.data
             new_trade.direction = form.direction.data
+            new_trade.point_value = point_value_for_trade  # Store the point value directly
             new_trade.initial_stop_loss = _parse_form_float(form.initial_stop_loss.data)
             new_trade.terminus_target = _parse_form_float(form.terminus_target.data)
             new_trade.is_dca = form.is_dca.data
@@ -179,20 +202,17 @@ def add_trade():
             new_trade.trade_management_notes = form.trade_management_notes.data
             new_trade.errors_notes = form.errors_notes.data
             new_trade.improvements_notes = form.improvements_notes.data
-            new_trade.screenshot_link = form.screenshot_link.data
-
-            # Set specific fields
-            new_trade.point_value = point_value_for_trade
             new_trade.tags = tag_value
+            new_trade.screenshot_link = form.screenshot_link.data
             new_trade.trading_model_id = form.trading_model_id.data if form.trading_model_id.data and form.trading_model_id.data != 0 else None
             new_trade.news_event = form.news_event_select.data if form.news_event_select.data else None
 
             db.session.add(new_trade)
             db.session.flush()
 
+            # Process entries - UNCHANGED
             for entry_data in form.entries.data:
-                if entry_data.get('entry_time') and entry_data.get('contracts') is not None and entry_data.get(
-                        'entry_price') is not None:
+                if entry_data.get('entry_time') and entry_data.get('contracts') is not None and entry_data.get('entry_price') is not None:
                     entry = EntryPoint(
                         trade_id=new_trade.id,
                         entry_time=entry_data['entry_time'],
@@ -201,9 +221,9 @@ def add_trade():
                     )
                     db.session.add(entry)
 
+            # Process exits - UNCHANGED
             for exit_data in form.exits.data:
-                if exit_data.get('exit_time') and exit_data.get('contracts') is not None and exit_data.get(
-                        'exit_price') is not None:
+                if exit_data.get('exit_time') and exit_data.get('contracts') is not None and exit_data.get('exit_price') is not None:
                     exit_point = ExitPoint(
                         trade_id=new_trade.id,
                         exit_time=exit_data['exit_time'],
@@ -216,6 +236,7 @@ def add_trade():
                         f"An exit for trade was partially filled and not saved. Please provide all of time, contracts, and price for a complete exit log.",
                         "warning")
 
+            # Process image uploads - UNCHANGED (keeping existing code)
             if form.trade_images.data:
                 for image_file in form.trade_images.data:
                     if image_file and _is_allowed_image(image_file.filename):
@@ -223,13 +244,17 @@ def add_trade():
                         file_ext = os.path.splitext(original_filename)[1].lower()
                         unique_filename = f"{uuid.uuid4().hex}{file_ext}"
                         upload_folder = current_app.config['UPLOAD_FOLDER']
-                        if not os.path.exists(upload_folder): os.makedirs(upload_folder)
+                        if not os.path.exists(upload_folder):
+                            os.makedirs(upload_folder)
                         file_path = os.path.join(upload_folder, unique_filename)
                         try:
                             image_file.save(file_path)
                             trade_image = TradeImage(
-                                trade_id=new_trade.id, user_id=current_user.id, filename=original_filename,
-                                filepath=unique_filename, filesize=os.path.getsize(file_path),
+                                trade_id=new_trade.id,
+                                user_id=current_user.id,
+                                filename=original_filename,
+                                filepath=unique_filename,
+                                filesize=os.path.getsize(file_path),
                                 mime_type=image_file.mimetype
                             )
                             db.session.add(trade_image)
@@ -243,10 +268,9 @@ def add_trade():
 
             db.session.commit()
             record_activity('trade_logged', f"Logged new trade ID: {new_trade.id} for {new_trade.instrument}")
-            flash(
-                f'Trade for {new_trade.instrument} on {new_trade.trade_date.strftime("%Y-%m-%d")} logged successfully!',
-                'success')
+            flash(f'Trade for {new_trade.instrument} on {new_trade.trade_date.strftime("%Y-%m-%d")} logged successfully!', 'success')
             return redirect(url_for('trades.view_trades_list'))
+
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error logging new trade for user {current_user.username}: {e}", exc_info=True)
@@ -254,11 +278,17 @@ def add_trade():
 
     elif request.method == 'POST':
         flash('Please correct the errors in the form and try again.', 'warning')
-        if not form.entries.entries: form.entries.append_entry(None)
-        if not form.exits.entries and len(form.exits.data) == 0: form.exits.append_entry(None)
+        if not form.entries.entries:
+            form.entries.append_entry(None)
+        if not form.exits.entries and len(form.exits.data) == 0:
+            form.exits.append_entry(None)
 
-    return render_template('trades/add_trade.html', title='Log New Trade', form=form,
-                           default_trade_date=py_date.today().strftime('%Y-%m-%d'))
+    # Pass dynamic instrument point values to template for JavaScript calculations
+    return render_template('trades/add_trade.html',
+                         title='Log New Trade',
+                         form=form,
+                         instrument_point_values=instrument_point_values,  # This is the key addition
+                         default_trade_date=py_date.today().strftime('%Y-%m-%d'))
 
 # --- VIEW TRADE DETAIL ---
 @trades_bp.route('/<int:trade_id>/view')
@@ -306,7 +336,7 @@ def edit_trade(trade_id):
             trade_to_edit.instrument = form.instrument.data
             trade_to_edit.trade_date = form.trade_date.data
             trade_to_edit.direction = form.direction.data
-            trade_to_edit.point_value = INSTRUMENT_POINT_VALUES.get(form.instrument.data, 1.0)
+            trade_to_edit.point_value = Instrument.get_point_value(form.instrument.data)
             trade_to_edit.initial_stop_loss = _parse_form_float(form.initial_stop_loss.data)
             trade_to_edit.terminus_target = _parse_form_float(form.terminus_target.data)
             trade_to_edit.is_dca = form.is_dca.data
@@ -600,7 +630,7 @@ def import_trades():
 
                     # --- 2. Create the main Trade object ---
                     new_trade = Trade(user_id=current_user.id, trade_date=trade_date, instrument=instrument,
-                                      direction=direction, point_value=INSTRUMENT_POINT_VALUES.get(instrument, 1.0))
+                                      direction=direction, point_value=Instrument.get_point_value(instrument))
 
                     # --- 3. Process Entries and Exits ---
                     entries_found = 0
