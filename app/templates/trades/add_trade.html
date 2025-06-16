@@ -37,6 +37,15 @@
         gap: 10px;
         align-items: end;
     }
+    .entry-exit-headers {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr) auto;
+        gap: 10px;
+        margin-bottom: 10px;
+        font-weight: bold;
+        font-size: 0.9em;
+        color: var(--bs-secondary);
+    }
     .entry-exit-row .form-group {
         margin-top: 0 !important;
         margin-bottom: 0 !important;
@@ -45,13 +54,17 @@
         display: none; /* Hide labels for subsequent rows */
     }
 
-    /* Quill container specific to this page */
+    /* Quill container specific to this page - made resizable */
     .quill-editor-container {
         height: 250px;
         background-color: var(--bs-body-bg);
         color: var(--bs-body-color);
         border: 1px solid var(--bs-border-color);
         border-radius: .25rem;
+        resize: vertical;
+        overflow: auto;
+        min-height: 150px;
+        max-height: 600px;
     }
 
     .form-buttons-container {
@@ -67,6 +80,7 @@
     .grid-3-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
     .grid-4-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
     .grid-5-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+    .grid-9-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; }
 </style>
 {% endblock %}
 
@@ -85,24 +99,48 @@
     <form method="POST" action="{{ url_for('trades.add_trade') }}" id="tradeForm" novalidate enctype="multipart/form-data">
         {{ form.hidden_tag() }}
 
+        <!-- 1. TRADE DETAILS (Combined with Risk/Reward) -->
         <div class="form-section">
             <h3>Trade Details</h3>
-            <div class="grid-5-col">
+            <div class="grid-9-col">
                 {{ forms.render_field(form.trade_date, input_class="form-control", type="date") }}
                 {{ forms.render_field(form.instrument, input_class="form-select") }}
                 {{ forms.render_field(form.direction, input_class="form-select") }}
+                {{ forms.render_field(form.initial_stop_loss, input_class="form-control", type="number", step="any", placeholder="SL Price Level") }}
+                {{ forms.render_field(form.terminus_target, input_class="form-control", type="number", step="any", placeholder="Final TP price level") }}
                 {{ forms.render_field(form.trading_model_id, input_class="form-select") }}
                 {{ forms.render_field(form.how_closed, input_class="form-select") }}
+                {{ forms.render_field(form.mae, input_class="form-control", type="number", step="any", placeholder="Points Against You") }}
+                {{ forms.render_field(form.mfe, input_class="form-control", type="number", step="any", placeholder="Points In Your Favor") }}
             </div>
             <div class="mt-3">
                 {{ forms.render_checkbox(form.is_dca) }}
             </div>
         </div>
 
+        <!-- 2. PRE-ENTRY ANALYSIS -->
+        <div class="form-section">
+            <h3>Pre-Entry Analysis</h3>
+            <div class="form-group mb-3">
+                {{ form.trade_notes.label(class="form-label") }}
+                <div id="trade_notes_editor" class="quill-editor-container"></div>
+                {{ form.trade_notes(class="d-none") }}
+                {% if form.trade_notes.errors %}<div class="invalid-feedback d-block">{% for error in form.trade_notes.errors %}<span>{{ error }}</span><br>{% endfor %}</div>{% endif %}
+                {% if form.trade_notes.description %}<small class="form-text text-muted">{{ form.trade_notes.description }}</small>{% endif %}
+            </div>
+        </div>
+
+        <!-- 3. ENTRY/EXIT POINTS -->
         <div class="row">
             <div class="col-md-6">
                 <div class="form-section">
-                    <h3>Entry Points</h3>
+                    <h3>Trade Entries</h3>
+                    <div class="entry-exit-headers">
+                        <div>Entry Time</div>
+                        <div># of Contracts</div>
+                        <div>Price Level</div>
+
+                    </div>
                     <div id="entry-points-container">
                         {% for entry_form_field in form.entries %}
                         <div class="entry-exit-item">
@@ -110,23 +148,28 @@
                                 {{ forms.render_field(entry_form_field.entry_time, input_class="form-control form-control-sm", type="time") }}
                                 {{ forms.render_field(entry_form_field.contracts, input_class="form-control form-control-sm", type="number") }}
                                 {{ forms.render_field(entry_form_field.entry_price, input_class="form-control form-control-sm", type="number", step="any") }}
-
                                 <div>
                                 {% if loop.index > form.entries.min_entries %}
-                                    <button type="button" class="btn btn-sm btn-danger remove-entry-btn" title="Remove Entry"><i class="fas fa-trash-alt"></i></button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-entry-btn" title="Remove Entry"><i class="fas fa-trash-alt"></i></button>
                                 {% endif %}
                                 </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
-                    <button type="button" class="btn btn-sm btn-success mt-2" id="add-entry-button" title="Add Entry"><i class="fas fa-plus"></i> Add Entry</button>
+                    <button type="button" class="btn btn-sm btn-outline-success mt-2" id="add-entry-button" title="Add Entry"><i class="fas fa-plus"></i> Add Entry</button>
                 </div>
             </div>
 
             <div class="col-md-6">
                 <div class="form-section">
-                    <h3>Exit Points</h3>
+                    <h3>Trade Exits</h3>
+                    <div class="entry-exit-headers">
+                        <div>Exit Time</div>
+                        <div># of Contracts</div>
+                        <div>Price Level</div>
+
+                    </div>
                     <div id="exit-points-container">
                         {% for exit_form_field in form.exits %}
                         <div class="entry-exit-item">
@@ -136,42 +179,63 @@
                                 {{ forms.render_field(exit_form_field.exit_price, input_class="form-control form-control-sm", type="number", step="any") }}
 
                                 <div>
-                                {% if loop.index > form.exits.min_entries %}
-                                    <button type="button" class="btn btn-sm btn-danger remove-exit-btn" title="Remove Exit"><i class="fas fa-trash-alt"></i></button>
+                                {% if loop.index > 1 %}
+                                    <button type="button" class="btn btn-sm btn-outline-danger remove-exit-btn" title="Remove Exit"><i class="fas fa-trash-alt"></i></button>
                                 {% endif %}
                                 </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
-                    <button type="button" class="btn btn-sm btn-success mt-2" id="add-exit-button" title="Add Exit"><i class="fas fa-plus"></i> Add Exit</button>
+                    <button type="button" class="btn btn-sm btn-outline-success mt-2" id="add-exit-button" title="Add Exit"><i class="fas fa-plus"></i> Add Exit</button>
                 </div>
             </div>
         </div>
 
+        <!-- 4. POST-TRADE ANALYSIS -->
         <div class="form-section">
-            <h3>Risk, Reward & Max Excursion Values</h3>
-            <div class="grid-4-col">
-                {{ forms.render_field(form.initial_stop_loss, input_class="form-control", type="number", step="any", placeholder="SL Price level") }}
-                {{ forms.render_field(form.terminus_target, input_class="form-control", type="number", step="any", placeholder="Final TP price level") }}
-                {{ forms.render_field(form.mae, input_class="form-control", type="number", step="any", placeholder="Points trade moved against you") }}
-                {{ forms.render_field(form.mfe, input_class="form-control", type="number", step="any", placeholder="Points price moved in your favor") }}
+            <h3>Post-Trade Analysis</h3>
+            <div class="form-group mb-3">
+                {{ form.overall_analysis_notes.label(class="form-label") }}
+                <div id="overall_analysis_notes_editor" class="quill-editor-container"></div>
+                {{ form.overall_analysis_notes(class="d-none") }}
+                {% if form.overall_analysis_notes.errors %}<div class="invalid-feedback d-block">{% for error in form.overall_analysis_notes.errors %}<span>{{ error }}</span><br>{% endfor %}</div>{% endif %}
+                {% if form.overall_analysis_notes.description %}<small class="form-text text-muted">{{ form.overall_analysis_notes.description }}</small>{% endif %}
+            </div>
+
+            <!-- Three-column layout for management, errors, and improvements -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <h5>Trade Management Notes</h5>
+                    {{ forms.render_field(form.trade_management_notes, input_class="form-control", rows="4", placeholder="Trade management decisions, scaling in/out, adjustments, etc.", label_visible=false) }}
+                </div>
+                <div class="col-md-4">
+                    <h5>Errors</h5>
+                    {{ forms.render_field(form.errors_notes, input_class="form-control", rows="4", placeholder="Any mistakes made during this trade?", label_visible=false) }}
+                </div>
+                <div class="col-md-4">
+                    <h5>Improvements</h5>
+                    {{ forms.render_field(form.improvements_notes, input_class="form-control", rows="4", placeholder="What could be improved for next the next trade?", label_visible=false) }}
+                </div>
             </div>
         </div>
 
+        <!-- 5. PSYCHOLOGICAL REVIEW -->
         <div class="form-section">
-            <h3>Psychological Review & Ratings</h3>
+            <h3>Trade Management Review & Ratings</h3>
             <div class="row">
                 <div class="col-lg-8">
+                    <h8>Rate this trade using the following headings.  How well did I:</h8>
                     <div class="grid-5-col">
+                        {{ forms.render_field(form.preparation_rating, input_class="form-select rating-selector") }}
                         {{ forms.render_field(form.rules_rating, input_class="form-select rating-selector") }}
                         {{ forms.render_field(form.management_rating, input_class="form-select rating-selector") }}
-                        {{ forms.render_field(form.target_rating, input_class="form-select rating-selector") }}
                         {{ forms.render_field(form.entry_rating, input_class="form-select rating-selector") }}
-                        {{ forms.render_field(form.preparation_rating, input_class="form-select rating-selector") }}
+                        {{ forms.render_field(form.target_rating, input_class="form-select rating-selector") }}
+
                     </div>
-                    {{ forms.render_field(form.psych_scored_highest, input_class="form-control", rows="2") }}
-                    {{ forms.render_field(form.psych_scored_lowest, input_class="form-control", rows="2") }}
+                    {{ forms.render_field(form.psych_scored_highest, input_class="form-control", rows="2", placeholder="What did you do well with this trade?") }}
+                    {{ forms.render_field(form.psych_scored_lowest, input_class="form-control", rows="2", placeholder="What areas need improvement?") }}
                 </div>
                 <div class="col-lg-4">
                     <div style="max-width: 350px; margin: auto;">
@@ -181,38 +245,31 @@
             </div>
         </div>
 
+        <!-- 6. IMAGES -->
         <div class="form-section">
-            <h3>Trade Analysis, Notes & Tags</h3>
-            <div class="form-group mb-3">
-                {{ form.trade_notes.label(class="form-label") }}
-                <div id="trade_notes_editor" class="quill-editor-container"></div>
-                {{ form.trade_notes(class="d-none") }}
-                 {% if form.trade_notes.errors %}<div class="invalid-feedback d-block">{% for error in form.trade_notes.errors %}<span>{{ error }}</span><br>{% endfor %}</div>{% endif %}
-                 {% if form.trade_notes.description %}<small class="form-text text-muted">{{ form.trade_notes.description }}</small>{% endif %}
-            </div>
-            <div class="form-group mb-3">
-                {{ form.overall_analysis_notes.label(class="form-label") }}
-                <div id="overall_analysis_notes_editor" class="quill-editor-container"></div>
-                {{ form.overall_analysis_notes(class="d-none") }}
-                {% if form.overall_analysis_notes.errors %}<div class="invalid-feedback d-block">{% for error in form.overall_analysis_notes.errors %}<span>{{ error }}</span><br>{% endfor %}</div>{% endif %}
-                {% if form.overall_analysis_notes.description %}<small class="form-text text-muted">{{ form.overall_analysis_notes.description }}</small>{% endif %}
-            </div>
-            <div class="form-group mb-3">
-                {{ form.trade_management_notes.label(class="form-label") }}
-                <div id="trade_management_notes_editor" class="quill-editor-container"></div>
-                {{ form.trade_management_notes(class="d-none") }}
-                {% if form.trade_management_notes.errors %}<div class="invalid-feedback d-block">{% for error in form.trade_management_notes.errors %}<span>{{ error }}</span><br>{% endfor %}</div>{% endif %}
-                {% if form.trade_management_notes.description %}<small class="form-text text-muted">{{ form.trade_management_notes.description }}</small>{% endif %}
-            </div>
+            <h3>Trade Images</h3>
+            {{ forms.render_field(form.trade_images, input_class="form-control") }}
+            <small class="form-text text-muted">Upload screenshots or relevant images for this trade.</small>
+        </div>
+
+        <!-- 7. SCREENSHOT LINKS (Pre-trade and Post-trade) -->
+        <div class="form-section">
+            <h3>Screenshot Links</h3>
             <div class="grid-2-col">
-                {{ forms.render_field(form.errors_notes, input_class="form-control", rows="2", placeholder="Any mistakes?") }}
-                {{ forms.render_field(form.improvements_notes, input_class="form-control", rows="2", placeholder="Potential improvements?") }}
+                <!-- We'll use the existing screenshot_link field for pre-trade, and we'll need to add a post-trade field to your form model -->
+                {{ forms.render_field(form.screenshot_link, input_class="form-control", type="url", placeholder="https://www.tradingview.com/chart/... (Pre-trade setup)") }}
+                <!-- For now, we'll add a note that post-trade screenshot link needs to be added to the form model -->
+                <div class="form-group">
+                    <label class="form-label">Post-Trade Screenshot Link</label>
+                    <input type="url" class="form-control" placeholder="https://www.tradingview.com/chart/... (Post-trade result)" disabled>
+                    <small class="form-text text-muted">Note: Post-trade screenshot field needs to be added to form model</small>
+                </div>
             </div>
-            <div class="mt-3">
-                {{ forms.render_field(form.trade_images, input_class="form-control") }}
-                 <small class="form-text text-muted">Upload screenshots or relevant images for this trade.</small>
-            </div>
-            {{ forms.render_field(form.screenshot_link, input_class="form-control", type="url", placeholder="https://www.tradingview.com/chart/...") }}
+        </div>
+
+        <!-- 8. TAGS -->
+        <div class="form-section">
+            <h3>Tags</h3>
             {{ forms.render_field(form.tags, input_class="form-select", id="tags-select", label_visible=true) }}
         </div>
 
@@ -237,7 +294,7 @@
                 <input class="form-control form-control-sm" id="entries-INDEX-entry_price" name="entries-INDEX-entry_price" type="number" step="any" placeholder="Price">
             </div>
             <div>
-                <button type="button" class="btn btn-sm btn-danger remove-entry-btn" title="Remove Entry"><i class="fas fa-trash-alt"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-entry-btn" title="Remove Entry"><i class="fas fa-trash-alt"></i></button>
             </div>
         </div>
     </div>
@@ -256,7 +313,7 @@
                 <input class="form-control form-control-sm" id="exits-INDEX-exit_price" name="exits-INDEX-exit_price" type="number" step="any" placeholder="Price">
             </div>
             <div>
-                <button type="button" class="btn btn-sm btn-danger remove-exit-btn" title="Remove Exit"><i class="fas fa-trash-alt"></i></button>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-exit-btn" title="Remove Exit"><i class="fas fa-trash-alt"></i></button>
             </div>
         </div>
     </div>
@@ -279,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
         tradeDateInput.value = `${year}-${month}-${day}`;
     }
 
-    // Dynamic fields logic (no changes needed here)
+    // Dynamic fields logic
     function initializeDynamicFields(containerId, addButtonId, templateId, itemClass, removeButtonClass, fieldListName, minEntries) {
         const container = document.getElementById(containerId);
         if (!container) { return; }
@@ -323,9 +380,9 @@ document.addEventListener('DOMContentLoaded', function() {
         addRemoveButtonListeners(container);
     }
     initializeDynamicFields('entry-points-container', 'add-entry-button', 'entry-template', 'entry-exit-item', 'remove-entry-btn', 'entries', parseInt('{{ form.entries.min_entries|default(1) }}', 10));
-    initializeDynamicFields('exit-points-container', 'add-exit-button', 'exit-template', 'entry-exit-item', 'remove-exit-btn', 'exits', parseInt('{{ form.exits.min_entries|default(1) }}', 10));
+    initializeDynamicFields('exit-points-container', 'add-exit-button', 'exit-template', 'entry-exit-item', 'remove-exit-btn', 'exits', 1);
 
-    // Quill Initialization
+    // Quill Initialization (only for Pre-Entry and Post-Trade Analysis)
     const quillToolbarOptions = [
         [{ 'header': [1, 2, 3, 4, false] }], ['bold', 'italic', 'underline', 'strike'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }], [{ 'script': 'sub'}, { 'script': 'super' }],
@@ -349,9 +406,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-    initializeQuill('trade_notes_editor', '{{ form.trade_notes.id }}', '{{ form.trade_notes.render_kw.get("placeholder", "") if form.trade_notes.render_kw else "" }}');
-    initializeQuill('overall_analysis_notes_editor', '{{ form.overall_analysis_notes.id }}', '{{ form.overall_analysis_notes.render_kw.get("placeholder", "") if form.overall_analysis_notes.render_kw else "" }}');
-    initializeQuill('trade_management_notes_editor', '{{ form.trade_management_notes.id }}', '{{ form.trade_management_notes.render_kw.get("placeholder", "") if form.trade_management_notes.render_kw else "" }}');
+    // Only initialize Quill for the analysis fields
+    initializeQuill('trade_notes_editor', '{{ form.trade_notes.id }}', 'Enter your pre-entry analysis, setup thoughts, reasoning, chart markups...');
+    initializeQuill('overall_analysis_notes_editor', '{{ form.overall_analysis_notes.id }}', 'Enter your post-trade analysis, what happened, lessons learned...');
 
     const tradeForm = document.getElementById('tradeForm');
     if (tradeForm) {
@@ -370,11 +427,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (psychRadarCtx && ratingSelectors.length === 5) {
         const chartLabels = [
+            'Prep',
             'Rules',
             'Mgmt',
-            'Targets',
             'Entry',
-            'Prep'
+            'Targets'
         ];
 
         const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';

@@ -39,7 +39,7 @@ def _is_allowed_image(filename):
 
 
 def _populate_trade_form_choices(form):
-    form.trading_model_id.choices = [(0, '-- Select Model --')] + \
+    form.trading_model_id.choices = [(0, 'Select Model')] + \
                                     [(tm.id, tm.name) for tm in
                                      TradingModel.query.filter_by(user_id=current_user.id, is_active=True).order_by(
                                          TradingModel.name).all()]

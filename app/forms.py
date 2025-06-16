@@ -242,13 +242,13 @@ class ExitPointForm(FlaskForm):
 
 class TradeForm(FlaskForm):
     instrument_choices = [
-        ('', '-- Select Instrument --'), ('NQ', 'NQ (Nasdaq 100)'), ('ES', 'ES (S&P 500)'), ('YM', 'YM (Dow Jones)'),
+        ('', 'Select Instrument'), ('NQ', 'NQ (Nasdaq 100)'), ('ES', 'ES (S&P 500)'), ('YM', 'YM (Dow Jones)'),
         ('MNQ', 'MNQ (Micro Nasdaq)'), ('MES', 'MES (Micro S&P)'), ('MYM', 'MYM (Micro Dow)'),
         ('Other', 'Other (Specify)')
     ]
-    direction_choices = [('', '-- Select Direction --'), ('Long', 'Long'), ('Short', 'Short')]
+    direction_choices = [('', 'Select Direction'), ('Long', 'Long'), ('Short', 'Short')]
     how_closed_choices = [
-        ('', '-- Select How Closed --'), ('Manual', 'Closed Manually'), ('SL', 'Closed by Stop Loss'),
+        ('', 'Select How Closed'), ('Manual', 'Closed Manually'), ('SL', 'Closed by Stop Loss'),
         ('TP', 'Closed by Take Profit'), ('Trailing SL', 'Closed by Trailing Stop Loss'),
         ('Time Exit', 'Exited by Time Rule'), ('Still Open', 'Still Open / Partially Exited')
     ]
@@ -256,7 +256,7 @@ class TradeForm(FlaskForm):
 
     # Using SIMPLE_TAG_CHOICES for single select as per recent request
     SIMPLE_TAG_CHOICES = [
-        ('', '-- Select Tag --'),
+        ('', 'Select Tag'),
         ('P12-1A', 'P12 Scenario 1A'), ('P12-1B', 'P12 Scenario 1B'), ('HOD_Reversal', 'HOD Reversal'),
         ('LOD_Bounce', 'LOD Bounce'), ('Snap_0930', '0930 Snap Model'),
         ('TrendDay_Bull', 'Trend Day (Bull)'), ('TrendDay_Bear', 'Trend Day (Bear)'),
@@ -278,24 +278,26 @@ class TradeForm(FlaskForm):
     entries = FieldList(FormField(EntryPointForm), min_entries=1, label='Entry Points')
     exits = FieldList(FormField(ExitPointForm), min_entries=0, label='Exit Points')
 
-    initial_stop_loss = FloatField('Stop Loss Price', validators=[Optional()], render_kw={"placeholder": "Price"})
+    initial_stop_loss = FloatField('Stop Loss Level', validators=[Optional()], render_kw={"placeholder": "Price"})
     terminus_target = FloatField('Terminus Target Price', validators=[Optional()], render_kw={"placeholder": "Price"})
     is_dca = BooleanField('Check here if this trade is a DCA entry strategy')
     mae = FloatField('MAE (In Points)', validators=[Optional()], render_kw={"placeholder": "Points against"})
     mfe = FloatField('MFE (In Points)', validators=[Optional()], render_kw={"placeholder": "Points for"})
 
-    trading_model_id = SelectField('Trading Model', coerce=int, validators=[InputRequired(message="Select model")],
-                                   choices=[(0, "-- Select Model --")])
-    news_event_select = SelectField('News Event', choices=[('', '-- None --')], validators=[Optional()])
-    how_closed = SelectField('How Closed?', choices=how_closed_choices, validators=[Optional()])
+    trading_model_id = SelectField('Model Used', coerce=int, validators=[InputRequired(message="Select model")],
+                                   choices=[(0, "Select Model")])
+    news_event_select = SelectField('News Event', choices=[('', 'None')], validators=[Optional()])
+    how_closed = SelectField('Trade Closure Method', choices=how_closed_choices, validators=[Optional()])
 
-    rules_rating = SelectField('Rule Following', choices=rating_choices, coerce=coerce_int_optional, validators=[Optional()])
-    management_rating = SelectField('Trade Management', choices=rating_choices, coerce=coerce_int_optional,
-                                    validators=[Optional()])
-    target_rating = SelectField('Target Placement', choices=rating_choices, coerce=coerce_int_optional, validators=[Optional()])
-    entry_rating = SelectField('Entry & Execution', choices=rating_choices, coerce=coerce_int_optional, validators=[Optional()])
-    preparation_rating = SelectField('Trade Preparation', choices=rating_choices, coerce=coerce_int_optional,
+    preparation_rating = SelectField('Prep for This Trade', choices=rating_choices, coerce=coerce_int_optional,
                                      validators=[Optional()])
+
+    rules_rating = SelectField('Follow My Rules', choices=rating_choices, coerce=coerce_int_optional, validators=[Optional()])
+    management_rating = SelectField('Manage the Trade', choices=rating_choices, coerce=coerce_int_optional,
+                                    validators=[Optional()])
+    target_rating = SelectField('Place Targets', choices=rating_choices, coerce=coerce_int_optional, validators=[Optional()])
+    entry_rating = SelectField('Enter the Trade', choices=rating_choices, coerce=coerce_int_optional, validators=[Optional()])
+
 
     trade_notes = TextAreaField('Pre-Entry Analysis', validators=[Optional()],
                                 render_kw={"rows": 4, "placeholder": "Trade context, Consider P12 analysis, 4-steps process, etc..."})
@@ -308,9 +310,9 @@ class TradeForm(FlaskForm):
     errors_notes = TextAreaField('Errors Noted', validators=[Optional()], render_kw={"rows": 2})
     improvements_notes = TextAreaField('Improvements Noted', validators=[Optional()], render_kw={"rows": 2})
 
-    trade_images = MultipleFileField('Upload Images', validators=[Optional(), FileAllowed(
+    trade_images = MultipleFileField('', validators=[Optional(), FileAllowed(
         ['jpg', 'png', 'jpeg', 'gif'], 'Images only!')])
-    screenshot_link = StringField('TradingView Screenshot Link', validators=[Optional(), Length(max=255)],
+    screenshot_link = StringField('Pre-Trade Screenshot Link', validators=[Optional(), Length(max=255)],
                                   render_kw={"placeholder": "http://..."})
     tags = SelectField('Tags', choices=SIMPLE_TAG_CHOICES, validators=[Optional()])
     submit = SubmitField('Save Trade')
