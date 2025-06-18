@@ -194,7 +194,7 @@
                 {{ forms.render_field(form.trade_date, input_class="form-control", type="date") }}
                 {{ forms.render_field(form.instrument, input_class="form-select") }}
                 {{ forms.render_field(form.direction, input_class="form-select") }}
-                {{ forms.render_field(form.initial_stop_loss, input_class="form-control", type="number", step="any", placeholder="SL Price Level") }}
+                {{ forms.render_field(form.initial_stop_loss, input_class="form-control", type="number", step="any", placeholder="SL Price") }}
                 {{ forms.render_field(form.terminus_target, input_class="form-control", type="number", step="any", placeholder="Final TP price level") }}
                 {{ forms.render_field(form.trading_model_id, input_class="form-select") }}
                 {{ forms.render_field(form.how_closed, input_class="form-select") }}
@@ -202,24 +202,7 @@
                 {{ forms.render_field(form.mae, input_class="form-control", type="number", step="any", placeholder="Ticks Against You") }}
                 {{ forms.render_field(form.mfe, input_class="form-control", type="number", step="any", placeholder="Ticks In Your Favor") }}
             </div>
-            <div class="mt-3">
-                {{ forms.render_checkbox(form.is_dca) }}
-            </div>
-        </div>
-
-        <!-- 2. PRE-ENTRY ANALYSIS -->
-        <div class="form-section">
-            <h3>Pre-Entry Analysis</h3>
-            <div class="form-group mb-3">
-                {{ form.trade_notes.label(class="form-label") }}
-                <div id="trade_notes_editor" class="quill-editor-container"></div>
-                {{ form.trade_notes(class="d-none") }}
-                {% if form.trade_notes.errors %}<div class="invalid-feedback d-block">{% for error in form.trade_notes.errors %}<span>{{ error }}</span><br>{% endfor %}</div>{% endif %}
-                {% if form.trade_notes.description %}<small class="form-text text-muted">{{ form.trade_notes.description }}</small>{% endif %}
-            </div>
-        </div>
-
-        <!-- 3. ENTRY/EXIT POINTS -->
+            <!-- 3. ENTRY/EXIT POINTS -->
         <div class="row">
             <div class="col-md-6">
                 <div class="form-section">
@@ -280,10 +263,22 @@
                 </div>
             </div>
         </div>
+            <div class="mt-3">
+                {{ forms.render_checkbox(form.is_dca) }}
+            </div>
+        </div>
 
-        <!-- 4. POST-TRADE ANALYSIS -->
+        <!-- 2. TRADE ANALYSIS -->
         <div class="form-section">
-            <h3>Post-Trade Analysis</h3>
+            <h3>Trade Analysis</h3>
+            <div class="form-group mb-3">
+                {{ form.trade_notes.label(class="form-label") }}
+                <div id="trade_notes_editor" class="quill-editor-container"></div>
+                {{ form.trade_notes(class="d-none") }}
+                {% if form.trade_notes.errors %}<div class="invalid-feedback d-block">{% for error in form.trade_notes.errors %}<span>{{ error }}</span><br>{% endfor %}</div>{% endif %}
+                {% if form.trade_notes.description %}<small class="form-text text-muted">{{ form.trade_notes.description }}</small>{% endif %}
+            </div>
+
             <div class="form-group mb-3">
                 {{ form.overall_analysis_notes.label(class="form-label") }}
                 <div id="overall_analysis_notes_editor" class="quill-editor-container"></div>
@@ -334,33 +329,25 @@
             </div>
         </div>
 
-        <!-- 6. IMAGES -->
+        <!-- 6. IMAGES, LINKS, & TAGS -->
         <div class="form-section">
-            <h3>Trade Images</h3>
-            {{ forms.render_field(form.trade_images, input_class="form-control") }}
-            <small class="form-text text-muted">Upload screenshots or relevant images for this trade.</small>
-        </div>
-
-        <!-- 7. SCREENSHOT LINKS (Pre-trade and Post-trade) -->
-        <div class="form-section">
-            <h3>Screenshot Links</h3>
-            <div class="grid-2-col">
-                <!-- We'll use the existing screenshot_link field for pre-trade, and we'll need to add a post-trade field to your form model -->
-                {{ forms.render_field(form.screenshot_link, input_class="form-control", type="url", placeholder="https://www.tradingview.com/chart/... (Pre-trade setup)") }}
-                <!-- For now, we'll add a note that post-trade screenshot link needs to be added to the form model -->
-                <div class="form-group">
-                    <label class="form-label">Post-Trade Screenshot Link</label>
-                    <input type="url" class="form-control" placeholder="https://www.tradingview.com/chart/... (Post-trade result)" disabled>
-                    <small class="form-text text-muted">Note: Post-trade screenshot field needs to be added to form model</small>
+            <h3>Trade Images, Links and Tags</h3>
+            <div class="row">
+                <div class="col-md-4">
+                    {{ forms.render_field(form.trade_images, input_class="form-control") }}
+                    <small class="form-text text-muted">Upload screenshots or relevant images for this trade.</small>
+                </div>
+                <div class="col-md-4">
+                    {{ forms.render_field(form.screenshot_link, input_class="form-control", type="url", placeholder="https://www.tradingview.com/chart/...") }}
+                    <small class="form-text text-muted">Paste screenshot links from your trading platform here.</small>
+                </div>
+                <div class="col-md-4">
+                    {{ forms.render_field(form.tags, input_class="form-select", id="tags-select", label_visible=true) }}
+                    <small class="form-text text-muted">Select appropriate tags for this trade.</small>
                 </div>
             </div>
         </div>
 
-        <!-- 8. TAGS -->
-        <div class="form-section">
-            <h3>Tags</h3>
-            {{ forms.render_field(form.tags, input_class="form-select", id="tags-select", label_visible=true) }}
-        </div>
 
         <div class="form-buttons-container">
             <button type="submit" class="btn btn-outline-success"><i class="fas fa-plus me-1"></i> Log Trade</button>

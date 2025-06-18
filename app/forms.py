@@ -277,7 +277,7 @@ class TradeForm(FlaskForm):
     entries = FieldList(FormField(EntryPointForm), min_entries=1, label='Entry Points')
     exits = FieldList(FormField(ExitPointForm), min_entries=0, label='Exit Points')
 
-    initial_stop_loss = FloatField('Stop Loss Level', validators=[Optional()], render_kw={"placeholder": "Price"})
+    initial_stop_loss = FloatField('Stop Loss Price', validators=[Optional()], render_kw={"placeholder": "Price"})
     terminus_target = FloatField('Terminus Target Price', validators=[Optional()], render_kw={"placeholder": "Price"})
     is_dca = BooleanField('Check here if this trade is a DCA entry strategy')
     mae = FloatField('MAE (In Points)', validators=[Optional()], render_kw={"placeholder": "Points against"})
@@ -296,7 +296,7 @@ class TradeForm(FlaskForm):
     target_rating = SelectField('Place Targets', choices=rating_choices, coerce=coerce_int_optional, validators=[Optional()])
     entry_rating = SelectField('Enter the Trade', choices=rating_choices, coerce=coerce_int_optional, validators=[Optional()])
 
-    trade_notes = TextAreaField('Pre-Entry Analysis', validators=[Optional()],
+    trade_notes = TextAreaField('Pre-Trade Analysis', validators=[Optional()],
                                 render_kw={"rows": 4, "placeholder": "Trade context, Consider P12 analysis, 4-steps process, etc..."})
     psych_scored_highest = TextAreaField('Where did I score highest and how will I sustain this?', validators=[Optional()], render_kw={"rows": 6})
     psych_scored_lowest = TextAreaField('Where did I score lowest and how will I improve this?', validators=[Optional()], render_kw={"rows": 6})
@@ -307,9 +307,9 @@ class TradeForm(FlaskForm):
     errors_notes = TextAreaField('Errors Noted', validators=[Optional()], render_kw={"rows": 2})
     improvements_notes = TextAreaField('Improvements Noted', validators=[Optional()], render_kw={"rows": 2})
 
-    trade_images = MultipleFileField('', validators=[Optional(), FileAllowed(
+    trade_images = MultipleFileField('Trade Images', validators=[Optional(), FileAllowed(
         ['jpg', 'png', 'jpeg', 'gif'], 'Images only!')])
-    screenshot_link = StringField('Pre-Trade Screenshot Link', validators=[Optional(), Length(max=255)],
+    screenshot_link = StringField('Screenshot Links', validators=[Optional(), Length(max=255)],
                                   render_kw={"placeholder": "http://..."})
     tags = SelectField('Tags', choices=SIMPLE_TAG_CHOICES, validators=[Optional()])
     submit = SubmitField('Save Trade')
