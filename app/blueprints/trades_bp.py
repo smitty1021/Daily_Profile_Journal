@@ -59,36 +59,36 @@ def _is_allowed_image(filename):
 
 def _populate_tags_choices(form):
     """Populate dynamic choices for tags dropdown - grouped by category"""
-    from app.models import TagCategory
+    # Note: These imports are likely already at the top of your file.
+    from app.models import Tag, TagCategory
+    from flask_login import current_user
+    from app import db
 
-    # Get all available tags
+    # Get all available tags for the user
     all_tags = Tag.query.filter(
         db.or_(
-            Tag.is_default == True,  # All default tags
-            Tag.user_id == current_user.id  # User's personal tags
+            Tag.is_default == True,
+            Tag.user_id == current_user.id
         )
     ).filter(Tag.is_active == True).order_by(Tag.category, Tag.name).all()
 
-    # Group tags by category for optgroup display
-    choices = []
-    current_category = None
-    category_choices = []
+    if not all_tags:
+        form.tags.choices = []
+        return form
+
+    # Use a dictionary to robustly group tags by category
+    grouped_tags = {category: [] for category in TagCategory}
 
     for tag in all_tags:
-        # If we've moved to a new category, add the previous group
-        if current_category is not None and tag.category != current_category:
-            if category_choices:
-                choices.append((current_category.value, category_choices))
-                category_choices = []
+        if tag.category in grouped_tags:
+            grouped_tags[tag.category].append((tag.id, tag.name))
 
-        current_category = tag.category
-        category_choices.append((tag.id, tag.name))
+    # Build the final choices list in the correct format for optgroups
+    choices = []
+    for category_enum, tags_list in grouped_tags.items():
+        if tags_list:  # Only add categories that actually contain tags
+            choices.append((category_enum.value, tags_list))
 
-    # Add the last category group
-    if category_choices and current_category:
-        choices.append((current_category.value, category_choices))
-
-    # Set the grouped choices
     form.tags.choices = choices
     return form
 

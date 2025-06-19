@@ -342,11 +342,9 @@
                     <small class="form-text text-muted">Paste screenshot links from your trading platform here.</small>
                 </div>
                 <div class="col-md-4">
-                    {{ forms.render_field(form.tags, input_class="form-select", id="tags-select", label_visible=true) }}
-                    <!-- Custom grouped tags dropdown -->
                     <div class="mb-3">
-                        <label for="{{ form.tags.id }}" class="form-label">{{ form.tags.label.text }}</label>
-                        <select multiple class="form-select" id="{{ form.tags.id }}" name="{{ form.tags.name }}">
+                        <label for="tags-select" class="form-label">{{ form.tags.label.text }}</label>
+                        <select multiple class="form-select" id="tags-select" name="{{ form.tags.name }}">
                             {% for category_name, tag_options in form.tags.choices %}
                                 <optgroup label="{{ category_name }}">
                                     {% for tag_id, tag_name in tag_options %}
@@ -363,8 +361,8 @@
                                 <div class="invalid-feedback d-block">{{ error }}</div>
                             {% endfor %}
                         {% endif %}
+                        <small class="form-text text-muted">Select appropriate tags for this trade.</small>
                     </div>
-                    <small class="form-text text-muted">Select appropriate tags for this trade.</small>
                 </div>
             </div>
         </div>
