@@ -294,6 +294,6 @@ def create_app(config_class=None):
                     app.logger.info(
                         f"Initial data setup: Could not commit initial data (this might be expected if tables are not yet fully created or app is initializing for CLI migration command): {e}")
 
-        app.register_blueprint(tags_bp)
+
 
     return app

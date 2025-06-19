@@ -1,10 +1,13 @@
+# In app/blueprints/tags_bp.py - Change the blueprint name from 'tags_management' to 'tags'
+
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app import db
 from app.models import Tag
 from app.forms import TagForm
 
-tags_bp = Blueprint('tags_management', __name__, url_prefix='/tags', template_folder='../templates/tags')
+# CHANGE THIS LINE: Change 'tags_management' to 'tags'
+tags_bp = Blueprint('tags', __name__, url_prefix='/tags', template_folder='../templates/tags')
 
 
 @tags_bp.route('/')
