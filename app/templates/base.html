@@ -183,7 +183,7 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
                                 <li><a class="dropdown-item" href="{{ url_for('auth.user_profile') }}">Profile</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('settings_routes.view_settings') }}">Settings</a></li>
+                                <a class="dropdown-item" href="{{ url_for('settings.view_settings') }}">Settings</a>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
                             </ul>
@@ -272,7 +272,8 @@
                     </li>
                     <li><a href="#"><i class="fas fa-sticky-note icon"></i><span class="label">Notes (Soon)</span></a></li>
                     <li><a href="#"><i class="fas fa-graduation-cap icon"></i><span class="label">Continuing Ed (Soon)</span></a></li>
-                    <li><a href="{{ url_for('settings_routes.view_settings') }}" class="{{ 'active' if request.blueprint == 'settings' else '' }}"><i class="fas fa-cog icon"></i><span class="label">Settings</span></a></li>
+                    <li><a href="{{ url_for('settings.view_settings') }}" class="{{ 'active' if request.blueprint == 'settings' else '' }}"><i class="fas fa-cog icon"></i><span class="label">Settings</span></a></li>
+
                 </ul>
             </nav>
             <div class="sidebar-footer">

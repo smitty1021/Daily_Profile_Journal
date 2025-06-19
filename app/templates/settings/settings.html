@@ -4,95 +4,6 @@
     {{ title or "User Settings" }} - Trading Journal
 {% endblock %}
 
-{% block content %}
-<div class="container mt-4 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-7">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0"><i class="fas fa-cog me-2"></i>{{ title or "User Settings" }}</h3>
-                </div>
-                <div class="card-body p-4">
-                    {# Display flashed messages #}
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                                    {{ message|safe }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            {% endfor %}
-                            <hr>
-                        {% endif %}
-                    {% endwith %}
-
-                    {# Theme Settings Section #}
-                    <div class="settings-section mb-4">
-                        <h4>Theme Preference</h4>
-                        <p>Your current theme is: <strong>{{ session.get('theme', 'dark')|title }}</strong></p>
-                        {# Form for changing theme #}
-                        <form method="POST" action="{{ url_for('settings_routes.view_settings') }}" class="mt-2">
-                            {# Correctly embed CSRF token in a hidden input field #}
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="form_name" value="change_theme">
-
-                            <button type="submit" name="theme" value="light"
-                                    class="btn theme-option-button {% if session.get('theme', 'dark') == 'light' %}btn-primary active{% else %}btn-outline-secondary{% endif %} me-2">
-                                <i class="fas fa-sun me-1"></i> Light Theme
-                            </button>
-                            <button type="submit" name="theme" value="dark"
-                                    class="btn theme-option-button {% if session.get('theme', 'dark') == 'dark' %}btn-primary active{% else %}btn-outline-secondary{% endif %}">
-                                <i class="fas fa-moon me-1"></i> Dark Theme
-                            </button>
-                        </form>
-                    </div>
-                    <hr>
-
-                    {# Placeholder for Notification Settings #}
-                    <div class="settings-section mb-4">
-                        <h4>Notification Settings <small class="text-muted">(Coming Soon)</small></h4>
-                        <div class="setting-item d-flex justify-content-between align-items-center">
-                            <label for="emailNotifications" class="form-check-label">Email Notifications</label>
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" role="switch" id="emailNotifications" disabled>
-                            </div>
-                        </div>
-                    </div>
-                    <hr>
-
-                    {# Placeholder for other settings #}
-                    <div class="settings-section">
-                        <h4>Account Preferences <small class="text-muted">(Coming Soon)</small></h4>
-                        <p class="text-muted">Other account preferences will go here.</p>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts_extra %}
-<script>
-// This script ensures the correct theme button appears active if the theme is changed
-// and the page reloads, or if JS is used to toggle theme without page reload (not implemented here).
-document.addEventListener('DOMContentLoaded', function() {
-    const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'dark';
-    const themeButtons = document.querySelectorAll('.theme-option-button');
-    themeButtons.forEach(button => {
-        if (button.value === currentTheme) {
-            button.classList.add('btn-primary', 'active');
-            button.classList.remove('btn-outline-secondary');
-        } else {
-            button.classList.remove('btn-primary', 'active');
-            button.classList.add('btn-outline-secondary');
-        }
-    });
-});
-</script>
-{% endblock %}
-
 {% block head_extra %}
 <style>
     .tag-category-section {
@@ -355,7 +266,6 @@ function createTag() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Add the new tag to the appropriate category
             addTagToDOM(data.tag);
             hideAddTagForm();
             showAlert('success', data.message);
@@ -403,7 +313,6 @@ function saveTagEdit() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Update the tag in the DOM
             updateTagInDOM(data.tag);
 
             const modal = bootstrap.Modal.getInstance(document.getElementById('editTagModal'));
@@ -434,7 +343,6 @@ function deleteTag(tagId, tagName) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Remove the tag from the DOM
             removeTagFromDOM(tagId);
             showAlert('success', data.message);
         } else {
@@ -450,13 +358,11 @@ function deleteTag(tagId, tagName) {
 function addTagToDOM(tag) {
     const categoryContainer = document.getElementById(`category-${tag.category}`);
 
-    // Check if category has "No tags" message and remove it
     const noTagsMsg = categoryContainer.querySelector('.text-muted');
     if (noTagsMsg) {
         noTagsMsg.remove();
     }
 
-    // Create new tag element
     const tagDiv = document.createElement('div');
     tagDiv.className = `tag-item ${tag.is_default ? 'default-tag' : 'user-tag'}`;
     tagDiv.setAttribute('data-tag-id', tag.id);
@@ -476,26 +382,20 @@ function addTagToDOM(tag) {
     `;
 
     categoryContainer.appendChild(tagDiv);
-
-    // Update badge count
     updateCategoryBadge(tag.category);
 }
 
 function updateTagInDOM(tag) {
     const tagElement = document.querySelector(`[data-tag-id="${tag.id}"]`);
     if (tagElement) {
-        // Check if category changed
         const currentCategory = tagElement.closest('[id^="category-"]').id.replace('category-', '');
 
         if (currentCategory !== tag.category) {
-            // Move to new category
             removeTagFromDOM(tag.id);
             addTagToDOM(tag);
         } else {
-            // Just update the name
             tagElement.querySelector('.tag-name').textContent = tag.name;
 
-            // Update onclick handlers with new name
             const editBtn = tagElement.querySelector('.text-primary');
             const deleteBtn = tagElement.querySelector('.text-danger');
             if (editBtn) editBtn.setAttribute('onclick', `editTag(${tag.id}, '${tag.name}', '${tag.category}')`);
@@ -512,7 +412,6 @@ function removeTagFromDOM(tagId) {
 
         tagElement.remove();
 
-        // Check if category is now empty
         const remainingTags = categoryContainer.querySelectorAll('.tag-item');
         if (remainingTags.length === 0) {
             const noTagsMsg = document.createElement('p');
@@ -521,7 +420,6 @@ function removeTagFromDOM(tagId) {
             categoryContainer.appendChild(noTagsMsg);
         }
 
-        // Update badge count
         updateCategoryBadge(categoryName);
     }
 }
@@ -534,7 +432,6 @@ function updateCategoryBadge(categoryName) {
 }
 
 function showAlert(type, message) {
-    // Create and show a Bootstrap alert
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
     alertDiv.innerHTML = `
@@ -542,21 +439,24 @@ function showAlert(type, message) {
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
 
-    // Insert at top of card body
     const cardBody = document.querySelector('.card-body');
     cardBody.insertBefore(alertDiv, cardBody.firstChild);
 
-    // Auto-dismiss after 5 seconds
     setTimeout(() => {
         const alert = bootstrap.Alert.getOrCreateInstance(alertDiv);
         alert.close();
     }, 5000);
 }
 
-// Handle Enter key in add tag form
-document.getElementById('newTagName').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        createTag();
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle Enter key in add tag form
+    const newTagName = document.getElementById('newTagName');
+    if (newTagName) {
+        newTagName.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                createTag();
+            }
+        });
     }
 });
 </script>

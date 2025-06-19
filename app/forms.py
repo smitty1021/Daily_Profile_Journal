@@ -5,6 +5,7 @@ from wtforms import (StringField, PasswordField, BooleanField, SubmitField, Mult
                      TimeField, FormField, FieldList, SelectMultipleField)
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional, NumberRange, InputRequired
 from app.models import UserRole  # Assuming UserRole is used elsewhere or for consistency
+from app.models import TagCategory
 
 
 
