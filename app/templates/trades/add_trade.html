@@ -399,11 +399,32 @@
 
 {% block scripts_extra %}
 {{ super() if super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tagsSelect = document.getElementById('tags-select');
+        if (tagsSelect) {
+            new TomSelect(tagsSelect, {
+                plugins: ['remove_button'],
+                placeholder: 'Select or search for tags...',
+            });
+        }
+    });
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // --- TRADE STATS DASHBOARD CALCULATIONS ---
     const dashboard = document.getElementById('trade-stats-dashboard');
+
+    const tagsSelect = document.getElementById('tags-select');
+        if (tagsSelect) {
+            new TomSelect(tagsSelect, {
+                plugins: ['remove_button'], // Adds a little 'x' to remove selected tags
+                placeholder: 'Select or search for tags...',
+                // Optional: To allow users to create new tags on the fly (requires more backend work)
+                // create: true
+            });
+        }
 
     // Use the dynamic point values passed from backend
     const instrumentPointValues = {{ instrument_point_values|tojson|safe }};

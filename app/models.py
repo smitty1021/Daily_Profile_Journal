@@ -348,6 +348,22 @@ class Instrument(db.Model):
             current_app.logger.error(f"Could not load instrument point values dictionary: {e}")
             return {}
 
+# Association table for the many-to-many relationship between Trades and Tags
+trade_tags = db.Table('trade_tags',
+    db.Column('trade_id', db.Integer, db.ForeignKey('trade.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
+class Tag(db.Model):
+    __tablename__ = 'tag'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', name='fk_tag_user'), nullable=False)
+    user = db.relationship('User', backref=db.backref('tags', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Tag {self.name}>'
+
 
 # --- Trading Models ---
 class TradingModel(db.Model):
@@ -497,7 +513,8 @@ class Trade(db.Model):
     trade_management_notes = db.Column(db.Text, nullable=True)
     errors_notes = db.Column(db.Text, nullable=True)
     improvements_notes = db.Column(db.Text, nullable=True)
-    tags = db.Column(db.String(255), nullable=True)
+    tags = db.relationship('Tag', secondary=trade_tags, lazy='subquery',
+                           backref=db.backref('trades', lazy=True))
 
     # Relationships
     trading_model_id = db.Column(db.Integer, db.ForeignKey('trading_model.id', name='fk_trade_trading_model'),

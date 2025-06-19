@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import (StringField, PasswordField, BooleanField, SubmitField, MultipleFileField,
                      TextAreaField, FloatField, SelectField, IntegerField, DateField,
-                     TimeField, FormField, FieldList)
+                     TimeField, FormField, FieldList, SelectMultipleField)
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional, NumberRange, InputRequired
 from app.models import UserRole  # Assuming UserRole is used elsewhere or for consistency
 
@@ -253,22 +253,6 @@ class TradeForm(FlaskForm):
     ]
     rating_choices = [('', '-- Rate 1-5 --')] + [(str(i), str(i)) for i in range(1, 6)]
 
-    # Using SIMPLE_TAG_CHOICES for single select as per recent request
-    SIMPLE_TAG_CHOICES = [
-        ('', 'Select Tag'),
-        ('P12-1A', 'P12 Scenario 1A'), ('P12-1B', 'P12 Scenario 1B'), ('HOD_Reversal', 'HOD Reversal'),
-        ('LOD_Bounce', 'LOD Bounce'), ('Snap_0930', '0930 Snap Model'),
-        ('TrendDay_Bull', 'Trend Day (Bull)'), ('TrendDay_Bear', 'Trend Day (Bear)'),
-        ('RangeBound', 'Range Bound'), ('HighVol', 'High Volatility'), ('LowVol', 'Low Volatility'),
-        ('FOMC_Day', 'FOMC Day'), ('CPI_Day', 'CPI Day'), ('NFP_Day', 'NFP Day'),
-        ('Other_News', 'Other News Impact'), ('FOMO_Entry', 'FOMO Entry'),
-        ('Good_Patience', 'Good Patience'), ('Revenge_Trade', 'Revenge Trade'),
-        ('OverConfidence', 'Over Confidence'), ('Lack_Confidence', 'Lack of Confidence'),
-        ('Rule_Break', 'Rule Broken'), ('Asia_Session', 'Asia Session Trade'),
-        ('London_Session', 'London Session Trade'), ('NY_AM_Session', 'NY AM Session Trade'),
-        ('NY_PM_Session', 'NY PM Session Trade')
-    ]
-
     instrument = SelectField('Instrument', choices=[('', 'Select Instrument')], validators=[DataRequired()])
     trade_date = DateField('Trade Date', validators=[DataRequired(message="Please select a trade date.")],
                            format='%Y-%m-%d', render_kw={"placeholder": "YYYY-MM-DD"})
@@ -311,7 +295,8 @@ class TradeForm(FlaskForm):
         ['jpg', 'png', 'jpeg', 'gif'], 'Images only!')])
     screenshot_link = StringField('Screenshot Links', validators=[Optional(), Length(max=255)],
                                   render_kw={"placeholder": "http://..."})
-    tags = SelectField('Tags', choices=SIMPLE_TAG_CHOICES, validators=[Optional()])
+    tags = SelectMultipleField('Tags', coerce=int, choices=[],
+                               render_kw={'class': 'form-select', 'multiple': 'multiple'})
     submit = SubmitField('Save Trade')
 
     def __init__(self, *args, **kwargs):
@@ -332,7 +317,13 @@ class TradeForm(FlaskForm):
                 ('MYM', 'MYM (Micro Dow)'),
                 ('Other', 'Other (Specify)')
             ]
-
+class TagForm(FlaskForm):
+    """Form for creating and editing tags."""
+    name = StringField('Tag Name', validators=[
+        DataRequired(),
+        Length(min=2, max=50, message="Tag name must be between 2 and 50 characters.")
+    ])
+    submit = SubmitField('Save Tag')
 
 # Form for filtering trades list
 class TradeFilterForm(FlaskForm):
@@ -343,8 +334,7 @@ class TradeFilterForm(FlaskForm):
                             validators=[Optional()])
     trading_model_id = SelectField('Trading Model', coerce=int, choices=[(0, 'All Models')],
                                    validators=[Optional()])  # Choices populated in route
-    tags = SelectField('Tag', choices=[('', 'All Tags')] + TradeForm.SIMPLE_TAG_CHOICES[1:],
-                       validators=[Optional()])  # For single tag filter
+    tags = SelectField('Tag', choices=[('', 'All Tags')], validators=[Optional()])
     submit = SubmitField('Filter Trades')
     clear = SubmitField('Clear Filters', render_kw={'formnovalidate': True, 'class': 'btn btn-outline-secondary'})
 

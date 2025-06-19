@@ -18,7 +18,7 @@ from datetime import date as py_date, datetime as py_datetime, time as py_time
 from flask_wtf.csrf import generate_csrf
 
 from app import db
-from app.models import Trade, EntryPoint, ExitPoint, TradingModel, NewsEventItem, TradeImage, Instrument  # Instrument added
+from app.models import Trade, EntryPoint, ExitPoint, TradingModel, NewsEventItem, TradeImage, Instrument, Tag
 from app.forms import TradeForm, EntryPointForm, ExitPointForm, TradeFilterForm, ImportTradesForm
 from app.utils import (_parse_form_float, _parse_form_int, _parse_form_time,
                        get_news_event_options, record_activity)
@@ -158,6 +158,10 @@ def view_trades_list():
 @login_required
 def add_trade():
     form = TradeForm()
+
+    # --- MODIFIED: Populate the tags dropdown with choices from the database ---
+    form.tags.choices = [(t.id, t.name) for t in Tag.query.filter_by(user_id=current_user.id).order_by(Tag.name).all()]
+
     if request.method == 'GET':
         if not form.entries.entries:
             form.entries.append_entry(None)
@@ -165,25 +169,19 @@ def add_trade():
             form.exits.append_entry(None)
 
     _populate_trade_form_choices(form)
-
-    # Get dynamic instrument point values for frontend JavaScript calculations
     instrument_point_values = get_instrument_point_values()
 
     if form.validate_on_submit():
         try:
             instrument = form.instrument.data
-
-            # FIXED: Use the consolidated Instrument.get_point_value method
             point_value_for_trade = Instrument.get_point_value(instrument)
-            tag_value = form.tags.data if form.tags.data and form.tags.data != '' else None
 
             new_trade = Trade(user_id=current_user.id)
-
-            # Populate trade object from form data
-            new_trade.instrument = instrument  # This uses the setter method
+            # --- (All your new_trade.field = form.field.data assignments remain the same) ---
+            new_trade.instrument = instrument
             new_trade.trade_date = form.trade_date.data
             new_trade.direction = form.direction.data
-            new_trade.point_value = point_value_for_trade  # Store the point value directly
+            new_trade.point_value = point_value_for_trade
             new_trade.initial_stop_loss = _parse_form_float(form.initial_stop_loss.data)
             new_trade.terminus_target = _parse_form_float(form.terminus_target.data)
             new_trade.is_dca = form.is_dca.data
@@ -202,41 +200,37 @@ def add_trade():
             new_trade.trade_management_notes = form.trade_management_notes.data
             new_trade.errors_notes = form.errors_notes.data
             new_trade.improvements_notes = form.improvements_notes.data
-            new_trade.tags = tag_value
             new_trade.screenshot_link = form.screenshot_link.data
             new_trade.trading_model_id = form.trading_model_id.data if form.trading_model_id.data and form.trading_model_id.data != 0 else None
             new_trade.news_event = form.news_event_select.data if form.news_event_select.data else None
 
+            # --- MODIFIED: The old tags assignment has been removed ---
+
             db.session.add(new_trade)
             db.session.flush()
 
-            # Process entries - UNCHANGED
-            for entry_data in form.entries.data:
-                if entry_data.get('entry_time') and entry_data.get('contracts') is not None and entry_data.get('entry_price') is not None:
-                    entry = EntryPoint(
-                        trade_id=new_trade.id,
-                        entry_time=entry_data['entry_time'],
-                        contracts=entry_data['contracts'],
-                        entry_price=entry_data['entry_price']
-                    )
-                    db.session.add(entry)
+            # --- MODIFIED: Added the logic to process and link the selected tags ---
+            if form.tags.data:
+                selected_tags = Tag.query.filter(Tag.id.in_(form.tags.data)).all()
+                new_trade.tags = selected_tags
 
-            # Process exits - UNCHANGED
+            # --- (The rest of the function for processing entries, exits, and images remains the same) ---
+            for entry_data in form.entries.data:
+                if entry_data.get('entry_time') and entry_data.get('contracts') is not None and entry_data.get(
+                        'entry_price') is not None:
+                    entry = EntryPoint(trade_id=new_trade.id, entry_time=entry_data['entry_time'],
+                                       contracts=entry_data['contracts'], entry_price=entry_data['entry_price'])
+                    db.session.add(entry)
             for exit_data in form.exits.data:
-                if exit_data.get('exit_time') and exit_data.get('contracts') is not None and exit_data.get('exit_price') is not None:
-                    exit_point = ExitPoint(
-                        trade_id=new_trade.id,
-                        exit_time=exit_data['exit_time'],
-                        contracts=exit_data['contracts'],
-                        exit_price=exit_data['exit_price']
-                    )
+                if exit_data.get('exit_time') and exit_data.get('contracts') is not None and exit_data.get(
+                        'exit_price') is not None:
+                    exit_point = ExitPoint(trade_id=new_trade.id, exit_time=exit_data['exit_time'],
+                                           contracts=exit_data['contracts'], exit_price=exit_data['exit_price'])
                     db.session.add(exit_point)
                 elif any(val for key, val in exit_data.items() if key != 'id' and val is not None and val != ''):
                     flash(
                         f"An exit for trade was partially filled and not saved. Please provide all of time, contracts, and price for a complete exit log.",
                         "warning")
-
-            # Process image uploads - UNCHANGED (keeping existing code)
             if form.trade_images.data:
                 for image_file in form.trade_images.data:
                     if image_file and _is_allowed_image(image_file.filename):
@@ -249,14 +243,9 @@ def add_trade():
                         file_path = os.path.join(upload_folder, unique_filename)
                         try:
                             image_file.save(file_path)
-                            trade_image = TradeImage(
-                                trade_id=new_trade.id,
-                                user_id=current_user.id,
-                                filename=original_filename,
-                                filepath=unique_filename,
-                                filesize=os.path.getsize(file_path),
-                                mime_type=image_file.mimetype
-                            )
+                            trade_image = TradeImage(trade_id=new_trade.id, user_id=current_user.id,
+                                                     filename=original_filename, filepath=unique_filename,
+                                                     filesize=os.path.getsize(file_path), mime_type=image_file.mimetype)
                             db.session.add(trade_image)
                         except Exception as e_save:
                             current_app.logger.error(
@@ -265,10 +254,11 @@ def add_trade():
                             flash(f"Could not save image: {original_filename}", "warning")
                     elif image_file:
                         flash(f"Image type not allowed for file: {image_file.filename}", "warning")
-
             db.session.commit()
             record_activity('trade_logged', f"Logged new trade ID: {new_trade.id} for {new_trade.instrument}")
-            flash(f'Trade for {new_trade.instrument} on {new_trade.trade_date.strftime("%Y-%m-%d")} logged successfully!', 'success')
+            flash(
+                f'Trade for {new_trade.instrument} on {new_trade.trade_date.strftime("%Y-%m-%d")} logged successfully!',
+                'success')
             return redirect(url_for('trades.view_trades_list'))
 
         except Exception as e:
@@ -283,12 +273,11 @@ def add_trade():
         if not form.exits.entries and len(form.exits.data) == 0:
             form.exits.append_entry(None)
 
-    # Pass dynamic instrument point values to template for JavaScript calculations
     return render_template('trades/add_trade.html',
-                         title='Log New Trade',
-                         form=form,
-                         instrument_point_values=instrument_point_values,  # This is the key addition
-                         default_trade_date=py_date.today().strftime('%Y-%m-%d'))
+                           title='Log New Trade',
+                           form=form,
+                           instrument_point_values=instrument_point_values,
+                           default_trade_date=py_date.today().strftime('%Y-%m-%d'))
 
 # --- VIEW TRADE DETAIL ---
 @trades_bp.route('/<int:trade_id>/view')
