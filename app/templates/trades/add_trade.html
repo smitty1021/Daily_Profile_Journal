@@ -343,6 +343,27 @@
                 </div>
                 <div class="col-md-4">
                     {{ forms.render_field(form.tags, input_class="form-select", id="tags-select", label_visible=true) }}
+                    <!-- Custom grouped tags dropdown -->
+                    <div class="mb-3">
+                        <label for="{{ form.tags.id }}" class="form-label">{{ form.tags.label.text }}</label>
+                        <select multiple class="form-select" id="{{ form.tags.id }}" name="{{ form.tags.name }}">
+                            {% for category_name, tag_options in form.tags.choices %}
+                                <optgroup label="{{ category_name }}">
+                                    {% for tag_id, tag_name in tag_options %}
+                                        <option value="{{ tag_id }}"
+                                                {% if tag_id in (form.tags.data or []) %}selected{% endif %}>
+                                            {{ tag_name }}
+                                        </option>
+                                    {% endfor %}
+                                </optgroup>
+                            {% endfor %}
+                        </select>
+                        {% if form.tags.errors %}
+                            {% for error in form.tags.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
                     <small class="form-text text-muted">Select appropriate tags for this trade.</small>
                 </div>
             </div>
