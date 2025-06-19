@@ -9,6 +9,7 @@ import os
 import statistics
 from sqlalchemy import ForeignKey
 from app import db
+from enum import Enum
 
 # --- Constants for Models ---
 QUARTER_NAMES = [None, "Q1 (Jan-Mar)", "Q2 (Apr-Jun)", "Q3 (Jul-Sep)", "Q4 (Oct-Dec)"]
@@ -354,15 +355,135 @@ trade_tags = db.Table('trade_tags',
     db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
 )
 
+
+class TagCategory(Enum):
+    SETUP_STRATEGY = "Setup & Strategy"
+    MARKET_CONDITIONS = "Market Conditions"
+    EXECUTION_MANAGEMENT = "Execution & Management"
+    PSYCHOLOGICAL_EMOTIONAL = "Psychological & Emotional Factors"
+
+
+# Replace the existing Tag model with this enhanced version:
 class Tag(db.Model):
     __tablename__ = 'tag'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False, unique=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', name='fk_tag_user'), nullable=False)
+    name = db.Column(db.String(50), nullable=False)
+    category = db.Column(db.Enum(TagCategory), nullable=False, default=TagCategory.SETUP_STRATEGY)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', name='fk_tag_user'),
+                        nullable=True)  # NULL for default tags
+    is_default = db.Column(db.Boolean, nullable=False, default=False)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    # Relationships
     user = db.relationship('User', backref=db.backref('tags', lazy='dynamic'))
 
+    # Constraints: Either global default (user_id=None) or user-specific unique name
+    __table_args__ = (
+        db.UniqueConstraint('name', 'user_id', name='uq_tag_name_user'),
+        db.Index('idx_tag_user_category', 'user_id', 'category'),
+        db.Index('idx_tag_default_active', 'is_default', 'is_active'),
+    )
+
+    @classmethod
+    def get_default_tags(cls):
+        """Get all default tags organized by category"""
+        return cls.query.filter_by(is_default=True, is_active=True).order_by(cls.category, cls.name).all()
+
+    @classmethod
+    def get_user_tags(cls, user_id, include_defaults=True):
+        """Get user's tags, optionally including defaults"""
+        query = cls.query.filter_by(user_id=user_id, is_active=True)
+
+        if include_defaults:
+            default_query = cls.query.filter_by(is_default=True, is_active=True)
+            query = query.union(default_query)
+
+        return query.order_by(cls.category, cls.name).all()
+
+    @classmethod
+    def get_tags_by_category(cls, user_id=None):
+        """Get tags organized by category for a user (including defaults)"""
+        if user_id:
+            tags = cls.get_user_tags(user_id, include_defaults=True)
+        else:
+            tags = cls.get_default_tags()
+
+        organized = {}
+        for category in TagCategory:
+            organized[category] = [tag for tag in tags if tag.category == category]
+
+        return organized
+
+    @classmethod
+    def create_default_tags(cls):
+        """Create the default tag set if they don't exist"""
+        default_tags = {
+            TagCategory.SETUP_STRATEGY: [
+                "Breakout", "Engulfing Candle", "Inside Bar", "Mean Reversion"
+            ],
+            TagCategory.MARKET_CONDITIONS: [
+                "Asian", "Cash Flow", "DNP", "DWP", "Extended Target", "High Volatility",
+                "London", "Low Volatility", "New York Open", "News Driven", "NY1", "NY2", "R1", "R2"
+            ],
+            TagCategory.EXECUTION_MANAGEMENT: [
+                "Chased Entry", "Cut Loser Short", "Impulsive Entry", "Let Winner Run",
+                "Limit Order", "Market Order", "Moved Stop Loss", "Partial Take Profit",
+                "Revenge Trade", "Trailing Stop"
+            ],
+            TagCategory.PSYCHOLOGICAL_EMOTIONAL: [
+                "Anxious", "Calm", "Confident", "Deviated from Plan", "Distracted",
+                "Followed Plan", "FOMO", "Greedy", "Hesitant", "Stressed", "Tired", "Well-Rested"
+            ]
+        }
+
+        created_count = 0
+        for category, tag_names in default_tags.items():
+            for tag_name in sorted(tag_names):  # Alphabetical order
+                existing = cls.query.filter_by(name=tag_name, is_default=True).first()
+                if not existing:
+                    tag = cls(
+                        name=tag_name,
+                        category=category,
+                        user_id=None,
+                        is_default=True,
+                        is_active=True
+                    )
+                    db.session.add(tag)
+                    created_count += 1
+
+        if created_count > 0:
+            db.session.commit()
+
+        return created_count
+
+    @classmethod
+    def copy_defaults_to_user(cls, user_id):
+        """Copy all default tags to a new user"""
+        default_tags = cls.get_default_tags()
+        copied_count = 0
+
+        for default_tag in default_tags:
+            # Check if user already has this tag
+            existing = cls.query.filter_by(name=default_tag.name, user_id=user_id).first()
+            if not existing:
+                user_tag = cls(
+                    name=default_tag.name,
+                    category=default_tag.category,
+                    user_id=user_id,
+                    is_default=False,
+                    is_active=True
+                )
+                db.session.add(user_tag)
+                copied_count += 1
+
+        if copied_count > 0:
+            db.session.commit()
+
+        return copied_count
+
     def __repr__(self):
-        return f'<Tag {self.name}>'
+        return f'<Tag {self.name} ({self.category.value})>'
 
 
 # --- Trading Models ---

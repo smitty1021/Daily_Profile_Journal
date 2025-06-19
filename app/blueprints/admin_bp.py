@@ -17,6 +17,182 @@ admin_bp = Blueprint('admin', __name__,
                      url_prefix='/admin')
 
 
+@admin_bp.route('/default-tags')
+@login_required
+@admin_required
+def manage_default_tags():
+    """Admin page to manage default tags"""
+    tags_by_category = Tag.get_tags_by_category()  # Gets only default tags
+    return render_template('admin/default_tags.html',
+                           title='Manage Default Tags',
+                           tags_by_category=tags_by_category,
+                           TagCategory=TagCategory)
+
+
+@admin_bp.route('/default-tags/create', methods=['POST'])
+@login_required
+@admin_required
+def create_default_tag():
+    """Create a new default tag"""
+    try:
+        name = request.json.get('name', '').strip()
+        category_name = request.json.get('category', '')
+
+        if not name or not category_name:
+            return jsonify({'success': False, 'message': 'Name and category are required'})
+
+        # Validate category
+        try:
+            category = TagCategory[category_name]
+        except KeyError:
+            return jsonify({'success': False, 'message': 'Invalid category'})
+
+        # Check for duplicates in default tags
+        existing = Tag.query.filter_by(name=name, is_default=True).first()
+        if existing:
+            return jsonify({'success': False, 'message': 'Default tag already exists'})
+
+        # Create new default tag
+        new_tag = Tag(
+            name=name,
+            category=category,
+            user_id=None,
+            is_default=True,
+            is_active=True
+        )
+
+        db.session.add(new_tag)
+        db.session.commit()
+
+        current_app.logger.info(f"Admin {current_user.username} created default tag: {name}")
+
+        return jsonify({
+            'success': True,
+            'message': f'Default tag "{name}" created successfully',
+            'tag': {
+                'id': new_tag.id,
+                'name': new_tag.name,
+                'category': new_tag.category.name,
+                'is_default': new_tag.is_default,
+                'is_active': new_tag.is_active
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error creating default tag: {e}")
+        return jsonify({'success': False, 'message': 'Error creating default tag'})
+
+
+@admin_bp.route('/default-tags/<int:tag_id>/edit', methods=['POST'])
+@login_required
+@admin_required
+def edit_default_tag(tag_id):
+    """Edit a default tag"""
+    try:
+        tag = Tag.query.get_or_404(tag_id)
+
+        if not tag.is_default:
+            return jsonify({'success': False, 'message': 'Can only edit default tags'})
+
+        name = request.json.get('name', '').strip()
+        category_name = request.json.get('category', '')
+        is_active = request.json.get('is_active', True)
+
+        if not name or not category_name:
+            return jsonify({'success': False, 'message': 'Name and category are required'})
+
+        # Validate category
+        try:
+            category = TagCategory[category_name]
+        except KeyError:
+            return jsonify({'success': False, 'message': 'Invalid category'})
+
+        # Check for duplicates (excluding current tag)
+        existing = Tag.query.filter(
+            Tag.id != tag_id,
+            Tag.name == name,
+            Tag.is_default == True
+        ).first()
+
+        if existing:
+            return jsonify({'success': False, 'message': 'Default tag name already exists'})
+
+        # Update tag
+        tag.name = name
+        tag.category = category
+        tag.is_active = is_active
+        db.session.commit()
+
+        current_app.logger.info(f"Admin {current_user.username} edited default tag: {name}")
+
+        return jsonify({
+            'success': True,
+            'message': f'Default tag "{name}" updated successfully',
+            'tag': {
+                'id': tag.id,
+                'name': tag.name,
+                'category': tag.category.name,
+                'is_default': tag.is_default,
+                'is_active': tag.is_active
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error editing default tag {tag_id}: {e}")
+        return jsonify({'success': False, 'message': 'Error updating default tag'})
+
+
+@admin_bp.route('/default-tags/<int:tag_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_default_tag(tag_id):
+    """Delete a default tag"""
+    try:
+        tag = Tag.query.get_or_404(tag_id)
+
+        if not tag.is_default:
+            return jsonify({'success': False, 'message': 'Can only delete default tags'})
+
+        tag_name = tag.name
+
+        # Note: This will also remove the tag from any user's collection who had it
+        db.session.delete(tag)
+        db.session.commit()
+
+        current_app.logger.info(f"Admin {current_user.username} deleted default tag: {tag_name}")
+
+        return jsonify({
+            'success': True,
+            'message': f'Default tag "{tag_name}" deleted successfully'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting default tag {tag_id}: {e}")
+        return jsonify({'success': False, 'message': 'Error deleting default tag'})
+
+
+@admin_bp.route('/default-tags/seed', methods=['POST'])
+@login_required
+@admin_required
+def seed_default_tags():
+    """Recreate all default tags"""
+    try:
+        created_count = Tag.create_default_tags()
+
+        current_app.logger.info(f"Admin {current_user.username} seeded {created_count} default tags")
+
+        flash(f'Successfully created {created_count} default tags', 'success')
+        return redirect(url_for('admin.manage_default_tags'))
+
+    except Exception as e:
+        current_app.logger.error(f"Error seeding default tags: {e}")
+        flash('Error creating default tags', 'danger')
+        return redirect(url_for('admin.manage_default_tags'))
+
+
 @admin_bp.route('/dashboard')
 @login_required
 @admin_required

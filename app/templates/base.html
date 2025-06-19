@@ -244,7 +244,7 @@
                     </li>
                     <li><a class="nav-link {{ 'active' if request.blueprint == 'trades' else '' }}" href="{{ url_for('trades.view_trades_list') }}"><span class="icon"><i class="fas fa-exchange-alt"></i></span><span class="label">Trades</span></a></li>
                     <li><a class="nav-link {{ 'active' if request.blueprint == 'trading_models' else '' }}" href="{{ url_for('trading_models.view_trading_models_list') }}"><span class="icon"><i class="fas fa-sitemap"></i></span><span class="label">Trade Models</span></a></li>
-                    <li><a class="nav-link {{ 'active' if request.blueprint == 'tags' else '' }}" href="{{ url_for('tags.tags_list') }}"><span class="icon"><i class="fas fa-tags"></i></span><span class="label">Manage Tags</span></a></li>
+
                     <li class="has-submenu">
                         <a href="#"><i class="fas fa-calendar-alt icon"></i><span class="label">Calendar Tools</span><span class="arrow"><i class="fas fa-chevron-right"></i></span></a>
                         <ul class="submenu">

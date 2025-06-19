@@ -1,77 +1,200 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
 from flask_login import login_required, current_user
+from app import db
+from app.models import Settings, Tag, TagCategory
+from app.forms import TagForm
+import json
 
-# Import db and Settings model locally within the function where needed to avoid potential circular imports
-# from app import db
-# from app.models import Settings
-from app.utils import record_activity
-
-settings_bp = Blueprint('settings_routes', __name__,
-                        template_folder='../templates/settings',
-                        url_prefix='/settings')
+settings_bp = Blueprint('settings', __name__, template_folder='../templates/settings')
 
 
-@settings_bp.route('/', methods=['GET', 'POST'])
+@settings_bp.route('/')
 @login_required
 def view_settings():
-    if request.method == 'POST':
-        form_name = request.form.get('form_name')
+    """Main settings page with tags management integrated"""
+    # Get user's tags organized by category
+    tags_by_category = Tag.get_tags_by_category(current_user.id)
 
-        if form_name == 'change_theme':
-            new_theme = request.form.get('theme', 'dark')  # Default to 'dark' if not provided
-            if new_theme in ['light', 'dark']:  # Validate theme value
-                session['theme'] = new_theme  # Always update the session for immediate effect
+    # Handle theme changes
+    if request.method == 'POST' and request.form.get('form_name') == 'change_theme':
+        theme = request.form.get('theme', 'dark')
+        session['theme'] = theme
 
-                # --- Save theme preference to the database ---
-                from app import db  # Local import
-                from app.models import Settings  # Local import
+        # Update user settings
+        user_settings = Settings.get_for_user(current_user.id)
+        user_settings.theme = theme
+        try:
+            db.session.commit()
+            flash(f'Theme changed to {theme.title()}', 'success')
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error updating theme for user {current_user.id}: {e}")
+            flash('Error updating theme', 'danger')
 
-                user_settings = Settings.query.filter_by(user_id=current_user.id).first()
-                if not user_settings:  # If no settings record exists for the user, create one
-                    user_settings = Settings(user_id=current_user.id)
-                    db.session.add(user_settings)
+        return redirect(url_for('settings.view_settings'))
 
-                user_settings.theme = new_theme  # Update the theme attribute
+    return render_template('settings.html',
+                           title='Settings',
+                           tags_by_category=tags_by_category,
+                           TagCategory=TagCategory)
 
-                try:
-                    db.session.commit()
-                    record_activity('theme_change_db', f"Theme changed to {new_theme} and saved to DB.")
-                    flash(f'Theme preference updated to {new_theme.title()} and saved.', 'success')
-                except Exception as e:
-                    db.session.rollback()
-                    current_app.logger.error(f"Could not save theme to DB for user {current_user.username}: {e}",
-                                             exc_info=True)
-                    record_activity('theme_change_session_only',
-                                    f"Theme changed to {new_theme} (session only, DB save failed).")
-                    flash(f'Theme preference updated for this session, but could not save permanently: {str(e)}',
-                          'warning')
-                # --- End of database saving logic ---
 
-            else:
-                flash('Invalid theme selected.', 'warning')
-            return redirect(url_for('settings_routes.view_settings'))
+@settings_bp.route('/tags/create', methods=['POST'])
+@login_required
+def create_tag():
+    """Create a new user tag via AJAX"""
+    try:
+        name = request.json.get('name', '').strip()
+        category_name = request.json.get('category', '')
 
-        # Add handling for other forms if this page manages more settings later
-        # elif form_name == 'other_settings_form':
-        #     pass
+        if not name or not category_name:
+            return jsonify({'success': False, 'message': 'Name and category are required'})
 
-    # For GET request, or if POST was not for a known form
-    return render_template('settings.html', title='User Settings')
+        # Validate category
+        try:
+            category = TagCategory[category_name]
+        except KeyError:
+            return jsonify({'success': False, 'message': 'Invalid category'})
 
-# ADD THIS NEW FUNCTION AT THE END OF THE FILE
-@settings_bp.route('/settings/set-sidebar-state', methods=['POST'])
-def set_sidebar_state():
-    """Saves the user's sidebar state (pinned/unpinned) to the session."""
-    if not current_user.is_authenticated:
-        return jsonify({'status': 'error', 'message': 'Authentication required'}), 401
+        # Check for duplicates (including defaults)
+        existing = Tag.query.filter(
+            db.or_(
+                db.and_(Tag.name == name, Tag.user_id == current_user.id),
+                db.and_(Tag.name == name, Tag.is_default == True)
+            )
+        ).first()
 
-    data = request.get_json()
-    state = data.get('sidebar_state')
+        if existing:
+            return jsonify({'success': False, 'message': 'Tag already exists'})
 
-    current_app.logger.info(f"SIDEBAR_STATE: Received request to set state to '{state}'.")
+        # Create new tag
+        new_tag = Tag(
+            name=name,
+            category=category,
+            user_id=current_user.id,
+            is_default=False,
+            is_active=True
+        )
 
-    if state in ['full', 'icons']:
-        session['sidebar_state'] = state
-        return jsonify({'status': 'success', 'message': f'Sidebar state set to {state}'})
+        db.session.add(new_tag)
+        db.session.commit()
 
-    return jsonify({'status': 'error', 'message': 'Invalid sidebar state provided'}), 400
+        return jsonify({
+            'success': True,
+            'message': f'Tag "{name}" created successfully',
+            'tag': {
+                'id': new_tag.id,
+                'name': new_tag.name,
+                'category': new_tag.category.name,
+                'is_default': new_tag.is_default
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error creating tag: {e}")
+        return jsonify({'success': False, 'message': 'Error creating tag'})
+
+
+@settings_bp.route('/tags/<int:tag_id>/edit', methods=['POST'])
+@login_required
+def edit_tag(tag_id):
+    """Edit a user tag via AJAX"""
+    try:
+        tag = Tag.query.get_or_404(tag_id)
+
+        # Users can only edit their own tags (not defaults)
+        if tag.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'Permission denied'})
+
+        name = request.json.get('name', '').strip()
+        category_name = request.json.get('category', '')
+
+        if not name or not category_name:
+            return jsonify({'success': False, 'message': 'Name and category are required'})
+
+        # Validate category
+        try:
+            category = TagCategory[category_name]
+        except KeyError:
+            return jsonify({'success': False, 'message': 'Invalid category'})
+
+        # Check for duplicates (excluding current tag)
+        existing = Tag.query.filter(
+            Tag.id != tag_id,
+            db.or_(
+                db.and_(Tag.name == name, Tag.user_id == current_user.id),
+                db.and_(Tag.name == name, Tag.is_default == True)
+            )
+        ).first()
+
+        if existing:
+            return jsonify({'success': False, 'message': 'Tag name already exists'})
+
+        # Update tag
+        tag.name = name
+        tag.category = category
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Tag "{name}" updated successfully',
+            'tag': {
+                'id': tag.id,
+                'name': tag.name,
+                'category': tag.category.name,
+                'is_default': tag.is_default
+            }
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error editing tag {tag_id}: {e}")
+        return jsonify({'success': False, 'message': 'Error updating tag'})
+
+
+@settings_bp.route('/tags/<int:tag_id>/delete', methods=['POST'])
+@login_required
+def delete_tag(tag_id):
+    """Delete a user tag via AJAX"""
+    try:
+        tag = Tag.query.get_or_404(tag_id)
+
+        # Users can only delete their own tags (not defaults)
+        if tag.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'Permission denied'})
+
+        tag_name = tag.name
+        db.session.delete(tag)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Tag "{tag_name}" deleted successfully'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting tag {tag_id}: {e}")
+        return jsonify({'success': False, 'message': 'Error deleting tag'})
+
+
+@settings_bp.route('/tags/reset-defaults', methods=['POST'])
+@login_required
+def reset_default_tags():
+    """Reset user's tags to current defaults"""
+    try:
+        # Delete user's custom tags
+        Tag.query.filter_by(user_id=current_user.id).delete()
+
+        # Copy current defaults
+        copied_count = Tag.copy_defaults_to_user(current_user.id)
+
+        flash(f'Reset complete! {copied_count} default tags have been restored.', 'success')
+        return redirect(url_for('settings.view_settings'))
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error resetting tags for user {current_user.id}: {e}")
+        flash('Error resetting tags', 'danger')
+        return redirect(url_for('settings.view_settings'))

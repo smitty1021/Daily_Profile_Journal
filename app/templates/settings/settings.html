@@ -92,3 +92,472 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
+
+{% block head_extra %}
+<style>
+    .tag-category-section {
+        border: 1px solid var(--bs-border-color);
+        border-radius: 0.375rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .tag-category-header {
+        background-color: var(--bs-secondary-bg);
+        border-bottom: 1px solid var(--bs-border-color);
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .tag-category-body {
+        padding: 1rem;
+    }
+
+    .tag-item {
+        display: inline-flex;
+        align-items: center;
+        background-color: var(--bs-tertiary-bg);
+        border: 1px solid var(--bs-border-color);
+        border-radius: 1rem;
+        padding: 0.25rem 0.75rem;
+        margin: 0.25rem;
+        font-size: 0.875rem;
+        position: relative;
+    }
+
+    .tag-item.default-tag {
+        background-color: var(--bs-primary-bg-subtle);
+        border-color: var(--bs-primary-border-subtle);
+        color: var(--bs-primary-text-emphasis);
+    }
+
+    .tag-item.user-tag {
+        background-color: var(--bs-success-bg-subtle);
+        border-color: var(--bs-success-border-subtle);
+        color: var(--bs-success-text-emphasis);
+    }
+
+    .tag-actions {
+        margin-left: 0.5rem;
+        display: none;
+    }
+
+    .tag-item:hover .tag-actions {
+        display: inline-flex;
+    }
+
+    .tag-actions button {
+        background: none;
+        border: none;
+        padding: 0.125rem;
+        margin: 0 0.125rem;
+        cursor: pointer;
+        opacity: 0.7;
+        font-size: 0.75rem;
+    }
+
+    .tag-actions button:hover {
+        opacity: 1;
+    }
+
+    .add-tag-form {
+        background-color: var(--bs-light-bg-subtle);
+        border: 1px dashed var(--bs-border-color);
+        border-radius: 0.375rem;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .add-tag-form.show {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-cog me-2"></i>{{ title or "User Settings" }}</h3>
+                </div>
+                <div class="card-body p-4">
+                    {# Theme Settings Section #}
+                    <div class="settings-section mb-4">
+                        <h4>Theme Preference</h4>
+                        <p>Your current theme is: <strong>{{ session.get('theme', 'dark')|title }}</strong></p>
+                        <form method="POST" action="{{ url_for('settings.view_settings') }}" class="mt-2">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="form_name" value="change_theme">
+
+                            <button type="submit" name="theme" value="light"
+                                    class="btn theme-option-button {% if session.get('theme', 'dark') == 'light' %}btn-primary active{% else %}btn-outline-secondary{% endif %} me-2">
+                                <i class="fas fa-sun me-1"></i> Light Theme
+                            </button>
+                            <button type="submit" name="theme" value="dark"
+                                    class="btn theme-option-button {% if session.get('theme', 'dark') == 'dark' %}btn-primary active{% else %}btn-outline-secondary{% endif %}">
+                                <i class="fas fa-moon me-1"></i> Dark Theme
+                            </button>
+                        </form>
+                    </div>
+                    <hr>
+
+                    {# Tags Management Section #}
+                    <div class="settings-section">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4><i class="fas fa-tags me-2"></i>Manage Your Trading Tags</h4>
+                            <div>
+                                <button type="button" class="btn btn-outline-primary btn-sm me-2" onclick="showAddTagForm()">
+                                    <i class="fas fa-plus me-1"></i>Add Custom Tag
+                                </button>
+                                <form style="display: inline;" method="POST" action="{{ url_for('settings.reset_default_tags') }}" onsubmit="return confirm('This will delete all your custom tags and restore defaults. Continue?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-outline-warning btn-sm">
+                                        <i class="fas fa-undo me-1"></i>Reset to Defaults
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Blue tags</strong> are defaults available to all users.
+                            <strong>Green tags</strong> are your custom tags that you can edit or delete.
+                        </div>
+
+                        {# Add Tag Form (Initially Hidden) #}
+                        <div id="addTagForm" class="add-tag-form">
+                            <h6>Add New Custom Tag</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <input type="text" id="newTagName" class="form-control" placeholder="Tag name" maxlength="50">
+                                </div>
+                                <div class="col-md-4">
+                                    <select id="newTagCategory" class="form-select">
+                                        {% for category in TagCategory %}
+                                        <option value="{{ category.name }}">{{ category.value }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-success" onclick="createTag()">Add</button>
+                                    <button type="button" class="btn btn-secondary" onclick="hideAddTagForm()">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Tags organized by category #}
+                        {% for category, tags in tags_by_category.items() %}
+                        <div class="tag-category-section">
+                            <div class="tag-category-header">
+                                <span>{{ category.value }}</span>
+                                <span class="badge bg-secondary">{{ tags|length }} tags</span>
+                            </div>
+                            <div class="tag-category-body" id="category-{{ category.name }}">
+                                {% if tags %}
+                                    {% for tag in tags %}
+                                    <div class="tag-item {% if tag.is_default %}default-tag{% else %}user-tag{% endif %}" data-tag-id="{{ tag.id }}">
+                                        <span class="tag-name">{{ tag.name }}</span>
+                                        {% if not tag.is_default %}
+                                        <div class="tag-actions">
+                                            <button type="button" class="text-primary" onclick="editTag({{ tag.id }}, '{{ tag.name }}', '{{ tag.category.name }}')" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="text-danger" onclick="deleteTag({{ tag.id }}, '{{ tag.name }}')" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted mb-0">No tags in this category</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Edit Tag Modal #}
+<div class="modal fade" id="editTagModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Tag</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="editTagName" class="form-label">Tag Name</label>
+                    <input type="text" id="editTagName" class="form-control" maxlength="50">
+                </div>
+                <div class="mb-3">
+                    <label for="editTagCategory" class="form-label">Category</label>
+                    <select id="editTagCategory" class="form-select">
+                        {% for category in TagCategory %}
+                        <option value="{{ category.name }}">{{ category.value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveTagEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+let currentEditingTagId = null;
+
+function showAddTagForm() {
+    document.getElementById('addTagForm').classList.add('show');
+    document.getElementById('newTagName').focus();
+}
+
+function hideAddTagForm() {
+    document.getElementById('addTagForm').classList.remove('show');
+    document.getElementById('newTagName').value = '';
+}
+
+function createTag() {
+    const name = document.getElementById('newTagName').value.trim();
+    const category = document.getElementById('newTagCategory').value;
+
+    if (!name) {
+        alert('Please enter a tag name');
+        return;
+    }
+
+    fetch('{{ url_for("settings.create_tag") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            name: name,
+            category: category
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add the new tag to the appropriate category
+            addTagToDOM(data.tag);
+            hideAddTagForm();
+            showAlert('success', data.message);
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Error creating tag');
+    });
+}
+
+function editTag(tagId, name, category) {
+    currentEditingTagId = tagId;
+    document.getElementById('editTagName').value = name;
+    document.getElementById('editTagCategory').value = category;
+
+    const modal = new bootstrap.Modal(document.getElementById('editTagModal'));
+    modal.show();
+}
+
+function saveTagEdit() {
+    if (!currentEditingTagId) return;
+
+    const name = document.getElementById('editTagName').value.trim();
+    const category = document.getElementById('editTagCategory').value;
+
+    if (!name) {
+        alert('Please enter a tag name');
+        return;
+    }
+
+    fetch(`{{ url_for("settings.edit_tag", tag_id=0) }}`.replace('0', currentEditingTagId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            name: name,
+            category: category
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the tag in the DOM
+            updateTagInDOM(data.tag);
+
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editTagModal'));
+            modal.hide();
+            showAlert('success', data.message);
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Error updating tag');
+    });
+}
+
+function deleteTag(tagId, tagName) {
+    if (!confirm(`Are you sure you want to delete the tag "${tagName}"?`)) {
+        return;
+    }
+
+    fetch(`{{ url_for("settings.delete_tag", tag_id=0) }}`.replace('0', tagId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the tag from the DOM
+            removeTagFromDOM(tagId);
+            showAlert('success', data.message);
+        } else {
+            showAlert('danger', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('danger', 'Error deleting tag');
+    });
+}
+
+function addTagToDOM(tag) {
+    const categoryContainer = document.getElementById(`category-${tag.category}`);
+
+    // Check if category has "No tags" message and remove it
+    const noTagsMsg = categoryContainer.querySelector('.text-muted');
+    if (noTagsMsg) {
+        noTagsMsg.remove();
+    }
+
+    // Create new tag element
+    const tagDiv = document.createElement('div');
+    tagDiv.className = `tag-item ${tag.is_default ? 'default-tag' : 'user-tag'}`;
+    tagDiv.setAttribute('data-tag-id', tag.id);
+
+    tagDiv.innerHTML = `
+        <span class="tag-name">${tag.name}</span>
+        ${!tag.is_default ? `
+        <div class="tag-actions">
+            <button type="button" class="text-primary" onclick="editTag(${tag.id}, '${tag.name}', '${tag.category}')" title="Edit">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button type="button" class="text-danger" onclick="deleteTag(${tag.id}, '${tag.name}')" title="Delete">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        ` : ''}
+    `;
+
+    categoryContainer.appendChild(tagDiv);
+
+    // Update badge count
+    updateCategoryBadge(tag.category);
+}
+
+function updateTagInDOM(tag) {
+    const tagElement = document.querySelector(`[data-tag-id="${tag.id}"]`);
+    if (tagElement) {
+        // Check if category changed
+        const currentCategory = tagElement.closest('[id^="category-"]').id.replace('category-', '');
+
+        if (currentCategory !== tag.category) {
+            // Move to new category
+            removeTagFromDOM(tag.id);
+            addTagToDOM(tag);
+        } else {
+            // Just update the name
+            tagElement.querySelector('.tag-name').textContent = tag.name;
+
+            // Update onclick handlers with new name
+            const editBtn = tagElement.querySelector('.text-primary');
+            const deleteBtn = tagElement.querySelector('.text-danger');
+            if (editBtn) editBtn.setAttribute('onclick', `editTag(${tag.id}, '${tag.name}', '${tag.category}')`);
+            if (deleteBtn) deleteBtn.setAttribute('onclick', `deleteTag(${tag.id}, '${tag.name}')`);
+        }
+    }
+}
+
+function removeTagFromDOM(tagId) {
+    const tagElement = document.querySelector(`[data-tag-id="${tagId}"]`);
+    if (tagElement) {
+        const categoryContainer = tagElement.closest('[id^="category-"]');
+        const categoryName = categoryContainer.id.replace('category-', '');
+
+        tagElement.remove();
+
+        // Check if category is now empty
+        const remainingTags = categoryContainer.querySelectorAll('.tag-item');
+        if (remainingTags.length === 0) {
+            const noTagsMsg = document.createElement('p');
+            noTagsMsg.className = 'text-muted mb-0';
+            noTagsMsg.textContent = 'No tags in this category';
+            categoryContainer.appendChild(noTagsMsg);
+        }
+
+        // Update badge count
+        updateCategoryBadge(categoryName);
+    }
+}
+
+function updateCategoryBadge(categoryName) {
+    const categorySection = document.getElementById(`category-${categoryName}`);
+    const badge = categorySection.closest('.tag-category-section').querySelector('.badge');
+    const tagCount = categorySection.querySelectorAll('.tag-item').length;
+    badge.textContent = `${tagCount} tags`;
+}
+
+function showAlert(type, message) {
+    // Create and show a Bootstrap alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    // Insert at top of card body
+    const cardBody = document.querySelector('.card-body');
+    cardBody.insertBefore(alertDiv, cardBody.firstChild);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        const alert = bootstrap.Alert.getOrCreateInstance(alertDiv);
+        alert.close();
+    }, 5000);
+}
+
+// Handle Enter key in add tag form
+document.getElementById('newTagName').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        createTag();
+    }
+});
+</script>
+{% endblock %}

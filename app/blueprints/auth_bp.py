@@ -79,6 +79,15 @@ def register():
                 new_user.set_password(form.password.data)
                 db.session.add(new_user)
                 db.session.commit()
+
+                try:
+                    copied_tags = Tag.copy_defaults_to_user(new_user.id)
+                    current_app.logger.info(f"Copied {copied_tags} default tags to new user {new_user.username}")
+                except Exception as e:
+                    current_app.logger.error(f"Failed to copy default tags to user {new_user.username}: {e}")
+                    # Don't fail registration if tag copying fails
+
+
                 token = generate_token(new_user.email, salt='email-verification-salt')
                 verification_url = url_for('auth.verify_email', token=token, _external=True)
                 send_email(to=new_user.email, subject="Verify Your Email - Trading Journal",

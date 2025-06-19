@@ -235,8 +235,7 @@ def create_app(config_class=None):
         app.register_blueprint(trades_bp, url_prefix='/trades')  # Added prefix
         from .blueprints.settings_bp import settings_bp
         app.register_blueprint(settings_bp, url_prefix='/settings')  # Added prefix
-        from .blueprints.tags_bp import tags_bp
-        app.register_blueprint(tags_bp)
+
 
         # ADDED: Import and Register Journal Blueprint
         from .blueprints.journal_bp import journal_bp
@@ -294,6 +293,12 @@ def create_app(config_class=None):
                     app.logger.info(
                         f"Initial data setup: Could not commit initial data (this might be expected if tables are not yet fully created or app is initializing for CLI migration command): {e}")
 
-
+            try:
+                from app.models import Tag
+                created_count = Tag.create_default_tags()
+                if created_count > 0:
+                    app.logger.info(f"Created {created_count} default tags")
+            except Exception as e:
+                app.logger.error(f"Error creating default tags: {e}")
 
     return app

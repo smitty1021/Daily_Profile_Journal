@@ -318,12 +318,25 @@ class TradeForm(FlaskForm):
                 ('Other', 'Other (Specify)')
             ]
 class TagForm(FlaskForm):
-    """Form for creating and editing tags."""
     name = StringField('Tag Name', validators=[
-        DataRequired(),
-        Length(min=2, max=50, message="Tag name must be between 2 and 50 characters.")
+        DataRequired(message="Tag name is required."),
+        Length(min=1, max=50, message="Tag name must be between 1 and 50 characters.")
     ])
+    category = SelectField('Category',
+                          choices=[(cat.name, cat.value) for cat in TagCategory],
+                          validators=[DataRequired()])
     submit = SubmitField('Save Tag')
+
+class AdminDefaultTagForm(FlaskForm):
+    name = StringField('Tag Name', validators=[
+        DataRequired(message="Tag name is required."),
+        Length(min=1, max=50, message="Tag name must be between 1 and 50 characters.")
+    ])
+    category = SelectField('Category',
+                          choices=[(cat.name, cat.value) for cat in TagCategory],
+                          validators=[DataRequired()])
+    is_active = BooleanField('Active', default=True)
+    submit = SubmitField('Save Default Tag')
 
 # Form for filtering trades list
 class TradeFilterForm(FlaskForm):
