@@ -18,7 +18,7 @@ from datetime import date as py_date, datetime as py_datetime, time as py_time
 from flask_wtf.csrf import generate_csrf
 
 from app import db
-from app.models import Trade, EntryPoint, ExitPoint, TradingModel, NewsEventItem, TradeImage, Instrument, Tag
+from app.models import Trade, EntryPoint, ExitPoint, TradingModel, NewsEventItem, TradeImage, Instrument, Tag, TagCategory
 from app.forms import TradeForm, EntryPointForm, ExitPointForm, TradeFilterForm, ImportTradesForm
 from app.utils import (_parse_form_float, _parse_form_int, _parse_form_time,
                        get_news_event_options, record_activity)
@@ -59,10 +59,9 @@ def _is_allowed_image(filename):
 
 def _populate_tags_choices(form):
     """Populate dynamic choices for tags dropdown - grouped by category"""
-    # Note: These imports are likely already at the top of your file.
     from app.models import Tag, TagCategory
     from flask_login import current_user
-    from app import db
+
 
     # Get all available tags for the user
     all_tags = Tag.query.filter(
@@ -81,9 +80,10 @@ def _populate_tags_choices(form):
 
     for tag in all_tags:
         if tag.category in grouped_tags:
-            grouped_tags[tag.category].append((tag.id, tag.name))
+            # Convert tag.id to string since we removed coerce=int
+            grouped_tags[tag.category].append((str(tag.id), tag.name))
 
-    # Build the final choices list in the correct format for optgroups
+    # Build the final choices list in optgroups format
     choices = []
     for category_enum, tags_list in grouped_tags.items():
         if tags_list:  # Only add categories that actually contain tags
@@ -246,10 +246,19 @@ def add_trade():
 
             # --- MODIFIED: Added the logic to process and link the selected tags ---
             if form.tags.data:
-                selected_tags = Tag.query.filter(Tag.id.in_(form.tags.data)).all()
+                # Filter out any non-digit strings and convert to integers
+                tag_ids = []
+                for tag_id in form.tags.data:
+                    if isinstance(tag_id, str) and tag_id.isdigit():
+                        tag_ids.append(int(tag_id))
+                    elif isinstance(tag_id, int):
+                        tag_ids.append(tag_id)
+
+                # Get the actual tag objects
+                selected_tags = Tag.query.filter(Tag.id.in_(tag_ids)).all()
                 new_trade.tags = selected_tags
 
-            # --- (The rest of the function for processing entries, exits, and images remains the same) ---
+                # --- (The rest of the function for processing entries, exits, and images remains the same) ---
             for entry_data in form.entries.data:
                 if entry_data.get('entry_time') and entry_data.get('contracts') is not None and entry_data.get(
                         'entry_price') is not None:
@@ -355,7 +364,7 @@ def edit_trade(trade_id):
             form.exits.append_entry(data=exit_form_data)
         if not form.exits.entries: form.exits.append_entry(None)
         if trade_to_edit.tags:
-            form.tags.data = [tag.id for tag in trade_to_edit.tags]
+            form.tags.data = [str(tag.id) for tag in trade_to_edit.tags]
 
     if form.validate_on_submit():
         try:
@@ -386,7 +395,16 @@ def edit_trade(trade_id):
             trade_to_edit.improvements_notes = form.improvements_notes.data
             trade_to_edit.screenshot_link = form.screenshot_link.data
             if form.tags.data:
-                selected_tags = Tag.query.filter(Tag.id.in_(form.tags.data)).all()
+                # Filter out any non-digit strings and convert to integers
+                tag_ids = []
+                for tag_id in form.tags.data:
+                    if isinstance(tag_id, str) and tag_id.isdigit():
+                        tag_ids.append(int(tag_id))
+                    elif isinstance(tag_id, int):
+                        tag_ids.append(tag_id)
+
+                # Get the actual tag objects
+                selected_tags = Tag.query.filter(Tag.id.in_(tag_ids)).all()
                 trade_to_edit.tags = selected_tags
             else:
                 trade_to_edit.tags = []
@@ -599,7 +617,7 @@ def export_trades_csv():
             trade.gross_pnl, trade.pnl_in_r, trade.dollar_risk,
             trade.initial_stop_loss, trade.terminus_target, trade.mae, trade.mfe,
             trade.how_closed, trade.trading_model.name if trade.trading_model else '',
-            trade.tags, trade.trade_notes, trade.overall_analysis_notes, trade.trade_management_notes,
+            ', '.join([tag.name for tag in trade.tags]) if trade.tags else '', trade.trade_notes, trade.overall_analysis_notes, trade.trade_management_notes,
             trade.errors_notes, trade.improvements_notes, trade.screenshot_link
         ])
     output.seek(0)

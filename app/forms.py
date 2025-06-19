@@ -6,8 +6,28 @@ from wtforms import (StringField, PasswordField, BooleanField, SubmitField, Mult
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional, NumberRange, InputRequired
 from app.models import UserRole  # Assuming UserRole is used elsewhere or for consistency
 from app.models import TagCategory
+from wtforms.fields import SelectMultipleField
 
 
+class OptGroupSelectMultipleField(SelectMultipleField):
+    """Custom SelectMultipleField that handles optgroups correctly"""
+
+    def iter_choices(self):
+        """Iterate over choices, flattening optgroups for validation"""
+        for choice in self.choices:
+            if isinstance(choice, (list, tuple)) and len(choice) == 2:
+                # Check if this is an optgroup (group_label, [(value, label), ...])
+                group_label, group_choices = choice
+                if isinstance(group_choices, (list, tuple)):
+                    # This is an optgroup, yield individual choices
+                    for value, label in group_choices:
+                        yield (value, label, value in (self.data or []))
+                else:
+                    # This is a regular choice (value, label)
+                    yield (choice[0], choice[1], choice[0] in (self.data or []))
+            else:
+                # Fallback for other choice formats
+                yield (choice, choice, choice in (self.data or []))
 
 # Custom coerce function for optional integer select fields
 def coerce_int_optional(value):
@@ -244,6 +264,27 @@ class ExitPointForm(FlaskForm):
 
 # Updated TradeForm and TradeFilterForm in app/forms.py
 
+class OptGroupSelectMultipleField(SelectMultipleField):
+    """Custom SelectMultipleField that handles optgroups correctly"""
+
+    def iter_choices(self):
+        """Iterate over choices, flattening optgroups for validation"""
+        for choice in self.choices:
+            if isinstance(choice, (list, tuple)) and len(choice) == 2:
+                # Check if this is an optgroup (group_label, [(value, label), ...])
+                group_label, group_choices = choice
+                if isinstance(group_choices, (list, tuple)):
+                    # This is an optgroup, yield individual choices
+                    for value, label in group_choices:
+                        yield (value, label, value in (self.data or []))
+                else:
+                    # This is a regular choice (value, label)
+                    yield (choice[0], choice[1], choice[0] in (self.data or []))
+            else:
+                # Fallback for other choice formats
+                yield (choice, choice, choice in (self.data or []))
+
+
 class TradeForm(FlaskForm):
     # Remove hardcoded instrument_choices - will be set dynamically
     direction_choices = [('', 'Select Direction'), ('Long', 'Long'), ('Short', 'Short')]
@@ -296,8 +337,8 @@ class TradeForm(FlaskForm):
         ['jpg', 'png', 'jpeg', 'gif'], 'Images only!')])
     screenshot_link = StringField('Screenshot Links', validators=[Optional(), Length(max=255)],
                                   render_kw={"placeholder": "http://..."})
-    tags = SelectMultipleField('Tags', coerce=int, choices=[],
-                               render_kw={'class': 'form-select', 'multiple': 'multiple'})
+    tags = OptGroupSelectMultipleField('Tags', choices=[],
+                                       render_kw={'class': 'form-select', 'multiple': 'multiple'})
     submit = SubmitField('Save Trade')
 
     def __init__(self, *args, **kwargs):
