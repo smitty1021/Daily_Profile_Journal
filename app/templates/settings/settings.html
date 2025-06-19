@@ -85,6 +85,40 @@
     .add-tag-form.show {
         display: block;
     }
+
+    .custom-confirm-modal .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .custom-confirm-modal .modal-header {
+        border-bottom: 1px solid var(--bs-border-color);
+        padding: 1.5rem;
+    }
+
+    .custom-confirm-modal .modal-body {
+        padding: 1.5rem;
+        font-size: 1.1rem;
+    }
+
+    .custom-confirm-modal .modal-footer {
+        border-top: 1px solid var(--bs-border-color);
+        padding: 1rem 1.5rem;
+    }
+
+    .btn-danger-custom {
+        background: linear-gradient(45deg, #dc3545, #e74c3c);
+        border: none;
+        box-shadow: 0 4px 8px rgba(220,53,69,0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-danger-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(220,53,69,0.4);
+    }
+
 </style>
 {% endblock %}
 
@@ -196,6 +230,26 @@
             </div>
         </div>
     </div>
+
+  <!-- Custom Confirmation Modal -->
+    <div class="modal fade custom-confirm-modal" id="customConfirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalTitle">Confirm Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="confirmModalBody">
+                    Are you sure you want to proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger-custom" id="confirmModalAction">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 {# Edit Tag Modal #}
@@ -447,7 +501,83 @@ function showAlert(type, message) {
         alert.close();
     }, 5000);
 }
+// Custom confirmation modal functions
+let confirmCallback = null;
 
+function showCustomConfirm(title, message, callback, actionText = 'Confirm') {
+    document.getElementById('confirmModalTitle').textContent = title;
+    document.getElementById('confirmModalBody').textContent = message;
+    document.getElementById('confirmModalAction').textContent = actionText;
+
+    confirmCallback = callback;
+
+    const modal = new bootstrap.Modal(document.getElementById('customConfirmModal'));
+    modal.show();
+}
+
+// Handle confirm button click
+document.getElementById('confirmModalAction').addEventListener('click', function() {
+    if (confirmCallback) {
+        confirmCallback();
+        confirmCallback = null;
+    }
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('customConfirmModal'));
+    modal.hide();
+});
+
+// Update the deleteTag function to use custom confirmation:
+function deleteTag(tagId, tagName) {
+    showCustomConfirm(
+        'Delete Tag',
+        `Are you sure you want to delete the tag "${tagName}"? This action cannot be undone.`,
+        function() {
+            // Original delete logic here
+            fetch(`{{ url_for("settings.delete_tag", tag_id=0) }}`.replace('0', tagId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    removeTagFromDOM(tagId);
+                    showAlert('success', data.message);
+                } else {
+                    showAlert('danger', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('danger', 'Error deleting tag');
+            });
+        },
+        'Delete'
+    );
+}
+
+// Update the reset tags form submission:
+// Replace the existing form with this:
+<form style="display: inline;" method="POST" action="{{ url_for('settings.reset_default_tags') }}" id="resetTagsForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="button" class="btn btn-outline-warning btn-sm" onclick="confirmResetTags()">
+        <i class="fas fa-undo me-1"></i>Reset to Defaults
+    </button>
+</form>
+
+// Add this function:
+function confirmResetTags() {
+    showCustomConfirm(
+        'Reset to Default Tags',
+        'This will delete all your custom tags and restore the default tag set. This action cannot be undone.',
+        function() {
+            document.getElementById('resetTagsForm').submit();
+        },
+        'Reset Tags'
+    );
+}
 document.addEventListener('DOMContentLoaded', function() {
     // Handle Enter key in add tag form
     const newTagName = document.getElementById('newTagName');

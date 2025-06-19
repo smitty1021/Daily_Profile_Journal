@@ -156,11 +156,12 @@ def edit_tag(tag_id):
 @settings_bp.route('/tags/<int:tag_id>/delete', methods=['POST'])
 @login_required
 def delete_tag(tag_id):
-    """Delete a user tag via AJAX"""
+    """Delete a user tag (including defaults copied to user)"""
     try:
         tag = Tag.query.get_or_404(tag_id)
 
-        # Users can only delete their own tags (not defaults)
+        # Users can delete any tag in their collection (including copied defaults)
+        # But they can't delete the master default tags (user_id=None)
         if tag.user_id != current_user.id:
             return jsonify({'success': False, 'message': 'Permission denied'})
 

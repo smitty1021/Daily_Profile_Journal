@@ -160,7 +160,11 @@ def add_trade():
     form = TradeForm()
 
     # --- MODIFIED: Populate the tags dropdown with choices from the database ---
-    form.tags.choices = [(t.id, t.name) for t in Tag.query.filter_by(user_id=current_user.id).order_by(Tag.name).all()]
+    def _populate_tags_choices(form):
+        """Populate dynamic choices for tags dropdown"""
+        form.tags.choices = [(t.id, t.name) for t in
+                             Tag.query.filter_by(user_id=current_user.id).order_by(Tag.name).all()]
+        return form
 
     if request.method == 'GET':
         if not form.entries.entries:
@@ -299,6 +303,7 @@ def edit_trade(trade_id):
 
     form = TradeForm(obj=trade_to_edit)
     _populate_trade_form_choices(form)
+    _populate_tags_choices(form)
 
     if request.method == 'GET':
         while len(form.entries) > 0: form.entries.pop_entry()
