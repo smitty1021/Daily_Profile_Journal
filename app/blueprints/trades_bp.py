@@ -57,6 +57,42 @@ def _is_allowed_image(filename):
                                                                      {'png', 'jpg', 'jpeg', 'gif'})
 
 
+def _populate_tags_choices(form):
+    """Populate dynamic choices for tags dropdown - grouped by category"""
+    from app.models import TagCategory
+
+    # Get all available tags
+    all_tags = Tag.query.filter(
+        db.or_(
+            Tag.is_default == True,  # All default tags
+            Tag.user_id == current_user.id  # User's personal tags
+        )
+    ).filter(Tag.is_active == True).order_by(Tag.category, Tag.name).all()
+
+    # Group tags by category for optgroup display
+    choices = []
+    current_category = None
+    category_choices = []
+
+    for tag in all_tags:
+        # If we've moved to a new category, add the previous group
+        if current_category is not None and tag.category != current_category:
+            if category_choices:
+                choices.append((current_category.value, category_choices))
+                category_choices = []
+
+        current_category = tag.category
+        category_choices.append((tag.id, tag.name))
+
+    # Add the last category group
+    if category_choices and current_category:
+        choices.append((current_category.value, category_choices))
+
+    # Set the grouped choices
+    form.tags.choices = choices
+    return form
+
+
 def _populate_trade_form_choices(form):
     """Populate dynamic choices for trading models and news events"""
     form.trading_model_id.choices = [(0, 'Select Model')] + \
@@ -159,12 +195,8 @@ def view_trades_list():
 def add_trade():
     form = TradeForm()
 
-    # --- MODIFIED: Populate the tags dropdown with choices from the database ---
-    def _populate_tags_choices(form):
-        """Populate dynamic choices for tags dropdown"""
-        form.tags.choices = [(t.id, t.name) for t in
-                             Tag.query.filter_by(user_id=current_user.id).order_by(Tag.name).all()]
-        return form
+    _populate_tags_choices(form)  # Call the function defined above
+    _populate_trade_form_choices(form)
 
     if request.method == 'GET':
         if not form.entries.entries:
@@ -172,7 +204,6 @@ def add_trade():
         if not form.exits.entries:
             form.exits.append_entry(None)
 
-    _populate_trade_form_choices(form)
     instrument_point_values = get_instrument_point_values()
 
     if form.validate_on_submit():
@@ -323,6 +354,8 @@ def edit_trade(trade_id):
             }
             form.exits.append_entry(data=exit_form_data)
         if not form.exits.entries: form.exits.append_entry(None)
+        if trade_to_edit.tags:
+            form.tags.data = [tag.id for tag in trade_to_edit.tags]
 
     if form.validate_on_submit():
         try:
@@ -352,7 +385,11 @@ def edit_trade(trade_id):
             trade_to_edit.errors_notes = form.errors_notes.data
             trade_to_edit.improvements_notes = form.improvements_notes.data
             trade_to_edit.screenshot_link = form.screenshot_link.data
-            trade_to_edit.tags = form.tags.data if form.tags.data and form.tags.data != '' else None
+            if form.tags.data:
+                selected_tags = Tag.query.filter(Tag.id.in_(form.tags.data)).all()
+                trade_to_edit.tags = selected_tags
+            else:
+                trade_to_edit.tags = []
 
             # Handle Entries: Update existing, Add new, Delete removed
             current_entry_ids_in_db = {entry.id for entry in trade_to_edit.entries}

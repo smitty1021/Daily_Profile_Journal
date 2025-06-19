@@ -153,7 +153,8 @@
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <button type="submit"
                                             class="btn btn-outline-{{ 'warning' if instrument.is_active else 'success' }}"
-                                            title="{{ 'Deactivate' if instrument.is_active else 'Activate' }}">
+                                            title="{{ 'Deactivate' if instrument.is_active else 'Activate' }}"
+                                            data-instrument-name="{{ instrument.symbol }}">
                                         <i class="fas fa-{{ 'pause' if instrument.is_active else 'play' }}"></i>
                                     </button>
                                 </form>
@@ -163,7 +164,8 @@
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <button type="submit"
                                             class="btn btn-outline-danger"
-                                            title="Delete">
+                                            title="Delete"
+                                            data-instrument-name="{{ instrument.symbol }}">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
@@ -197,62 +199,50 @@
 {% endblock %}
 
 {% block scripts_extra %}
+<script src="{{ url_for('static', filename='js/custom-modals.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const confirmationModalElement = document.getElementById('confirmationModal');
-    if (confirmationModalElement) {
-        const confirmationModal = new bootstrap.Modal(confirmationModalElement);
-        const modalTitle = document.getElementById('confirmationModalLabel');
-        const modalBody = document.getElementById('confirmationModalBody');
-        const modalConfirmBtn = document.getElementById('confirmationModalConfirmBtn');
-        let formToSubmit = null;
+    // Handle delete buttons with custom modal
+    document.querySelectorAll('form[action*="/delete"] button[type="submit"]').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            const instrumentName = this.dataset.instrumentName;
 
-        // --- Logic for Delete Buttons ---
-        document.querySelectorAll('form[action*="/delete"] button[type="submit"]').forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault(); // Stop the form from submitting immediately
-                formToSubmit = this.closest('form'); // Store the form that needs to be submitted
-
-                // Configure the modal for a delete action
-                modalTitle.innerHTML = '<i class="fas fa-exclamation-triangle text-danger me-2"></i> Confirm Deletion';
-                modalBody.innerHTML = '<p class="lead">Are you sure you want to permanently delete this instrument?</p><p class="small text-muted">This action cannot be undone.</p>';
-                modalConfirmBtn.className = 'btn btn-danger';
-                modalConfirmBtn.textContent = 'Delete';
-
-                confirmationModal.show();
+            showCustomConfirmation({
+                title: 'Confirm Deletion',
+                message: `Are you sure you want to permanently delete the instrument "${instrumentName}"? This action cannot be undone.`,
+                confirmText: 'Delete',
+                confirmClass: 'btn-danger',
+                icon: 'exclamation-triangle',
+                iconClass: 'text-danger',
+                onConfirm: () => form.submit()
             });
         });
+    });
 
-        // --- Logic for Toggle Status Buttons ---
-        document.querySelectorAll('form[action*="/toggle-status"] button[type="submit"]').forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                formToSubmit = this.closest('form');
+    // Handle toggle status buttons with custom modal
+    document.querySelectorAll('form[action*="/toggle-status"] button[type="submit"]').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            const instrumentName = this.dataset.instrumentName;
+            const isDeactivating = this.title.includes('Deactivate');
+            const action = isDeactivating ? 'deactivate' : 'activate';
 
-                const isDeactivating = this.title.includes('Deactivate');
-                const action = isDeactivating ? 'deactivate' : 'activate';
-                const actionColor = isDeactivating ? 'warning' : 'success';
-                const actionIcon = isDeactivating ? 'pause-circle' : 'play-circle';
-
-                // Configure the modal for a toggle action
-                modalTitle.innerHTML = `<i class="fas fa-${actionIcon} text-${actionColor} me-2"></i> Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`;
-                modalBody.textContent = `Are you sure you want to ${action} this instrument?`;
-                modalConfirmBtn.className = `btn btn-${actionColor}`;
-                modalConfirmBtn.textContent = action.charAt(0).toUpperCase() + action.slice(1);
-
-                confirmationModal.show();
+            showCustomConfirmation({
+                title: `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`,
+                message: `Are you sure you want to ${action} the instrument "${instrumentName}"?`,
+                confirmText: action.charAt(0).toUpperCase() + action.slice(1),
+                confirmClass: isDeactivating ? 'btn-warning' : 'btn-success',
+                icon: isDeactivating ? 'pause-circle' : 'play-circle',
+                iconClass: isDeactivating ? 'text-warning' : 'text-success',
+                onConfirm: () => form.submit()
             });
         });
+    });
 
-        // Add a single event listener to the modal's confirm button to handle form submission
-        modalConfirmBtn.addEventListener('click', function() {
-            if (formToSubmit) {
-                formToSubmit.submit();
-            }
-        });
-    }
-
-    // Auto-submit filter form when selection changes (existing functionality)
+    // Auto-submit filter form when selection changes
     const filterSelects = document.querySelectorAll('.filter-form select');
     filterSelects.forEach(function(select) {
         select.addEventListener('change', function() {

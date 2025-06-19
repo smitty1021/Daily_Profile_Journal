@@ -11,6 +11,11 @@ from sqlalchemy import ForeignKey
 from app import db
 from enum import Enum
 
+user_default_tags = db.Table('user_default_tags',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
 # --- Constants for Models ---
 QUARTER_NAMES = [None, "Q1 (Jan-Mar)", "Q2 (Apr-Jun)", "Q3 (Jul-Sep)", "Q4 (Oct-Dec)"]
 
@@ -52,6 +57,15 @@ class User(db.Model, UserMixin):
     monthly_journals = db.relationship('MonthlyJournal', backref='user', lazy='dynamic')
     quarterly_journals = db.relationship('QuarterlyJournal', backref='user', lazy='dynamic')
     yearly_journals = db.relationship('YearlyJournal', backref='user', lazy='dynamic')
+
+    selected_default_tags = db.relationship(
+        'Tag',
+        secondary=user_default_tags,
+        backref=db.backref('users_who_selected', lazy='dynamic'),
+        lazy='dynamic',
+        primaryjoin='User.id == user_default_tags.c.user_id',
+        secondaryjoin='and_(Tag.id == user_default_tags.c.tag_id, Tag.is_default == True)'
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -391,6 +405,16 @@ class Tag(db.Model):
         return cls.query.filter_by(is_default=True, is_active=True).order_by(cls.category, cls.name).all()
 
     @classmethod
+    def get_available_for_user(cls, user_id):
+        """Get all tags available to a specific user (default + personal)"""
+        return cls.query.filter(
+            db.or_(
+                cls.is_default == True,
+                cls.user_id == user_id
+            )
+        ).filter(cls.is_active == True).order_by(cls.name).all()
+
+    @classmethod
     def get_user_tags(cls, user_id, include_defaults=True):
         """Get user's tags, optionally including defaults"""
         query = cls.query.filter_by(user_id=user_id, is_active=True)
@@ -411,29 +435,38 @@ class Tag(db.Model):
 
         organized = {}
         for category in TagCategory:
-            organized[category] = [tag for tag in tags if tag.category == category]
+            organized[category.value] = [tag for tag in tags if tag.category == category]
 
         return organized
+
+    @classmethod
+    def get_user_selected_defaults(cls, user_id):
+        """Get default tags selected by a specific user"""
+        user = User.query.get(user_id)
+        return user.selected_default_tags.all() if user else []
 
     @classmethod
     def create_default_tags(cls):
         """Create the default tag set if they don't exist"""
         default_tags = {
             TagCategory.SETUP_STRATEGY: [
-                "Breakout", "Engulfing Candle", "Inside Bar", "Mean Reversion"
+                "0930-Open", "Breakout", "Captain-Backtest", "Engulfing-Candle",
+                "HOD-LOD", "Inside-Bar", "Mean-Reversion", "P12"
             ],
             TagCategory.MARKET_CONDITIONS: [
-                "Asian", "Cash Flow", "DNP", "DWP", "Extended Target", "High Volatility",
-                "London", "Low Volatility", "New York Open", "News Driven", "NY1", "NY2", "R1", "R2"
+                "Asian", "Cash-Flow", "DNP", "DWP", "Extended-Target", "High-Volatility",
+                "London", "Low-Volatility", "New-York-Open", "News-Driven", "NY1", "NY2",
+                "R1", "R2", "True-Session", "False-Session", "Broken-Session"
             ],
             TagCategory.EXECUTION_MANAGEMENT: [
-                "Chased Entry", "Cut Loser Short", "Impulsive Entry", "Let Winner Run",
-                "Limit Order", "Market Order", "Moved Stop Loss", "Partial Take Profit",
-                "Revenge Trade", "Trailing Stop"
+                "Chased-Entry", "Cut-Loser-Short", "Front-Run", "Confirmation", "Retest",
+                "Impulsive-Entry", "Let-Winner-Run", "Limit-Order", "Market-Order",
+                "Moved-Stop-Loss", "Partial-Take-Profit", "Price-Cloud", "Trailing-Stop"
             ],
             TagCategory.PSYCHOLOGICAL_EMOTIONAL: [
-                "Anxious", "Calm", "Confident", "Deviated from Plan", "Distracted",
-                "Followed Plan", "FOMO", "Greedy", "Hesitant", "Stressed", "Tired", "Well-Rested"
+                "Anxious", "Calm", "Confident", "Deviated-from-Plan", "Discipline",
+                "Distracted", "FOMO", "Followed-Plan", "Greedy", "Hesitant",
+                "Patience", "Perfect-Setup", "Revenge-Trade", "Stressed", "Tired", "Well-Rested"
             ]
         }
 
@@ -459,28 +492,16 @@ class Tag(db.Model):
 
     @classmethod
     def copy_defaults_to_user(cls, user_id):
-        """Copy all default tags to a new user"""
+        """Copy all default tags to a new user's selected defaults"""
+        user = User.query.get(user_id)
+        if not user:
+            return 0
+
         default_tags = cls.get_default_tags()
-        copied_count = 0
+        user.selected_default_tags = default_tags
+        db.session.commit()
 
-        for default_tag in default_tags:
-            # Check if user already has this tag
-            existing = cls.query.filter_by(name=default_tag.name, user_id=user_id).first()
-            if not existing:
-                user_tag = cls(
-                    name=default_tag.name,
-                    category=default_tag.category,
-                    user_id=user_id,
-                    is_default=False,
-                    is_active=True
-                )
-                db.session.add(user_tag)
-                copied_count += 1
-
-        if copied_count > 0:
-            db.session.commit()
-
-        return copied_count
+        return len(default_tags)
 
     def __repr__(self):
         return f'<Tag {self.name} ({self.category.value})>'

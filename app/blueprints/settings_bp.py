@@ -153,6 +153,65 @@ def edit_tag(tag_id):
         return jsonify({'success': False, 'message': 'Error updating tag'})
 
 
+@settings_bp.route('/tags')
+@login_required
+def manage_tags():
+    """User tags management page"""
+    # Get default tags (available to all users)
+    default_tags = Tag.query.filter_by(is_default=True, is_active=True).order_by(Tag.name).all()
+
+    # Get user's personal tags
+    user_tags = Tag.query.filter_by(user_id=current_user.id).order_by(Tag.name).all()
+
+    # Get user's selected default tags (many-to-many relationship)
+    user_selected_defaults = current_user.selected_default_tags if hasattr(current_user,
+                                                                           'selected_default_tags') else []
+
+    return render_template('settings/tags.html',
+                           title='Manage Tags',
+                           default_tags=default_tags,
+                           user_tags=user_tags,
+                           user_selected_defaults=user_selected_defaults)
+
+
+@settings_bp.route('/tags/toggle-default/<int:tag_id>', methods=['POST'])
+@login_required
+def toggle_default_tag(tag_id):
+    """Toggle a default tag for the current user"""
+    tag = Tag.query.get_or_404(tag_id)
+
+    if not tag.is_default:
+        return jsonify({'success': False, 'message': 'Can only toggle default tags'})
+
+    # Add/remove tag from user's selected defaults
+    if tag in current_user.selected_default_tags:
+        current_user.selected_default_tags.remove(tag)
+        action = 'removed'
+    else:
+        current_user.selected_default_tags.append(tag)
+        action = 'added'
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'action': action,
+        'message': f'Tag "{tag.name}" {action} successfully'
+    })
+
+
+@settings_bp.route('/tags/restore-defaults', methods=['POST'])
+@login_required
+def restore_default_tags():
+    """Restore all default tags for the user"""
+    default_tags = Tag.query.filter_by(is_default=True, is_active=True).all()
+    current_user.selected_default_tags = default_tags
+    db.session.commit()
+
+    flash(f'Restored {len(default_tags)} default tags', 'success')
+    return redirect(url_for('settings.manage_tags'))
+
+
 @settings_bp.route('/tags/<int:tag_id>/delete', methods=['POST'])
 @login_required
 def delete_tag(tag_id):
