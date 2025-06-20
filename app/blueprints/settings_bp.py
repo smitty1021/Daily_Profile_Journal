@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, session
 from flask_login import login_required, current_user
 from app import db
 from app.models import Settings, Tag, TagCategory
@@ -33,10 +33,11 @@ def view_settings():
 
         return redirect(url_for('settings.view_settings'))
 
-    return render_template('settings.html',
+    return render_template('settings/settings.html',
                            title='Settings',
                            tags_by_category=tags_by_category,
                            TagCategory=TagCategory)
+    # REMOVED: csrf_token=generate_csrf() - let the template use csrf_token() function
 
 
 @settings_bp.route('/tags/create', methods=['POST'])
@@ -44,6 +45,10 @@ def view_settings():
 def create_tag():
     """Create a new user tag via AJAX"""
     try:
+        # Debug logging
+        current_app.logger.info(f"Create tag request from user {current_user.id}")
+        current_app.logger.info(f"Request JSON: {request.json}")
+
         name = request.json.get('name', '').strip()
         category_name = request.json.get('category', '')
 
@@ -79,6 +84,8 @@ def create_tag():
         db.session.add(new_tag)
         db.session.commit()
 
+        current_app.logger.info(f"Successfully created tag: {name}")
+
         return jsonify({
             'success': True,
             'message': f'Tag "{name}" created successfully',
@@ -93,7 +100,7 @@ def create_tag():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error creating tag: {e}")
-        return jsonify({'success': False, 'message': 'Error creating tag'})
+        return jsonify({'success': False, 'message': f'Error creating tag: {str(e)}'})
 
 
 @settings_bp.route('/tags/<int:tag_id>/edit', methods=['POST'])
