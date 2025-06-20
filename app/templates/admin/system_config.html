@@ -7,114 +7,41 @@
     <div class="row mb-3">
         <div class="col">
             <h1 class="display-5"><i class="fas fa-cogs me-2"></i>System Configuration</h1>
-            <p class="lead">Manage trading instruments, system settings, and data configurations.</p>
+            <p class="lead">Manage trading instruments, system settings, tags, and data configurations.</p>
         </div>
     </div>
     <hr class="mb-4">
 
-    <!-- Instrument Management Section -->
-    <div class="row gy-4 mb-5">
-        <div class="col-md-6 col-lg-3">
-            <div class="card text-white bg-success shadow-sm h-100">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-3 text-center">
-                            <i class="fas fa-chart-line fa-3x"></i>
-                        </div>
-                        <div class="col-9 text-end">
-                            <div class="fs-1 fw-bold">{{ total_instruments }}</div>
-                            <div class="fs-6">Total Instruments</div>
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ url_for('admin.instruments_list') }}" class="card-footer text-white clearfix small z-1 text-decoration-none">
-                    <span class="float-start">Manage Instruments</span>
-                    <span class="float-end"><i class="fas fa-arrow-circle-right"></i></span>
-                </a>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
-            <div class="card text-white bg-primary shadow-sm h-100">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-3 text-center">
-                            <i class="fas fa-check-circle fa-3x"></i>
-                        </div>
-                        <div class="col-9 text-end">
-                            <div class="fs-1 fw-bold">{{ active_instruments }}</div>
-                            <div class="fs-6">Active Instruments</div>
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ url_for('admin.instruments_list', status='active') }}" class="card-footer text-white clearfix small z-1 text-decoration-none">
-                    <span class="float-start">View Active</span>
-                    <span class="float-end"><i class="fas fa-arrow-circle-right"></i></span>
-                </a>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
-            <div class="card text-white bg-warning shadow-sm h-100">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-3 text-center">
-                            <i class="fas fa-pause-circle fa-3x"></i>
-                        </div>
-                        <div class="col-9 text-end">
-                            <div class="fs-1 fw-bold">{{ inactive_instruments }}</div>
-                            <div class="fs-6">Inactive Instruments</div>
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ url_for('admin.instruments_list', status='inactive') }}" class="card-footer text-white clearfix small z-1 text-decoration-none">
-                    <span class="float-start">View Inactive</span>
-                    <span class="float-end"><i class="fas fa-arrow-circle-right"></i></span>
-                </a>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-lg-3">
-            <div class="card text-white bg-info shadow-sm h-100">
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-3 text-center">
-                            <i class="fas fa-plus-circle fa-3x"></i>
-                        </div>
-                        <div class="col-9 text-end">
-                            <div class="fs-1 fw-bold"><i class="fas fa-plus"></i></div>
-                            <div class="fs-6">Add New</div>
-                        </div>
-                    </div>
-                </div>
-                <a href="{{ url_for('admin.create_instrument') }}" class="card-footer text-white clearfix small z-1 text-decoration-none">
-                    <span class="float-start">Create Instrument</span>
-                    <span class="float-end"><i class="fas fa-arrow-circle-right"></i></span>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions Section -->
-    <div class="row mt-5">
+    <!-- Configuration Sections -->
+    <div class="row gy-4">
+        <!-- Left Column: Navigation Menu -->
         <div class="col-md-8">
-            <h4>Instrument Management:</h4>
-            <div class="list-group">
+            <h4>System Management:</h4>
+            <div class="list-group mb-4">
                 <a href="{{ url_for('admin.instruments_list') }}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-list me-2"></i>View All Instruments
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-chart-line me-2"></i>
+                            <strong>Manage Trading Instruments</strong>
+                            <p class="mb-1 text-muted">Add, edit, and configure trading instruments and asset classes</p>
+                        </div>
+                        <span class="badge bg-primary">{{ total_instruments }} Total</span>
+                    </div>
                 </a>
-                <a href="{{ url_for('admin.create_instrument') }}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-plus me-2"></i>Add New Instrument
-                </a>
-                <a href="{{ url_for('admin.instruments_list', asset_class='Equity Index') }}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-chart-line me-2"></i>View Equity Index Instruments
-                </a>
-                <a href="{{ url_for('admin.instruments_list', asset_class='Currency') }}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-dollar-sign me-2"></i>View Currency Instruments
+
+                <a href="{{ url_for('admin.manage_default_tags') }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-tags me-2"></i>
+                            <strong>Manage Default Tags</strong>
+                            <p class="mb-1 text-muted">Configure system-wide default tags for all users</p>
+                        </div>
+                        <span class="badge bg-secondary">Tags</span>
+                    </div>
                 </a>
             </div>
 
-            <h4 class="mt-4">Other Configuration:</h4>
+            <h4>Other Configuration:</h4>
             <div class="list-group">
                 <a href="#" class="list-group-item list-group-item-action disabled" aria-disabled="true">
                     <i class="fas fa-database me-2"></i>Database Settings (Coming Soon)
@@ -128,11 +55,27 @@
             </div>
         </div>
 
+        <!-- Right Column: Statistics Overview -->
         <div class="col-md-4">
-            <h4>Instruments by Asset Class:</h4>
+            <h4>System Overview:</h4>
             <div class="card">
                 <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Instrument Statistics</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Total Instruments:</span>
+                        <span class="fw-bold text-primary">{{ total_instruments }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Active Instruments:</span>
+                        <span class="fw-bold text-success">{{ active_instruments }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Inactive Instruments:</span>
+                        <span class="fw-bold text-warning">{{ inactive_instruments }}</span>
+                    </div>
+
                     {% if instruments_by_class %}
+                    <h6 class="card-subtitle mb-2 text-muted">Active by Asset Class:</h6>
                         {% for asset_class, count in instruments_by_class %}
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span class="badge bg-secondary me-2">{{ asset_class }}</span>

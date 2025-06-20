@@ -525,8 +525,8 @@ def admin_bulk_delete_users():
 def system_config():
     """System configuration dashboard"""
     try:
-        # Get some basic stats for the dashboard
-        from app.models import Instrument
+        # Get instrument stats for the dashboard
+        from app.models import Instrument, Tag
         total_instruments = Instrument.query.count()
         active_instruments = Instrument.query.filter_by(is_active=True).count()
         inactive_instruments = total_instruments - active_instruments
@@ -537,14 +537,20 @@ def system_config():
             db.func.count(Instrument.id).label('count')
         ).filter_by(is_active=True).group_by(Instrument.asset_class).all()
 
+        # Get tag stats for additional context (optional)
+        total_default_tags = Tag.query.filter_by(is_default=True).count()
+        active_default_tags = Tag.query.filter_by(is_default=True, is_active=True).count()
+
         current_app.logger.info(f"Admin {current_user.username} accessed system configuration.")
 
-        return render_template('system_config.html',
+        return render_template('admin/system_config.html',
                                title='System Configuration',
                                total_instruments=total_instruments,
                                active_instruments=active_instruments,
                                inactive_instruments=inactive_instruments,
-                               instruments_by_class=instruments_by_class)
+                               instruments_by_class=instruments_by_class,
+                               total_default_tags=total_default_tags,
+                               active_default_tags=active_default_tags)
     except Exception as e:
         current_app.logger.error(f"Error loading system config: {e}", exc_info=True)
         flash("Could not load system configuration.", "danger")
@@ -781,7 +787,15 @@ def delete_instrument(instrument_id):
 @admin_required
 def manage_default_tags():
     """Admin page to manage default tags"""
-    tags_by_category = Tag.get_tags_by_category()  # Gets only default tags
+    # Get ALL default tags (both active and inactive) for admin management
+    tags = Tag.query.filter_by(is_default=True).order_by(Tag.category, Tag.name).all()
+
+    # Organize by category manually since we're not using the model method
+    from app.models import TagCategory
+    tags_by_category = {}
+    for category in TagCategory:
+        tags_by_category[category.value] = [tag for tag in tags if tag.category == category]
+
     return render_template('admin/default_tags.html',
                            title='Manage Default Tags',
                            tags_by_category=tags_by_category,
