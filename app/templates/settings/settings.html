@@ -161,14 +161,23 @@
                             </div>
                         </div>
 
+                        <!-- Replace your tag category loop (around lines 140-170) with this: -->
+
                         {# Tags organized by category #}
-                        {% for category, tags in tags_by_category.items() %}
+                        {% for category_display, tags in tags_by_category.items() %}
                         <div class="tag-category-section">
                             <div class="tag-category-header">
-                                <span>{{ category.value }}</span>
+                                <span>{{ category_display }}</span>
                                 <span class="badge bg-secondary">{{ tags|length }} tags</span>
                             </div>
-                            <div class="tag-category-body" id="category-{{ category.name }}">
+                            <!-- Convert display name back to enum name for the ID -->
+                            {% set category_id = {
+                                'Setup & Strategy': 'SETUP_STRATEGY',
+                                'Market Conditions': 'MARKET_CONDITIONS',
+                                'Execution & Management': 'EXECUTION_MANAGEMENT',
+                                'Psychological & Emotional Factors': 'PSYCHOLOGICAL_EMOTIONAL'
+                            }[category_display] %}
+                            <div class="tag-category-body" id="category-{{ category_id }}">
                                 {% if tags %}
                                     {% for tag in tags %}
                                     <div class="tag-item {% if tag.is_default %}default-tag{% else %}user-tag{% endif %}" data-tag-id="{{ tag.id }}">
@@ -196,6 +205,27 @@
             </div>
         </div>
     </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div class="modal fade" id="customConfirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalTitle">Confirm Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="confirmModalBody">
+                    Are you sure you want to proceed?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmModalAction">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 </div>
 
 {# Edit Tag Modal #}
@@ -270,17 +300,20 @@ function createTag() {
         return response.json();
     })
     .then(data => {
-        console.log('Response data:', data);
+        console.log('Full response data:', data);
+
         if (data.success) {
+            console.log('Tag creation successful, calling addTagToDOM with:', data.tag);
             addTagToDOM(data.tag);
             hideAddTagForm();
             showAlert('success', data.message);
         } else {
+            console.log('Tag creation failed:', data.message);
             showAlert('danger', data.message);
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        console.error('Fetch error:', error);
         showAlert('danger', 'Error creating tag: ' + error.message);
     });
 }
@@ -335,38 +368,106 @@ function saveTagEdit() {
 }
 
 function deleteTag(tagId, tagName) {
-    if (!confirm(`Are you sure you want to delete the tag "${tagName}"?`)) {
+    showCustomConfirm(
+        'Delete Tag',
+        `Are you sure you want to delete the tag "${tagName}"? This action cannot be undone.`,
+        function() {
+            // Actual delete logic
+            fetch(`{{ url_for("settings.delete_tag", tag_id=0) }}`.replace('0', tagId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    removeTagFromDOM(tagId);
+                    showAlert('success', data.message);
+                } else {
+                    showAlert('danger', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('danger', 'Error deleting tag');
+            });
+        },
+        'Delete'
+    );
+}
+
+let confirmCallback = null;
+
+function showCustomConfirm(title, message, callback, actionText = 'Confirm') {
+    document.getElementById('confirmModalTitle').textContent = title;
+    document.getElementById('confirmModalBody').textContent = message;
+    document.getElementById('confirmModalAction').textContent = actionText;
+
+    confirmCallback = callback;
+
+    const modal = new bootstrap.Modal(document.getElementById('customConfirmModal'));
+    modal.show();
+}
+
+// Handle confirm button click
+document.getElementById('confirmModalAction').addEventListener('click', function() {
+    if (confirmCallback) {
+        confirmCallback();
+        confirmCallback = null;
+    }
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('customConfirmModal'));
+    modal.hide();
+});
+
+// Replace your addTagToDOM function (around line 343) with this:
+
+function addTagToDOM(tag) {
+    console.log('addTagToDOM called with tag:', tag);
+
+    // The issue is here - we need to find the container by the category enum name
+    const categoryContainer = document.getElementById(`category-${tag.category}`);
+    console.log('Looking for category container:', `category-${tag.category}`);
+    console.log('Category container found:', categoryContainer);
+
+    if (!categoryContainer) {
+        console.error('Category container not found for:', tag.category);
+        // Let's see what category containers exist
+        const allCategories = document.querySelectorAll('[id^="category-"]');
+        console.log('Available categories:', Array.from(allCategories).map(el => el.id));
+
+        // Try to find the container by searching through all categories
+        let foundContainer = null;
+        allCategories.forEach(container => {
+            const categoryName = container.id.replace('category-', '');
+            console.log('Checking container:', categoryName, 'against tag category:', tag.category);
+            if (categoryName === tag.category) {
+                foundContainer = container;
+            }
+        });
+
+        if (foundContainer) {
+            console.log('Found container via search:', foundContainer.id);
+            addTagToFoundContainer(foundContainer, tag);
+        } else {
+            console.error('No matching category container found. Available:',
+                Array.from(allCategories).map(el => el.id));
+            showAlert('danger', 'Could not add tag to page - category not found');
+        }
         return;
     }
 
-    fetch(`{{ url_for("settings.delete_tag", tag_id=0) }}`.replace('0', tagId), {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token() }}'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            removeTagFromDOM(tagId);
-            showAlert('success', data.message);
-        } else {
-            showAlert('danger', data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('danger', 'Error deleting tag');
-    });
+    addTagToFoundContainer(categoryContainer, tag);
 }
 
-function addTagToDOM(tag) {
-    const categoryContainer = document.getElementById(`category-${tag.category}`);
-
+// Add this helper function after your addTagToDOM function:
+function addTagToFoundContainer(categoryContainer, tag) {
     // Remove "No tags" message if it exists
     const noTagsMsg = categoryContainer.querySelector('.text-muted');
     if (noTagsMsg) {
+        console.log('Removing "no tags" message');
         noTagsMsg.remove();
     }
 
@@ -388,8 +489,13 @@ function addTagToDOM(tag) {
         ` : ''}
     `;
 
+    console.log('Adding tag div to category container');
     categoryContainer.appendChild(tagDiv);
-    updateCategoryBadge(tag.category);
+
+    // Update the badge count
+    const categoryName = categoryContainer.id.replace('category-', '');
+    updateCategoryBadge(categoryName);
+    console.log('Tag added successfully to DOM');
 }
 
 function updateTagInDOM(tag) {

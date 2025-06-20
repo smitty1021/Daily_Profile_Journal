@@ -17,48 +17,17 @@ admin_bp = Blueprint('admin', __name__,
                      template_folder='../templates/admin',
                      url_prefix='/admin')
 
-
-@admin_bp.route('/default-tags/bulk-actions', methods=['POST'])
-@login_required
-@admin_required
-def bulk_default_tags_actions():
-    """Handle bulk actions on default tags"""
-    action = request.json.get('action')
-    tag_ids = request.json.get('tag_ids', [])
-
-    if action == 'delete_selected':
-        deleted_count = 0
-        for tag_id in tag_ids:
-            tag = Tag.query.get(tag_id)
-            if tag and tag.is_default:
-                db.session.delete(tag)
-                deleted_count += 1
-
-        db.session.commit()
-        return jsonify({'success': True, 'message': f'Deleted {deleted_count} tags'})
-
-    elif action == 'toggle_status':
-        updated_count = 0
-        for tag_id in tag_ids:
-            tag = Tag.query.get(tag_id)
-            if tag and tag.is_default:
-                tag.is_active = not tag.is_active
-                updated_count += 1
-
-        db.session.commit()
-        return jsonify({'success': True, 'message': f'Updated {updated_count} tags'})
-
-    return jsonify({'success': False, 'message': 'Invalid action'})
-
+# Add these routes to your app/blueprints/admin_bp.py:
 
 @admin_bp.route('/default-tags/create', methods=['POST'])
 @login_required
 @admin_required
 def create_default_tag():
-    """Create a new default tag"""
+    """Create a new default tag via AJAX"""
     try:
         name = request.json.get('name', '').strip()
         category_name = request.json.get('category', '')
+        is_active = request.json.get('is_active', True)
 
         if not name or not category_name:
             return jsonify({'success': False, 'message': 'Name and category are required'})
@@ -69,7 +38,7 @@ def create_default_tag():
         except KeyError:
             return jsonify({'success': False, 'message': 'Invalid category'})
 
-        # Check for duplicates in default tags
+        # Check for duplicates
         existing = Tag.query.filter_by(name=name, is_default=True).first()
         if existing:
             return jsonify({'success': False, 'message': 'Default tag already exists'})
@@ -78,9 +47,9 @@ def create_default_tag():
         new_tag = Tag(
             name=name,
             category=category,
-            user_id=None,
+            user_id=None,  # NULL for default tags
             is_default=True,
-            is_active=True
+            is_active=is_active
         )
 
         db.session.add(new_tag)
@@ -103,14 +72,14 @@ def create_default_tag():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error creating default tag: {e}")
-        return jsonify({'success': False, 'message': 'Error creating default tag'})
+        return jsonify({'success': False, 'message': f'Error creating default tag: {str(e)}'})
 
 
 @admin_bp.route('/default-tags/<int:tag_id>/edit', methods=['POST'])
 @login_required
 @admin_required
 def edit_default_tag(tag_id):
-    """Edit a default tag"""
+    """Edit a default tag via AJAX"""
     try:
         tag = Tag.query.get_or_404(tag_id)
 
@@ -170,7 +139,7 @@ def edit_default_tag(tag_id):
 @login_required
 @admin_required
 def delete_default_tag(tag_id):
-    """Delete a default tag"""
+    """Delete a default tag via AJAX"""
     try:
         tag = Tag.query.get_or_404(tag_id)
 
@@ -194,6 +163,41 @@ def delete_default_tag(tag_id):
         db.session.rollback()
         current_app.logger.error(f"Error deleting default tag {tag_id}: {e}")
         return jsonify({'success': False, 'message': 'Error deleting default tag'})
+
+@admin_bp.route('/default-tags/bulk-actions', methods=['POST'])
+@login_required
+@admin_required
+def bulk_default_tags_actions():
+    """Handle bulk actions on default tags"""
+    action = request.json.get('action')
+    tag_ids = request.json.get('tag_ids', [])
+
+    if action == 'delete_selected':
+        deleted_count = 0
+        for tag_id in tag_ids:
+            tag = Tag.query.get(tag_id)
+            if tag and tag.is_default:
+                db.session.delete(tag)
+                deleted_count += 1
+
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'Deleted {deleted_count} tags'})
+
+    elif action == 'toggle_status':
+        updated_count = 0
+        for tag_id in tag_ids:
+            tag = Tag.query.get(tag_id)
+            if tag and tag.is_default:
+                tag.is_active = not tag.is_active
+                updated_count += 1
+
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'Updated {updated_count} tags'})
+
+    return jsonify({'success': False, 'message': 'Invalid action'})
+
+
+
 
 
 @admin_bp.route('/default-tags/seed', methods=['POST'])
