@@ -3,6 +3,7 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta, date as py_date, time as py_time
 from datetime import datetime as dt  # Alias for dt.utcnow
+from datetime import datetime, timezone
 import enum
 import uuid
 import os
@@ -1114,3 +1115,121 @@ class AccountSetting(db.Model):
         return f"<AccountSetting '{self.setting_name}'>"
 
 
+class TagUsageStats(db.Model):
+    """Track tag usage patterns for analytics and AI suggestions"""
+    __tablename__ = 'tag_usage_stats'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tag_id = db.Column(db.Integer, db.ForeignKey('tag.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    usage_count = db.Column(db.Integer, nullable=False, default=0)
+    last_used = db.Column(db.DateTime, nullable=True)
+    first_used = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    # Relationships
+    tag = db.relationship('Tag', backref='usage_stats')
+    user = db.relationship('User', backref='tag_usage_stats')
+
+    __table_args__ = (
+        db.UniqueConstraint('tag_id', 'user_id', name='unique_tag_user_usage'),
+    )
+
+    @classmethod
+    def record_tag_usage(cls, user_id, tag_ids):
+        """
+        Record or update tag usage statistics
+        This method now ensures usage_count always matches actual trade count
+        """
+        for tag_id in tag_ids:
+            # Get existing record or create new one
+            usage_stat = cls.query.filter_by(user_id=user_id, tag_id=tag_id).first()
+
+            if usage_stat:
+                # Update last used time
+                usage_stat.last_used = datetime.utcnow()
+                usage_stat.updated_at = datetime.utcnow()
+
+                # Recalculate actual usage count from trades
+                from app.models import Trade
+                actual_count = (Trade.query
+                                .filter(Trade.user_id == user_id)
+                                .filter(Trade.tags.any(Tag.id == tag_id))
+                                .count())
+                usage_stat.usage_count = actual_count
+            else:
+                # Create new record
+                from app.models import Trade
+                actual_count = (Trade.query
+                                .filter(Trade.user_id == user_id)
+                                .filter(Trade.tags.any(Tag.id == tag_id))
+                                .count())
+
+                usage_stat = cls(
+                    user_id=user_id,
+                    tag_id=tag_id,
+                    usage_count=actual_count,
+                    last_used=datetime.utcnow(),
+                    first_used=datetime.utcnow()
+                )
+                db.session.add(usage_stat)
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
+    @classmethod
+    def cleanup_unused_stats(cls, user_id):
+        """Remove usage stats for tags that are no longer on any trades"""
+        # Get all usage stats for this user
+        all_stats = cls.query.filter_by(user_id=user_id).all()
+
+        for stat in all_stats:
+            # Check if any trades still have this tag
+            from app.models import Trade
+            trade_count = (Trade.query
+                           .filter(Trade.user_id == user_id)
+                           .filter(Trade.tags.any(Tag.id == stat.tag_id))
+                           .count())
+
+            if trade_count == 0:
+                # No trades have this tag anymore, remove the stat
+                db.session.delete(stat)
+            else:
+                # Update the count to be accurate
+                stat.usage_count = trade_count
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
+    @classmethod
+    def get_user_most_used_tags(cls, user_id, limit=10):
+        """Get user's most frequently used tags"""
+        return (cls.query
+                .filter_by(user_id=user_id)
+                .join(Tag)
+                .filter(Tag.is_active == True)
+                .order_by(cls.usage_count.desc(), cls.last_used.desc())
+                .limit(limit)
+                .all())
+
+    @classmethod
+    def get_recently_used_tags(cls, user_id, days=30, limit=10):
+        """Get tags used recently"""
+        from datetime import timedelta
+        cutoff_date = datetime.utcnow() - timedelta(days=days)
+
+        return (cls.query
+                .filter_by(user_id=user_id)
+                .filter(cls.last_used >= cutoff_date)
+                .join(Tag)
+                .filter(Tag.is_active == True)
+                .order_by(cls.last_used.desc())
+                .limit(limit)
+                .all())

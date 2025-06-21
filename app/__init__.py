@@ -235,7 +235,8 @@ def create_app(config_class=None):
         app.register_blueprint(trades_bp, url_prefix='/trades')  # Added prefix
         from .blueprints.settings_bp import settings_bp
         app.register_blueprint(settings_bp, url_prefix='/settings')  # Added prefix
-
+        from app.blueprints.analytics_bp import analytics_bp
+        app.register_blueprint(analytics_bp)
 
         # ADDED: Import and Register Journal Blueprint
         from .blueprints.journal_bp import journal_bp

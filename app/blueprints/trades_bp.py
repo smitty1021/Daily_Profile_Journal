@@ -13,12 +13,13 @@ import uuid
 import csv
 import io
 from datetime import date as py_date, datetime as py_datetime, time as py_time
-
+from app.models import TagUsageStats
 # This import is required for the fix
 from flask_wtf.csrf import generate_csrf
 
 from app import db
 from app.models import Trade, EntryPoint, ExitPoint, TradingModel, NewsEventItem, TradeImage, Instrument, Tag, TagCategory
+from app.models import Trade, Tag, EntryPoint, ExitPoint, TradingModel, NewsEventItem, TradeImage, Instrument, TagUsageStats
 from app.forms import TradeForm, EntryPointForm, ExitPointForm, TradeFilterForm, ImportTradesForm
 from app.utils import (_parse_form_float, _parse_form_int, _parse_form_time,
                        get_news_event_options, record_activity)
@@ -140,7 +141,31 @@ def view_trades_list():
     if filter_form.trading_model_id.data and filter_form.trading_model_id.data != 0:
         query = query.filter(Trade.trading_model_id == filter_form.trading_model_id.data)
     if filter_form.tags.data:
-        query = query.filter(Trade.tags == filter_form.tags.data)
+        # Handle tag filtering for many-to-many relationship
+        tag_id = None
+
+        # Parse tag_id from form data or URL parameter
+        if isinstance(filter_form.tags.data, str) and filter_form.tags.data.isdigit():
+            tag_id = int(filter_form.tags.data)
+        elif isinstance(filter_form.tags.data, int):
+            tag_id = filter_form.tags.data
+        elif hasattr(filter_form.tags.data, '__iter__') and len(filter_form.tags.data) > 0:
+            # Handle list/array of tag IDs (take the first one for now)
+            first_tag = filter_form.tags.data[0]
+            if isinstance(first_tag, str) and first_tag.isdigit():
+                tag_id = int(first_tag)
+            elif isinstance(first_tag, int):
+                tag_id = first_tag
+
+        # Also check URL parameters directly as fallback
+        if not tag_id:
+            tag_param = request.args.get('tags')
+            if tag_param and tag_param.isdigit():
+                tag_id = int(tag_param)
+
+        # Apply the filter using the correct many-to-many syntax
+        if tag_id:
+            query = query.filter(Trade.tags.any(Tag.id == tag_id))
 
     # Handle sorting
     sort_by = request.args.get('sort', 'date_desc')
@@ -257,6 +282,7 @@ def add_trade():
                 # Get the actual tag objects
                 selected_tags = Tag.query.filter(Tag.id.in_(tag_ids)).all()
                 new_trade.tags = selected_tags
+                TagUsageStats.record_tag_usage(current_user.id, tag_ids)
 
                 # --- (The rest of the function for processing entries, exits, and images remains the same) ---
             for entry_data in form.entries.data:
@@ -406,6 +432,7 @@ def edit_trade(trade_id):
                 # Get the actual tag objects
                 selected_tags = Tag.query.filter(Tag.id.in_(tag_ids)).all()
                 trade_to_edit.tags = selected_tags
+                TagUsageStats.record_tag_usage(current_user.id, tag_ids)
             else:
                 trade_to_edit.tags = []
 
@@ -495,6 +522,7 @@ def edit_trade(trade_id):
                                 exc_info=True)
 
             db.session.commit()
+            TagUsageStats.cleanup_unused_stats(current_user.id)
             flash('Trade updated successfully!', 'success')
             return redirect(url_for('trades.view_trade_detail', trade_id=trade_to_edit.id))
         except Exception as e:
@@ -521,6 +549,7 @@ def delete_trade(trade_id):
                     current_app.logger.warning(f"Could not delete image file: {img.filepath}")
         db.session.delete(trade_to_delete)  # Cascades should handle entries, exits, images in DB
         db.session.commit()
+        TagUsageStats.cleanup_unused_stats(current_user.id)
         flash('Trade deleted successfully.', 'success')
     except Exception as e:
         db.session.rollback()
@@ -564,6 +593,7 @@ def bulk_delete_trades():
     if deleted_count > 0:
         try:
             db.session.commit()
+            TagUsageStats.cleanup_unused_stats(current_user.id)
             flash(f'Successfully deleted {deleted_count} trade(s).', 'success')
         except Exception as e_commit:
             db.session.rollback()
