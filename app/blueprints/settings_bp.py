@@ -8,7 +8,7 @@ import json
 settings_bp = Blueprint('settings', __name__, template_folder='../templates/settings')
 
 
-@settings_bp.route('/')
+@settings_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def view_settings():
     """Updated settings page with statistics"""
