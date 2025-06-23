@@ -214,7 +214,7 @@
                     {% if not tag.is_default %}
                     <div class="tag-actions">
                         <button type="button" class="action-btn btn-outline-warning"
-                                onclick="editTag({{ tag.id }}, '{{ tag.name }}', '{{ tag.category.name }}')"
+                                onclick="editTag({{ tag.id }}, '{{ tag.name }}', '{{ tag.category.name }}', '{{ tag.color_category or 'neutral' }}')"
                                 title="Edit Tag">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -273,6 +273,23 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label for="edit-tag-color" class="form-label">Color Category</label>
+                        <select class="form-select" id="edit-tag-color">
+                            <option value="neutral">Neutral (Blue) - Informational</option>
+                            <option value="good">Good (Green) - Positive Performance</option>
+                            <option value="bad">Bad (Red) - Negative Performance</option>
+                        </select>
+                        <small class="form-text text-muted">Set the color based on performance impact</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-tag-active" class="form-label">Status</label>
+                        <select class="form-select" id="edit-tag-active">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                        <small class="form-text text-muted">Inactive tags won't appear in trade entry forms</small>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -296,6 +313,7 @@ function hideAddTagForm() {
     document.getElementById('add-tag-form').classList.remove('show');
     document.getElementById('new-tag-name').value = '';
     document.getElementById('new-tag-category').selectedIndex = 0;
+    document.getElementById('new-tag-color').selectedIndex = 0; // Added this line
 }
 
 function confirmResetTags() {
@@ -315,6 +333,7 @@ function confirmResetTags() {
 function createTag() {
     const name = document.getElementById('new-tag-name').value.trim();
     const category = document.getElementById('new-tag-category').value;
+    const colorCategory = document.getElementById('new-tag-color').value; // Added this line
 
     if (!name) {
         showError('Please enter a tag name');
@@ -329,7 +348,8 @@ function createTag() {
         },
         body: JSON.stringify({
             name: name,
-            category: category
+            category: category,
+            color_category: colorCategory // Added this line
         })
     })
     .then(response => response.json())
@@ -366,7 +386,7 @@ function addNewTagToDOM(tag) {
         }
 
         const tagElement = document.createElement('div');
-        tagElement.className = `tag-item tag-neutral ${tag.is_default ? 'default-tag' : 'user-tag'}`;
+        tagElement.className = `tag-item tag-${tag.color_category || 'neutral'} ${tag.is_default ? 'default-tag' : 'user-tag'}`;
         tagElement.setAttribute('data-tag-id', tag.id);
 
         tagElement.innerHTML = `
@@ -375,7 +395,7 @@ function addNewTagToDOM(tag) {
             ${!tag.is_default ? `
             <div class="tag-actions">
                 <button type="button" class="action-btn btn-outline-warning"
-                        onclick="editTag(${tag.id}, '${tag.name}', '${tag.category}')"
+                        onclick="editTag(${tag.id}, '${tag.name}', '${tag.category}', '${tag.color_category || 'neutral'}')"
                         title="Edit Tag">
                     <i class="fas fa-edit"></i>
                 </button>
@@ -398,10 +418,11 @@ function addNewTagToDOM(tag) {
     }
 }
 
-function editTag(tagId, tagName, categoryName) {
+function editTag(tagId, tagName, categoryName, colorCategory = 'neutral') {
     document.getElementById('edit-tag-id').value = tagId;
     document.getElementById('edit-tag-name').value = tagName;
     document.getElementById('edit-tag-category').value = categoryName;
+    document.getElementById('edit-tag-color').value = colorCategory; // Added this line
 
     const modal = new bootstrap.Modal(document.getElementById('editTagModal'));
     modal.show();
@@ -411,6 +432,7 @@ function updateTag() {
     const tagId = document.getElementById('edit-tag-id').value;
     const name = document.getElementById('edit-tag-name').value.trim();
     const category = document.getElementById('edit-tag-category').value;
+    const colorCategory = document.getElementById('edit-tag-color').value; // Added this line
 
     if (!name) {
         showError('Please enter a tag name');
@@ -425,7 +447,8 @@ function updateTag() {
         },
         body: JSON.stringify({
             name: name,
-            category: category
+            category: category,
+            color_category: colorCategory // Added this line
         })
     })
     .then(response => response.json())
@@ -461,9 +484,13 @@ function updateTagInDOM(tag) {
 
         tagElement.querySelector('.tag-name').textContent = tag.name;
 
+        // Update the color class
+        tagElement.classList.remove('tag-good', 'tag-bad', 'tag-neutral');
+        tagElement.classList.add(`tag-${tag.color_category || 'neutral'}`);
+
         const editButton = tagElement.querySelector('.action-btn.btn-outline-warning');
         if (editButton) {
-            editButton.setAttribute('onclick', `editTag(${tag.id}, '${tag.name}', '${tag.category}')`);
+            editButton.setAttribute('onclick', `editTag(${tag.id}, '${tag.name}', '${tag.category}', '${tag.color_category || 'neutral'}')`);
         }
 
         if (targetContainer && currentContainer !== targetContainer) {

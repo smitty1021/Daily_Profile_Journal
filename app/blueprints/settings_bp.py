@@ -79,7 +79,7 @@ def manage_personal_tags():
                 Tag.is_default == True,
                 Tag.user_id == current_user.id
             )
-        ).filter(Tag.is_active == True).order_by(Tag.category, Tag.name).all()
+        ).order_by(Tag.category, Tag.name).all()
 
         # Organize by category
         from app.models import TagCategory
@@ -179,6 +179,7 @@ def edit_tag(tag_id):
         name = data.get('name', '').strip()
         category_name = data.get('category', '')
         color_category = data.get('color_category', 'neutral')  # Add color category support
+        is_active = data.get('is_active', True)
 
         if not name or not category_name:
             return jsonify({'success': False, 'message': 'Name and category are required'})
@@ -207,6 +208,7 @@ def edit_tag(tag_id):
         tag.name = name
         tag.category = category
         tag.color_category = color_category  # Update color category
+        tag.is_active = is_active
         db.session.commit()
 
         return jsonify({
