@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from PIL import Image # For thumbnail generation, make sure Pillow is in requirements.txt
 import io
 
-from app import db
+from app.extensions import db
 from app.models import File, Activity # Assuming File model is defined in app.models
 from app.forms import FileUploadForm # Assuming FileUploadForm is in app.forms
 # You'll need the record_activity helper, ideally from utils.py

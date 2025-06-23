@@ -467,3 +467,35 @@ Custom Flash Message (Notification) Styles
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Add a subtle shadow for depth */
     border: none;
 }
+
+/* Random's Trading System Tag Colors */
+.tag-good {
+    background-color: #d4edda !important;
+    border-color: #c3e6cb !important;
+    color: #155724 !important;
+}
+
+.tag-bad {
+    background-color: #f8d7da !important;
+    border-color: #f5c6cb !important;
+    color: #721c24 !important;
+}
+
+.tag-neutral {
+    background-color: #cce7ff !important;
+    border-color: #b8daff !important;
+    color: #004085 !important;
+}
+
+/* Hover effects */
+.tag-good:hover {
+    background-color: #c3e6cb !important;
+}
+
+.tag-bad:hover {
+    background-color: #f5c6cb !important;
+}
+
+.tag-neutral:hover {
+    background-color: #b8daff !important;
+}

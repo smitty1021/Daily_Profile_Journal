@@ -34,7 +34,7 @@ def verify_token(token, salt, max_age_seconds=3600):
 
 # --- Email Sending Helper ---
 def send_email(to, subject, template_name, **kwargs):
-    from app import mail  # Import mail when the function is called
+    from app.extensions import mail  # Import mail when the function is called
     from flask_mail import Message  # Import Message locally
     try:
         if not template_name.startswith('email/'):
@@ -51,7 +51,7 @@ def send_email(to, subject, template_name, **kwargs):
 
 # --- Activity Logging Helper ---
 def record_activity(action, details=None, user_id_for_activity=None):
-    from app import db  # Import db when the function is called
+    from app.extensions import db  # Import db when the function is called
     from app.models import Activity, User  # Local model import
 
     actual_user_id = user_id_for_activity
@@ -113,7 +113,7 @@ def _parse_form_time(form_value_str):
 
 # --- News Event Options (This needs db and models, so import locally) ---
 def get_news_event_options():
-    from app import db  # Import db when the function is called
+    from app.extensions import db  # Import db when the function is called
     from app.models import NewsEventItem  # Local model import
     try:
         news_event_items = [item.name for item in NewsEventItem.query.order_by(NewsEventItem.name).all()]

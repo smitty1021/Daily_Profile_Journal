@@ -17,7 +17,7 @@ from app.models import TagUsageStats
 # This import is required for the fix
 from flask_wtf.csrf import generate_csrf
 
-from app import db
+from app.extensions import db
 from app.models import Trade, EntryPoint, ExitPoint, TradingModel, NewsEventItem, TradeImage, Instrument, Tag, TagCategory
 from app.models import Trade, Tag, EntryPoint, ExitPoint, TradingModel, NewsEventItem, TradeImage, Instrument, TagUsageStats
 from app.forms import TradeForm, EntryPointForm, ExitPointForm, TradeFilterForm, ImportTradesForm

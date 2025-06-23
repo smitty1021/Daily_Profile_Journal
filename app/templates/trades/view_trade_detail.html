@@ -26,7 +26,18 @@
                     <li class="list-group-item"><strong>Date:</strong> {{ trade.trade_date|format_date('%d-%b-%Y') }}</li>
                     <li class="list-group-item"><strong>Direction:</strong> <span class="badge {% if trade.direction == 'Long' %}bg-success{% elif trade.direction == 'Short' %}bg-danger{% else %}bg-secondary{% endif %}">{{ trade.direction }}</span></li>
                     <li class="list-group-item"><strong>Trading Model:</strong> {{ trade.trading_model.name if trade.trading_model else 'N/A' }}</li>
-                    <li class="list-group-item"><strong>Tags:</strong> {{ trade.tags if trade.tags else 'N/A' }}</li>
+                    <li class="list-group-item">
+                        <strong>Tags:</strong>
+                        {% if trade.tags %}
+                            {% for tag in trade.tags %}
+                                <span class="badge me-1 mb-1 {{ tag.name|tag_color }}">
+                                    {{ tag.name }}
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </li>
                     <li class="list-group-item"><strong>News Event:</strong> {{ trade.news_event if trade.news_event else 'N/A' }}</li>
                     <li class="list-group-item"><strong>How Closed:</strong> {{ trade.how_closed if trade.how_closed else 'N/A' }}</li>
                 </ul>

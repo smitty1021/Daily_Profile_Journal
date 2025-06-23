@@ -2,7 +2,7 @@ from flask import (Blueprint, render_template, current_app, request,
                    redirect, url_for, flash, abort, jsonify)  # Added abort
 from flask_login import login_required, current_user
 
-from app import db
+from app.extensions import db
 from app.utils import admin_required, record_activity, generate_token, send_email, smart_flash  # Added generate_token, send_email
 from app.models import User, UserRole, Activity, Instrument, Tag, TagCategory  # Add TagCategory here
 from datetime import datetime
@@ -197,26 +197,28 @@ def bulk_default_tags_actions():
     return jsonify({'success': False, 'message': 'Invalid action'})
 
 
-
-
-
 @admin_bp.route('/default-tags/seed', methods=['POST'])
 @login_required
 @admin_required
 def seed_default_tags():
-    """Recreate all default tags"""
+    """Seed Random's trading methodology default tags"""
     try:
+        # Clear existing default tags
+        Tag.query.filter_by(is_default=True).delete()
+
+        # Create Random's tag system
         created_count = Tag.create_default_tags()
 
-        current_app.logger.info(f"Admin {current_user.username} seeded {created_count} default tags")
-
-        flash(f'Successfully created {created_count} default tags', 'success')
-        return redirect(url_for('admin.manage_default_tags'))
+        db.session.commit()
+        flash(f'Successfully created {created_count} Random trading system tags!', 'success')
+        current_app.logger.info(f"Admin {current_user.username} seeded Random's default tags")
 
     except Exception as e:
+        db.session.rollback()
         current_app.logger.error(f"Error seeding default tags: {e}")
-        flash('Error creating default tags', 'danger')
-        return redirect(url_for('admin.manage_default_tags'))
+        flash('Error creating default tags. Please try again.', 'danger')
+
+    return redirect(url_for('admin.manage_default_tags'))
 
 
 @admin_bp.route('/dashboard')

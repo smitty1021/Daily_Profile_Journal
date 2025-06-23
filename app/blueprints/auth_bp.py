@@ -6,7 +6,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from PIL import Image
 
-from app import db
+from app.extensions import db
 from app.models import User, Activity, Settings
 from app.forms import (LoginForm, RegistrationForm, RequestPasswordResetForm,
                        ResetPasswordForm, ResendVerificationForm,

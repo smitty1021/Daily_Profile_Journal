@@ -2,7 +2,7 @@
 
 from flask import Blueprint, render_template, jsonify, request, current_app
 from flask_login import login_required, current_user
-from app import db
+from app.extensions import db
 from app.models import TagUsageStats, Tag, Trade
 
 analytics_bp = Blueprint('analytics', __name__, url_prefix='/analytics')

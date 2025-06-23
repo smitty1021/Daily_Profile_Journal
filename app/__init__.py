@@ -11,6 +11,10 @@ from dotenv import load_dotenv
 from itsdangerous import URLSafeTimedSerializer
 from flask_session import Session # <--- ADD THIS IMPORT
 
+
+# Import blueprints
+from app.blueprints.main_bp import main_bp
+
 # Import only self-contained utility functions needed for filter registration at module level
 from .utils import format_date_filter, format_filesize
 
@@ -21,12 +25,7 @@ if os.path.exists(dotenv_path):
 else:
     print(f"Warning: .env file not found at {dotenv_path}.")
 
-db = SQLAlchemy()
-migrate = Migrate()
-login_manager = LoginManager()
-mail = Mail()
-csrf = CSRFProtect()
-sess = Session()
+from app.extensions import db, migrate, login_manager, mail, csrf, sess
 serializer = None
 
 # --- Constants ---
@@ -134,6 +133,9 @@ def create_app(config_class=None):
 
     app.jinja_env.filters['format_date'] = format_date_filter
     app.jinja_env.filters['file_size'] = format_filesize
+
+    from app.template_filters import register_template_filters
+    register_template_filters(app)
 
     @app.context_processor
     def inject_current_year():

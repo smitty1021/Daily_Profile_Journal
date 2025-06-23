@@ -9,7 +9,7 @@ import uuid
 import os
 import statistics
 from sqlalchemy import ForeignKey
-from app import db
+from app.extensions import db
 from enum import Enum
 
 user_default_tags = db.Table('user_default_tags',
@@ -448,46 +448,105 @@ class Tag(db.Model):
 
     @classmethod
     def create_default_tags(cls):
-        """Create the default tag set if they don't exist"""
+        """Create Random's trading methodology default tag set"""
         default_tags = {
             TagCategory.SETUP_STRATEGY: [
-                "0930-Open", "Breakout", "Captain-Backtest", "Engulfing-Candle",
-                "HOD-LOD", "Inside-Bar", "Mean-Reversion", "P12"
+                # Core Trading Models (Primary Systems) - Random's Four Models
+                "0930 Open",  # The 9:30 opening range snap model
+                "HOD LOD",  # High/Low of day reversal model
+                "P12",  # P12 scenario-based trades
+                "Captain Backtest",  # H4 breakout trend-following model
+
+                # Supporting Setup Types
+                "Quarter Trade",  # Hourly quarter trades (Q1, Q2, Q3, Q4)
+                "05 Box",  # First 5-minute box of each hour
+                "Three Hour Quarter",  # 3-hour session quarters
+                "Midnight Open",  # Midnight open retracement
+                "Breakout",  # General breakout patterns
+                "Mean Reversion",  # Reversion to mean trades
             ],
+
             TagCategory.MARKET_CONDITIONS: [
-                "Asian", "Cash-Flow", "DNP", "DWP", "Extended-Target", "High-Volatility",
-                "London", "Low-Volatility", "New-York-Open", "News-Driven", "NY1", "NY2",
-                "R1", "R2", "True-Session", "False-Session", "Broken-Session"
+                # Daily Classifications (Critical) - Random's Four Steps
+                "DWP",  # Directional With Pullback
+                "DNP",  # Directional No Pullback
+                "R1",  # Range 1 (back to 9:30 open)
+                "R2",  # Range 2 (defined range day)
+
+                # Session Types - Random's Time-Based Analysis
+                "Asian Session",  # 18:00-02:30 EST
+                "London Session",  # 02:30-07:30 EST
+                "NY1 Session",  # 07:30-11:30 EST (New York 1)
+                "NY2 Session",  # 11:30-16:15 EST (New York 2)
+
+                # Market Environment
+                "High Volatility",  # High vol environment
+                "Low Volatility",  # Low vol environment
+                "News Driven",  # News affecting price action
+                "Extended Target",  # Extended daily range
             ],
+
             TagCategory.EXECUTION_MANAGEMENT: [
-                "Chased-Entry", "Cut-Loser-Short", "Front-Run", "Confirmation", "Retest",
-                "Impulsive-Entry", "Let-Winner-Run", "Limit-Order", "Market-Order",
-                "Moved-Stop-Loss", "Partial-Take-Profit", "Price-Cloud", "Trailing-Stop"
+                # Entry Quality (Performance-Critical) - Random's Execution Framework
+                "Front Run",  # Entered before confirmation
+                "Confirmation",  # Waited for confirmation
+                "Retest",  # Entered on retest of level
+                "Chased Entry",  # Chased price, poor timing
+                "Late Entry",  # Entered too late in move
+
+                # Risk Management - Based on Random's Risk Rules
+                "Proper Stop",  # Stop placed according to rules
+                "Moved Stop",  # Moved stop against position
+                "Cut Short",  # Cut winner too early
+                "Let Run",  # Let winner run properly
+                "Partial Profit",  # Took partial profits
+
+                # Order Types
+                "Limit Order",  # Used limit orders
+                "Market Order",  # Used market orders
             ],
+
             TagCategory.PSYCHOLOGICAL_EMOTIONAL: [
-                "Anxious", "Calm", "Confident", "Deviated-from-Plan", "Discipline",
-                "Distracted", "FOMO", "Followed-Plan", "Greedy", "Hesitant",
-                "Patience", "Perfect-Setup", "Revenge-Trade", "Stressed", "Tired", "Well-Rested"
+                # Positive States - Random's Psychology Framework
+                "Disciplined",  # Followed rules completely
+                "Patient",  # Waited for proper setup
+                "Calm",  # Calm emotional state
+                "Confident",  # Confident execution
+                "Followed Plan",  # Executed according to plan
+
+                # Negative States - Common Trading Psychology Issues
+                "FOMO",  # Fear of missing out
+                "Revenge Trading",  # Trading to get back losses
+                "Impulsive",  # Impulsive decisions
+                "Anxious",  # Anxious state affecting trading
+                "Broke Rules",  # Violated trading rules
+                "Overconfident",  # Dangerous overconfidence
             ]
         }
 
         created_count = 0
         for category, tag_names in default_tags.items():
-            for tag_name in sorted(tag_names):  # Alphabetical order
+            for tag_name in tag_names:
+                # Check if tag already exists
                 existing = cls.query.filter_by(name=tag_name, is_default=True).first()
                 if not existing:
-                    tag = cls(
+                    new_tag = cls(
                         name=tag_name,
                         category=category,
-                        user_id=None,
                         is_default=True,
                         is_active=True
                     )
-                    db.session.add(tag)
+                    db.session.add(new_tag)
                     created_count += 1
 
         if created_count > 0:
-            db.session.commit()
+            try:
+                db.session.commit()
+                current_app.logger.info(f"Created {created_count} new default tags for Random's system")
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f"Error creating default tags: {e}")
+                raise
 
         return created_count
 

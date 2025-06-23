@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
-from app import db  # Import db from the app package (app/__init__.py)
+from app.extensions import db
 from app.models import TradingModel  # Import your TradingModel from app/models.py
 from app.forms import TradingModelForm  # Import your TradingModelForm from app/forms.py
 

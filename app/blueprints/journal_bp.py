@@ -6,7 +6,7 @@ import os
 import uuid
 from datetime import date as py_date, datetime as py_datetime, timedelta
 
-from app import db
+from app.extensions import db
 from app.models import DailyJournal, DailyJournalImage, Trade
 from app.forms import DailyJournalForm  # Assuming DailyJournalForm is in app.forms
 from app.utils import record_activity  # Assuming record_activity is in app.utils

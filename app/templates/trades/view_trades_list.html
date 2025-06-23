@@ -170,6 +170,7 @@
                                         <th>Contracts</th>
                                         <th>P&L</th>
                                         <th>R Multiple</th>
+                                        <th>Tags</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -223,6 +224,19 @@
                                                 </span>
                                             {% else %}
                                                 <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <td>
+                                            {% if trade.tags %}
+                                                {% for tag in trade.tags[:3] %}{# Show max 3 tags in list view #}
+                                                    <span class="badge badge-sm me-1 {{ tag.name|tag_color }}">{{ tag.name }}</span>
+                                                {% endfor %}
+                                                {% if trade.tags|length > 3 %}
+                                                    <span class="text-muted small">+{{ trade.tags|length - 3 }} more</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
                                             {% endif %}
                                         </td>
                                         <td>

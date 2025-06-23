@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, session
 from flask_login import login_required, current_user
-from app import db
+from app.extensions import db
 from app.models import Settings, Tag, TagCategory
 from app.forms import TagForm
 import json

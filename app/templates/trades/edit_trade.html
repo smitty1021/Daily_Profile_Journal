@@ -135,6 +135,57 @@
         color: #6c757d !important;
         font-weight: bold;
     }
+
+    /* Random's Trading System Tag Colors */
+    .tag-good {
+        background-color: #d4edda !important;
+        border-color: #c3e6cb !important;
+        color: #155724 !important;
+    }
+
+    .tag-bad {
+        background-color: #f8d7da !important;
+        border-color: #f5c6cb !important;
+        color: #721c24 !important;
+    }
+
+    .tag-neutral {
+        background-color: #cce7ff !important;
+        border-color: #b8daff !important;
+        color: #004085 !important;
+    }
+
+    /* Hover effects */
+    .tag-good:hover {
+        background-color: #c3e6cb !important;
+    }
+
+    .tag-bad:hover {
+        background-color: #f5c6cb !important;
+    }
+
+    .tag-neutral:hover {
+        background-color: #b8daff !important;
+    }
+
+    /* Selected tags display */
+    .selected-tags-display {
+        margin-top: 0.5rem;
+        padding: 0.5rem;
+        border: 1px solid var(--bs-border-color);
+        border-radius: 0.375rem;
+        background-color: var(--bs-tertiary-bg);
+        min-height: 2rem;
+    }
+
+    .tag-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        margin: 0.125rem;
+        border-radius: 0.375rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
 </style>
 {% endblock %}
 
@@ -391,6 +442,11 @@
                             {% endfor %}
                         {% endif %}
                         <small class="form-text text-muted">Select appropriate tags for this trade.</small>
+
+                        <!-- Selected Tags Display -->
+                        <div class="selected-tags-display" id="selected-tags-display">
+                            <small class="text-muted">Selected tags will appear here...</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -861,6 +917,45 @@ document.addEventListener('DOMContentLoaded', function() {
             psychRadarCtx: !!psychRadarCtx,
             ratingSelectorsCount: ratingSelectors.length
         });
+    }
+
+    // --- TAG COLOR DISPLAY FUNCTIONALITY ---
+    function getTagColorClass(tagName) {
+        const goodTags = ["Front Run", "Confirmation", "Retest", "Proper Stop", "Let Run", "Partial Profit", "Disciplined", "Patient", "Calm", "Confident", "Followed Plan"];
+        const badTags = ["Chased Entry", "Late Entry", "Moved Stop", "Cut Short", "FOMO", "Revenge Trading", "Impulsive", "Anxious", "Broke Rules", "Overconfident"];
+
+        if (goodTags.includes(tagName)) return 'tag-good';
+        if (badTags.includes(tagName)) return 'tag-bad';
+        return 'tag-neutral';
+    }
+
+    function updateSelectedTagsDisplay() {
+        const tagsDisplay = document.getElementById('selected-tags-display');
+        const selectedOptions = tagsSelect.tomselect.getValue();
+
+        if (selectedOptions.length === 0) {
+            tagsDisplay.innerHTML = '<small class="text-muted">Selected tags will appear here...</small>';
+            return;
+        }
+
+        let tagsHtml = '';
+        selectedOptions.forEach(value => {
+            const option = tagsSelect.querySelector(`option[value="${value}"]`);
+            if (option) {
+                const tagName = option.textContent;
+                const colorClass = getTagColorClass(tagName);
+                tagsHtml += `<span class="tag-badge ${colorClass}">${tagName}</span>`;
+            }
+        });
+
+        tagsDisplay.innerHTML = tagsHtml;
+    }
+
+    // Add listener for tag selection changes
+    if (tagsSelect && tagsSelect.tomselect) {
+        tagsSelect.tomselect.on('change', updateSelectedTagsDisplay);
+        // Initial display update for edit mode
+        setTimeout(updateSelectedTagsDisplay, 100); // Small delay to ensure TomSelect is fully initialized
     }
 
     // --- INITIAL SETUP ---
