@@ -13,8 +13,8 @@
     }
 
     .tag-category-header {
-        background: linear-gradient(135deg, var(--bs-primary), var(--bs-primary-dark));
-        color: white;
+        background-color: var(--bs-secondary-bg);
+        color: var(--bs-body-color);
         border-bottom: 1px solid var(--bs-border-color);
         padding: 0.75rem 1rem;
         font-weight: 600;
@@ -215,16 +215,24 @@
     <div id="add-tag-form" class="add-tag-form">
         <h5><i class="fas fa-plus me-2"></i>Add New Default Tag</h5>
         <div class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="new-tag-name" class="form-label">Tag Name</label>
                 <input type="text" class="form-control" id="new-tag-name" placeholder="Enter tag name...">
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label for="new-tag-category" class="form-label">Category</label>
                 <select class="form-select" id="new-tag-category">
                     {% for category in TagCategory %}
                     <option value="{{ category.name }}">{{ category.value }}</option>
                     {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="new-tag-color" class="form-label">Color Category</label>
+                <select class="form-select" id="new-tag-color">
+                    <option value="neutral">Neutral (Blue)</option>
+                    <option value="good">Good (Green)</option>
+                    <option value="bad">Bad (Red)</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -248,7 +256,7 @@
     <div class="tag-category-section">
         <div class="tag-category-header">
             <span><i class="fas fa-folder me-2"></i>{{ category_display }}</span>
-            <span class="badge bg-light text-dark">{{ tags|length }} tags</span>
+            <span class="badge bg-secondary">{{ tags|length }} tags</span>
         </div>
         {% set category_id = {
             'Setup & Strategy': 'SETUP_STRATEGY',
@@ -289,8 +297,8 @@
     {# Quick Actions #}
     <div class="row mt-4">
         <div class="col-md-6">
-            <div class="card border-info">
-                <div class="card-header bg-info text-white">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
                     <i class="fas fa-magic me-2"></i>Quick Actions
                 </div>
                 <div class="card-body">
@@ -409,6 +417,7 @@ function hideAddTagForm() {
     // Clear form
     document.getElementById('new-tag-name').value = '';
     document.getElementById('new-tag-category').selectedIndex = 0;
+    document.getElementById('new-tag-color').selectedIndex = 0;
     document.getElementById('new-tag-active').selectedIndex = 0;
 }
 
@@ -457,6 +466,7 @@ function confirmSeedDefaultTags() {
 function createTag() {
     const name = document.getElementById('new-tag-name').value.trim();
     const category = document.getElementById('new-tag-category').value;
+    const colorCategory = document.getElementById('new-tag-color').value;
     const isActive = document.getElementById('new-tag-active').value === 'true';
 
     if (!name) {
@@ -473,6 +483,7 @@ function createTag() {
         body: JSON.stringify({
             name: name,
             category: category,
+            color_category: colorCategory,
             is_active: isActive
         })
     })
@@ -506,6 +517,7 @@ function updateTag() {
     const name = document.getElementById('edit-tag-name').value.trim();
     const category = document.getElementById('edit-tag-category').value;
     const isActive = document.getElementById('edit-tag-active').value === 'true';
+    const colorCategory = document.getElementById('edit-tag-color').value; // Get color category
 
     if (!name) {
         alert('Please enter a tag name');
@@ -521,13 +533,22 @@ function updateTag() {
         body: JSON.stringify({
             name: name,
             category: category,
-            is_active: isActive
+            is_active: isActive,
+            color_category: colorCategory  // Send color category
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            // Update the tag in the DOM instead of reloading
+            updateTagInDOM(data.tag);
+
+            // Hide modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editTagModal'));
+            modal.hide();
+
+            // Show success message (optional)
+            console.log('Tag updated successfully:', data.message);
         } else {
             alert('Error: ' + data.message);
         }
@@ -536,6 +557,46 @@ function updateTag() {
         console.error('Error:', error);
         alert('An error occurred while updating the tag');
     });
+}
+
+function updateTagInDOM(tag) {
+    const tagElement = document.querySelector(`[data-tag-id="${tag.id}"]`);
+    if (tagElement) {
+        // Update tag name
+        tagElement.querySelector('.tag-name').textContent = tag.name;
+
+        // Remove old color classes and add new one
+        tagElement.classList.remove('tag-good', 'tag-bad', 'tag-neutral');
+        tagElement.classList.add(`tag-${tag.color_category || 'neutral'}`);
+
+        // Update active/inactive status
+        if (tag.is_active) {
+            tagElement.classList.remove('inactive');
+            // Remove inactive badge if present
+            const inactiveBadge = tagElement.querySelector('.badge.bg-secondary');
+            if (inactiveBadge) {
+                inactiveBadge.remove();
+            }
+        } else {
+            tagElement.classList.add('inactive');
+            // Add inactive badge if not present
+            if (!tagElement.querySelector('.badge.bg-secondary')) {
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-secondary ms-2';
+                badge.style.fontSize = '0.6rem';
+                badge.textContent = 'INACTIVE';
+                tagElement.querySelector('.tag-name').after(badge);
+            }
+        }
+
+        // Update edit button onclick with new values
+        const editButton = tagElement.querySelector('.action-btn.btn-outline-warning');
+        if (editButton) {
+            editButton.setAttribute('onclick',
+                `editTag(${tag.id}, '${tag.name}', '${tag.category}', ${tag.is_active ? 'true' : 'false'}, '${tag.color_category || 'neutral'}')`
+            );
+        }
+    }
 }
 
 function deleteTag(tagId, tagName) {

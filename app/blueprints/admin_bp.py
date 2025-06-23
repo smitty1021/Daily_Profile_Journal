@@ -27,6 +27,7 @@ def create_default_tag():
     try:
         name = request.json.get('name', '').strip()
         category_name = request.json.get('category', '')
+        color_category = request.json.get('color_category', 'neutral')
         is_active = request.json.get('is_active', True)
 
         if not name or not category_name:
@@ -47,7 +48,7 @@ def create_default_tag():
         new_tag = Tag(
             name=name,
             category=category,
-            user_id=None,  # NULL for default tags
+            color_category=color_category,
             is_default=True,
             is_active=is_active
         )
@@ -55,24 +56,21 @@ def create_default_tag():
         db.session.add(new_tag)
         db.session.commit()
 
-        current_app.logger.info(f"Admin {current_user.username} created default tag: {name}")
-
         return jsonify({
             'success': True,
-            'message': f'Default tag "{name}" created successfully',
+            'message': 'Default tag created successfully',
             'tag': {
                 'id': new_tag.id,
                 'name': new_tag.name,
                 'category': new_tag.category.name,
-                'is_default': new_tag.is_default,
+                'color_category': new_tag.color_category,
                 'is_active': new_tag.is_active
             }
         })
 
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error creating default tag: {e}")
-        return jsonify({'success': False, 'message': f'Error creating default tag: {str(e)}'})
+        return jsonify({'success': False, 'message': f'Error creating tag: {str(e)}'})
 
 
 @admin_bp.route('/default-tags/<int:tag_id>/edit', methods=['POST'])
@@ -86,9 +84,11 @@ def edit_default_tag(tag_id):
         if not tag.is_default:
             return jsonify({'success': False, 'message': 'Can only edit default tags'})
 
-        name = request.json.get('name', '').strip()
-        category_name = request.json.get('category', '')
-        is_active = request.json.get('is_active', True)
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        category_name = data.get('category', '')
+        is_active = data.get('is_active', True)
+        color_category = data.get('color_category', 'neutral')  # Get color category
 
         if not name or not category_name:
             return jsonify({'success': False, 'message': 'Name and category are required'})
@@ -100,39 +100,33 @@ def edit_default_tag(tag_id):
             return jsonify({'success': False, 'message': 'Invalid category'})
 
         # Check for duplicates (excluding current tag)
-        existing = Tag.query.filter(
-            Tag.id != tag_id,
-            Tag.name == name,
-            Tag.is_default == True
-        ).first()
-
+        existing = Tag.query.filter_by(name=name, is_default=True).filter(Tag.id != tag_id).first()
         if existing:
-            return jsonify({'success': False, 'message': 'Default tag name already exists'})
+            return jsonify({'success': False, 'message': 'Another default tag with this name already exists'})
 
         # Update tag
         tag.name = name
         tag.category = category
         tag.is_active = is_active
-        db.session.commit()
+        tag.color_category = color_category  # Update color category
 
-        current_app.logger.info(f"Admin {current_user.username} edited default tag: {name}")
+        db.session.commit()
 
         return jsonify({
             'success': True,
-            'message': f'Default tag "{name}" updated successfully',
+            'message': 'Tag updated successfully',
             'tag': {
                 'id': tag.id,
                 'name': tag.name,
                 'category': tag.category.name,
-                'is_default': tag.is_default,
-                'is_active': tag.is_active
+                'is_active': tag.is_active,
+                'color_category': tag.color_category  # Return color category
             }
         })
 
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error editing default tag {tag_id}: {e}")
-        return jsonify({'success': False, 'message': 'Error updating default tag'})
+        return jsonify({'success': False, 'message': f'Error updating tag: {str(e)}'})
 
 
 @admin_bp.route('/default-tags/<int:tag_id>/delete', methods=['POST'])
