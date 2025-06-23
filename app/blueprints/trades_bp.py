@@ -59,10 +59,9 @@ def _is_allowed_image(filename):
 
 
 def _populate_tags_choices(form):
-    """Populate dynamic choices for tags dropdown - grouped by category"""
+    """Populate dynamic choices for tags dropdown - grouped by category with color information"""
     from app.models import Tag, TagCategory
     from flask_login import current_user
-
 
     # Get all available tags for the user
     all_tags = Tag.query.filter(
@@ -81,8 +80,12 @@ def _populate_tags_choices(form):
 
     for tag in all_tags:
         if tag.category in grouped_tags:
-            # Convert tag.id to string since we removed coerce=int
-            grouped_tags[tag.category].append((str(tag.id), tag.name))
+            # Convert tag.id to string and include color_category
+            grouped_tags[tag.category].append((
+                str(tag.id),
+                tag.name,
+                tag.color_category or 'neutral'
+            ))
 
     # Build the final choices list in optgroups format
     choices = []
@@ -530,7 +533,15 @@ def edit_trade(trade_id):
             current_app.logger.error(f"Error editing trade {trade_id}: {e}", exc_info=True)
             flash(f'An error occurred while updating the trade: {str(e)}', 'danger')
 
-    return render_template('trades/edit_trade.html', title="Edit Trade", form=form, trade=trade_to_edit)
+    # Get instrument point values for JavaScript calculations
+    from app.models import Instrument
+    instrument_point_values = Instrument.get_instrument_point_values()
+
+    return render_template('trades/edit_trade.html',
+                           title="Edit Trade",
+                           form=form,
+                           trade=trade_to_edit,
+                           instrument_point_values=instrument_point_values)
 
 
 # --- DELETE TRADE (Single) ---

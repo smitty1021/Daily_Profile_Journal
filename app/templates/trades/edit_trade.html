@@ -2,7 +2,7 @@
 {% import "macros/_form_helpers.html" as forms %}
 
 {% block title %}
-    Edit Trade #{{ trade.id }} - Trading Journal
+    Edit Trade {{ trade.trade_date.strftime('%m/%d') }} {{ trade.entries[0].entry_time.strftime('%H:%M') if trade.entries else '' }} {{ trade.instrument }} - Trading Journal
 {% endblock %}
 
 {% block head_extra %}
@@ -136,23 +136,23 @@
         font-weight: bold;
     }
 
-    /* Random's Trading System Tag Colors */
+    /* Tag Colors - Match Default Tags Page using global CSS variables */
     .tag-good {
-        background-color: #d4edda !important;
-        border-color: #c3e6cb !important;
-        color: #155724 !important;
+        background-color: var(--bs-success-bg-subtle) !important;
+        border-color: var(--bs-success-border-subtle) !important;
+        color: var(--bs-success-text-emphasis) !important;
     }
 
     .tag-bad {
-        background-color: #f8d7da !important;
-        border-color: #f5c6cb !important;
-        color: #721c24 !important;
+        background-color: var(--bs-danger-bg-subtle) !important;
+        border-color: var(--bs-danger-border-subtle) !important;
+        color: var(--bs-danger-text-emphasis) !important;
     }
 
     .tag-neutral {
-        background-color: #cce7ff !important;
-        border-color: #b8daff !important;
-        color: #004085 !important;
+        background-color: var(--bs-primary-bg-subtle) !important;
+        border-color: var(--bs-primary-border-subtle) !important;
+        color: var(--bs-primary-text-emphasis) !important;
     }
 
     /* Hover effects */
@@ -166,6 +166,18 @@
 
     .tag-neutral:hover {
         background-color: #b8daff !important;
+    }
+
+    [data-bs-theme="dark"] .tag-good:hover {
+        background-color: #146c43 !important;
+    }
+
+    [data-bs-theme="dark"] .tag-bad:hover {
+        background-color: #842029 !important;
+    }
+
+    [data-bs-theme="dark"] .tag-neutral:hover {
+        background-color: #084298 !important;
     }
 
     /* Selected tags display */
@@ -186,12 +198,16 @@
         font-size: 0.75rem;
         font-weight: 500;
     }
+
+    .ts-control .item .remove {
+        border-left: none !important;
+    }
 </style>
 {% endblock %}
 
 {% block page_header %}
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-        <h1>Edit Trade #{{ trade.id }}</h1>
+        <h1>Edit Trade {{ trade.trade_date.strftime('%m/%d') }} {{ trade.entries[0].entry_time.strftime('%H:%M') if trade.entries else '' }} {{ trade.instrument }}</h1>
         <div class="d-flex gap-2 mt-2 mt-md-0">
             <a href="{{ url_for('trades.view_trade_detail', trade_id=trade.id) }}" class="btn btn-outline-secondary"><i class="fas fa-eye me-1"></i> View Details</a>
             <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-outline-secondary"><i class="fas fa-list me-1"></i> Back to List</a>
@@ -203,7 +219,7 @@
 <div class="container-fluid">
     <!-- Trade Stats Dashboard (Auto-calculated) -->
     <div id="trade-stats-dashboard" class="card mb-4">
-        <div class="card-header bg-info text-white">
+        <div class="card-header bg-primary text-white">
             <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Live Trade Statistics</h5>
         </div>
         <div class="card-body">
@@ -267,7 +283,7 @@
             </div>
 
             <!-- ENTRY/EXIT POINTS -->
-            <div class="row mt-4">
+            <div class="row">
                 <div class="col-md-6">
                     <div class="form-section">
                         <h3>Trade Entries</h3>
@@ -427,8 +443,10 @@
                         <select multiple class="form-select" id="tags-select" name="{{ form.tags.name }}">
                             {% for category_name, tag_options in form.tags.choices %}
                                 <optgroup label="{{ category_name }}">
-                                    {% for tag_id, tag_name in tag_options %}
+                                    {% for tag_id, tag_name, tag_color in tag_options %}
                                         <option value="{{ tag_id }}"
+                                                data-color="{{ tag_color or 'neutral' }}"
+                                                class="tag-{{ tag_color or 'neutral' }}"
                                                 {% if tag_id in (form.tags.data or []) %}selected{% endif %}>
                                             {{ tag_name }}
                                         </option>
@@ -442,11 +460,6 @@
                             {% endfor %}
                         {% endif %}
                         <small class="form-text text-muted">Select appropriate tags for this trade.</small>
-
-                        <!-- Selected Tags Display -->
-                        <div class="selected-tags-display" id="selected-tags-display">
-                            <small class="text-muted">Selected tags will appear here...</small>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -505,23 +518,42 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Edit trade page JavaScript initializing...');
 
+    // Create tag color mapping from the backend data
+    const tagColors = {};
+    {% for category_name, tag_options in form.tags.choices %}
+        {% for tag_id, tag_name, tag_color in tag_options %}
+            tagColors['{{ tag_id }}'] = '{{ tag_color or "neutral" }}';
+        {% endfor %}
+    {% endfor %}
+
     // --- INITIALIZE TAGS SELECT (ONLY ONCE) ---
     const tagsSelect = document.getElementById('tags-select');
     if (tagsSelect) {
         new TomSelect(tagsSelect, {
             plugins: ['remove_button'],
             placeholder: 'Select or search for tags...',
+            render: {
+                option: function(data, escape) {
+                    const tagId = data.value;
+                    const colorClass = tagColors[tagId] ? `tag-${tagColors[tagId]}` : 'tag-neutral';
+                    return `<div class="option ${colorClass}">${escape(data.text)}</div>`;
+                },
+                item: function(data, escape) {
+                    const tagId = data.value;
+                    const colorClass = tagColors[tagId] ? `tag-${tagColors[tagId]}` : 'tag-neutral';
+                    return `<div class="item ${colorClass}">${escape(data.text)}</div>`;
+                }
+            }
         });
-        console.log('TomSelect initialized for tags');
+        console.log('TomSelect initialized for tags with colors');
     }
 
     // --- TRADE STATS DASHBOARD CALCULATIONS ---
     const dashboard = document.getElementById('trade-stats-dashboard');
 
-    // Get instrument point values from the backend (you may need to pass this from the view)
-    const instrumentPointValues = {
-        'NQ': 20.0, 'ES': 50.0, 'YM': 5.0, 'MNQ': 2.0, 'MES': 5.0, 'MYM': 0.5, 'Other': 1.0
-    };
+    // Use the dynamic point values passed from backend
+    const instrumentPointValues = {{ instrument_point_values|tojson|safe }};
+    console.log('Available instruments and point values:', instrumentPointValues);
 
     // COMPREHENSIVE field watching for P&L updates
     function addCalculationListeners() {
@@ -919,49 +951,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- TAG COLOR DISPLAY FUNCTIONALITY ---
-    function getTagColorClass(tagName) {
-        const goodTags = ["Front Run", "Confirmation", "Retest", "Proper Stop", "Let Run", "Partial Profit", "Disciplined", "Patient", "Calm", "Confident", "Followed Plan"];
-        const badTags = ["Chased Entry", "Late Entry", "Moved Stop", "Cut Short", "FOMO", "Revenge Trading", "Impulsive", "Anxious", "Broke Rules", "Overconfident"];
-
-        if (goodTags.includes(tagName)) return 'tag-good';
-        if (badTags.includes(tagName)) return 'tag-bad';
-        return 'tag-neutral';
-    }
-
-    function updateSelectedTagsDisplay() {
-        const tagsDisplay = document.getElementById('selected-tags-display');
-        const selectedOptions = tagsSelect.tomselect.getValue();
-
-        if (selectedOptions.length === 0) {
-            tagsDisplay.innerHTML = '<small class="text-muted">Selected tags will appear here...</small>';
-            return;
-        }
-
-        let tagsHtml = '';
-        selectedOptions.forEach(value => {
-            const option = tagsSelect.querySelector(`option[value="${value}"]`);
-            if (option) {
-                const tagName = option.textContent;
-                const colorClass = getTagColorClass(tagName);
-                tagsHtml += `<span class="tag-badge ${colorClass}">${tagName}</span>`;
-            }
-        });
-
-        tagsDisplay.innerHTML = tagsHtml;
-    }
-
-    // Add listener for tag selection changes
-    if (tagsSelect && tagsSelect.tomselect) {
-        tagsSelect.tomselect.on('change', updateSelectedTagsDisplay);
-        // Initial display update for edit mode
-        setTimeout(updateSelectedTagsDisplay, 100); // Small delay to ensure TomSelect is fully initialized
-    }
-
     // --- INITIAL SETUP ---
     console.log('Running initial setup...');
     addCalculationListeners();
     calculateStats();
+
+    // Scroll to top to show the trade statistics dashboard
+    window.scrollTo(0, 0);
+
     console.log('Edit trade page JavaScript initialization complete');
 });
 </script>

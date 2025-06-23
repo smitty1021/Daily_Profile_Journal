@@ -227,19 +227,6 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <td>
-                                            {% if trade.tags %}
-                                                {% for tag in trade.tags[:3] %}{# Show max 3 tags in list view #}
-                                                    <span class="badge badge-sm me-1 {{ tag.name|tag_color }}">{{ tag.name }}</span>
-                                                {% endfor %}
-                                                {% if trade.tags|length > 3 %}
-                                                    <span class="text-muted small">+{{ trade.tags|length - 3 }} more</span>
-                                                {% endif %}
-                                            {% else %}
-                                                <span class="text-muted">-</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
                                             {% if trade.tags %}
                                                 {% for tag in trade.tags[:3] %}
                                                     <span class="badge badge-sm me-1 {{ tag|tag_color }}">{{ tag.name }}</span>
@@ -252,7 +239,21 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <div class="btn-group btn-group-sm">
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{{ url_for('trades.view_trade_detail', trade_id=trade.id) }}"
+                                                   class="btn btn-outline-primary btn-sm" title="View Trade">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ url_for('trades.edit_trade', trade_id=trade.id) }}"
+                                                   class="btn btn-outline-warning btn-sm" title="Edit Trade">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" class="btn btn-outline-danger btn-sm"
+                                                        onclick="confirmSingleDelete({{ trade.id }}, '{{ trade.trade_date.strftime('%m/%d/%Y') }}', '{{ trade.instrument }}', '{{ trade.direction }}')"
+                                                        title="Delete Trade">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -572,5 +573,34 @@ function showCustomConfirm(title, message, confirmCallback, cancelCallback) {
     // Show modal
     modal.show();
 }
+
+// Single trade delete confirmation
+function confirmSingleDelete(tradeId, date, instrument, direction) {
+    const message = `Are you sure you want to permanently delete this trade?\n\n${date} - ${instrument} (${direction})\n\nThis action cannot be undone.`;
+
+    showCustomConfirm(
+        'Confirm Trade Deletion',
+        message,
+        function() {
+            // Create a form and submit it
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
+
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrf_token';
+            csrfToken.value = '{{ csrf_token }}';
+
+            form.appendChild(csrfToken);
+            document.body.appendChild(form);
+            form.submit();
+        },
+        function() {
+            console.log('Delete cancelled by user');
+        }
+    );
+}
+
 </script>
 {% endblock %}
