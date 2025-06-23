@@ -240,16 +240,19 @@
                                             {% endif %}
                                         </td>
                                         <td>
+                                            {% if trade.tags %}
+                                                {% for tag in trade.tags[:3] %}
+                                                    <span class="badge badge-sm me-1 {{ tag|tag_color }}">{{ tag.name }}</span>
+                                                {% endfor %}
+                                                {% if trade.tags|length > 3 %}
+                                                    <span class="text-muted small">+{{ trade.tags|length - 3 }} more</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
                                             <div class="btn-group btn-group-sm">
-                                                <a href="{{ url_for('trades.view_trade_detail', trade_id=trade.id) }}"
-                                                   class="btn btn-outline-primary btn-sm me-1" title="View Details">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <a href="{{ url_for('trades.edit_trade', trade_id=trade.id) }}"
-                                                   class="btn btn-outline-warning btn-sm" title="Edit Trade">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}

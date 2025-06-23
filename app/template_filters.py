@@ -1,5 +1,13 @@
-def get_tag_color_class(tag_name):
-    """Template filter for tag color classes"""
+def get_tag_color_class(tag_or_name):
+    """Template filter for tag color classes - accepts Tag object or tag name"""
+
+    # If it's a Tag object, check if it has a color_category set
+    if hasattr(tag_or_name, 'color_category') and tag_or_name.color_category:
+        return f"tag-{tag_or_name.color_category}"
+
+    # Fall back to name-based logic for backward compatibility
+    tag_name = tag_or_name.name if hasattr(tag_or_name, 'name') else str(tag_or_name)
+
     good_performance_tags = {
         "Front Run", "Confirmation", "Retest", "Proper Stop",
         "Let Run", "Partial Profit", "Disciplined", "Patient",

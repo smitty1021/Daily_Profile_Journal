@@ -388,6 +388,7 @@ class Tag(db.Model):
                         nullable=True)  # NULL for default tags
     is_default = db.Column(db.Boolean, nullable=False, default=False)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
+    color_category = db.Column(db.String(20), nullable=True, default='neutral')  # 'good', 'bad', 'neutral'
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     # Relationships
@@ -448,104 +449,105 @@ class Tag(db.Model):
 
     @classmethod
     def create_default_tags(cls):
-        """Create Random's trading methodology default tag set"""
-        default_tags = {
-            TagCategory.SETUP_STRATEGY: [
-                # Core Trading Models (Primary Systems) - Random's Four Models
-                "0930 Open",  # The 9:30 opening range snap model
-                "HOD LOD",  # High/Low of day reversal model
-                "P12",  # P12 scenario-based trades
-                "Captain Backtest",  # H4 breakout trend-following model
+        """Create Random's trading methodology default tag set with color categories"""
+        from app.extensions import db
+        from flask import current_app
 
-                # Supporting Setup Types
-                "Quarter Trade",  # Hourly quarter trades (Q1, Q2, Q3, Q4)
-                "05 Box",  # First 5-minute box of each hour
-                "Three Hour Quarter",  # 3-hour session quarters
-                "Midnight Open",  # Midnight open retracement
-                "Breakout",  # General breakout patterns
-                "Mean Reversion",  # Reversion to mean trades
+        # Define tags with their categories and colors
+        default_tags_with_colors = {
+            TagCategory.SETUP_STRATEGY: [
+                # All setup/strategy tags are neutral (blue)
+                ("0930 Open", "neutral"),
+                ("HOD LOD", "neutral"),
+                ("P12", "neutral"),
+                ("Captain Backtest", "neutral"),
+                ("Quarter Trade", "neutral"),
+                ("05 Box", "neutral"),
+                ("Three Hour Quarter", "neutral"),
+                ("Midnight Open", "neutral"),
+                ("Breakout", "neutral"),
+                ("Mean Reversion", "neutral"),
             ],
 
             TagCategory.MARKET_CONDITIONS: [
-                # Daily Classifications (Critical) - Random's Four Steps
-                "DWP",  # Directional With Pullback
-                "DNP",  # Directional No Pullback
-                "R1",  # Range 1 (back to 9:30 open)
-                "R2",  # Range 2 (defined range day)
-
-                # Session Types - Random's Time-Based Analysis
-                "Asian Session",  # 18:00-02:30 EST
-                "London Session",  # 02:30-07:30 EST
-                "NY1 Session",  # 07:30-11:30 EST (New York 1)
-                "NY2 Session",  # 11:30-16:15 EST (New York 2)
-
-                # Market Environment
-                "High Volatility",  # High vol environment
-                "Low Volatility",  # Low vol environment
-                "News Driven",  # News affecting price action
-                "Extended Target",  # Extended daily range
+                # All market condition tags are neutral (blue)
+                ("DWP", "neutral"),
+                ("DNP", "neutral"),
+                ("R1", "neutral"),
+                ("R2", "neutral"),
+                ("Asian Session", "neutral"),
+                ("London Session", "neutral"),
+                ("NY1 Session", "neutral"),
+                ("NY2 Session", "neutral"),
+                ("High Volatility", "neutral"),
+                ("Low Volatility", "neutral"),
+                ("News Driven", "neutral"),
+                ("Extended Target", "neutral"),
             ],
 
             TagCategory.EXECUTION_MANAGEMENT: [
-                # Entry Quality (Performance-Critical) - Random's Execution Framework
-                "Front Run",  # Entered before confirmation
-                "Confirmation",  # Waited for confirmation
-                "Retest",  # Entered on retest of level
-                "Chased Entry",  # Chased price, poor timing
-                "Late Entry",  # Entered too late in move
-
-                # Risk Management - Based on Random's Risk Rules
-                "Proper Stop",  # Stop placed according to rules
-                "Moved Stop",  # Moved stop against position
-                "Cut Short",  # Cut winner too early
-                "Let Run",  # Let winner run properly
-                "Partial Profit",  # Took partial profits
-
-                # Order Types
-                "Limit Order",  # Used limit orders
-                "Market Order",  # Used market orders
+                # Mixed colors based on performance impact
+                ("Front Run", "good"),  # Good execution
+                ("Confirmation", "good"),  # Good execution
+                ("Retest", "good"),  # Good execution
+                ("Chased Entry", "bad"),  # Poor execution
+                ("Late Entry", "bad"),  # Poor execution
+                ("Proper Stop", "good"),  # Good risk management
+                ("Moved Stop", "bad"),  # Poor risk management
+                ("Cut Short", "bad"),  # Poor management
+                ("Let Run", "good"),  # Good management
+                ("Partial Profit", "good"),  # Good management
+                ("Limit Order", "neutral"),  # Order type (neutral)
+                ("Market Order", "neutral"),  # Order type (neutral)
             ],
 
             TagCategory.PSYCHOLOGICAL_EMOTIONAL: [
-                # Positive States - Random's Psychology Framework
-                "Disciplined",  # Followed rules completely
-                "Patient",  # Waited for proper setup
-                "Calm",  # Calm emotional state
-                "Confident",  # Confident execution
-                "Followed Plan",  # Executed according to plan
-
-                # Negative States - Common Trading Psychology Issues
-                "FOMO",  # Fear of missing out
-                "Revenge Trading",  # Trading to get back losses
-                "Impulsive",  # Impulsive decisions
-                "Anxious",  # Anxious state affecting trading
-                "Broke Rules",  # Violated trading rules
-                "Overconfident",  # Dangerous overconfidence
+                # Green for positive psychology, red for negative
+                ("Disciplined", "good"),  # Positive psychology
+                ("Patient", "good"),  # Positive psychology
+                ("Calm", "good"),  # Positive psychology
+                ("Confident", "good"),  # Positive psychology
+                ("Followed Plan", "good"),  # Positive psychology
+                ("FOMO", "bad"),  # Negative psychology
+                ("Revenge Trading", "bad"),  # Negative psychology
+                ("Impulsive", "bad"),  # Negative psychology
+                ("Anxious", "bad"),  # Negative psychology
+                ("Broke Rules", "bad"),  # Negative psychology
+                ("Overconfident", "bad"),  # Negative psychology
             ]
         }
 
         created_count = 0
-        for category, tag_names in default_tags.items():
-            for tag_name in tag_names:
+        for category, tag_data_list in default_tags_with_colors.items():
+            for tag_name, color_category in tag_data_list:
                 # Check if tag already exists
                 existing = cls.query.filter_by(name=tag_name, is_default=True).first()
                 if not existing:
                     new_tag = cls(
                         name=tag_name,
                         category=category,
+                        color_category=color_category,  # Set the color category
                         is_default=True,
                         is_active=True
                     )
                     db.session.add(new_tag)
                     created_count += 1
+                else:
+                    # Update existing tag's color if it's different
+                    if existing.color_category != color_category:
+                        existing.color_category = color_category
+                        created_count += 1  # Count updates too
 
         if created_count > 0:
             try:
                 db.session.commit()
-                current_app.logger.info(f"Created {created_count} new default tags for Random's system")
+                if current_app:
+                    current_app.logger.info(
+                        f"Created/updated {created_count} default tags for Random's system with colors")
             except Exception as e:
                 db.session.rollback()
-                current_app.logger.error(f"Error creating default tags: {e}")
+                if current_app:
+                    current_app.logger.error(f"Error creating default tags: {e}")
                 raise
 
         return created_count

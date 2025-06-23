@@ -162,6 +162,8 @@
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
     }
+
+
 </style>
 {% endblock %}
 
@@ -257,7 +259,7 @@
         <div class="tag-category-body" id="category-{{ category_id }}">
             {% if tags %}
                 {% for tag in tags %}
-                <div class="tag-item {% if not tag.is_active %}inactive{% endif %}" data-tag-id="{{ tag.id }}">
+                <div class="tag-item {% if not tag.is_active %}inactive{% endif %} {{ tag|tag_color }}" data-tag-id="{{ tag.id }}">
                     <input type="checkbox" class="form-check-input me-2 tag-checkbox" style="display: none;" data-tag-id="{{ tag.id }}">
                     <span class="tag-name">{{ tag.name }}</span>
                     {% if not tag.is_active %}
@@ -265,7 +267,7 @@
                     {% endif %}
                     <div class="tag-actions">
                         <button type="button" class="action-btn btn-outline-warning"
-                                onclick="editTag({{ tag.id }}, '{{ tag.name }}', '{{ tag.category.name }}', {{ 'true' if tag.is_active else 'false' }})"
+                                onclick="editTag({{ tag.id }}, '{{ tag.name }}', '{{ tag.category.name }}', {{ 'true' if tag.is_active else 'false' }}, '{{ tag.color_category or 'neutral' }}')"
                                 title="Edit Tag">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -350,6 +352,15 @@
                             <option value="true">Active</option>
                             <option value="false">Inactive</option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-tag-color" class="form-label">Color Category</label>
+                        <select class="form-select" id="edit-tag-color">
+                            <option value="neutral">Neutral (Blue) - Informational</option>
+                            <option value="good">Good (Green) - Positive Performance</option>
+                            <option value="bad">Bad (Red) - Negative Performance</option>
+                        </select>
+                        <small class="form-text text-muted">Set the color based on performance impact</small>
                     </div>
                 </form>
             </div>
@@ -479,13 +490,15 @@ function createTag() {
     });
 }
 
-function editTag(tagId, name, category, isActive) {
+function editTag(tagId, tagName, categoryName, isActive, colorCategory = 'neutral') {
     document.getElementById('edit-tag-id').value = tagId;
-    document.getElementById('edit-tag-name').value = name;
-    document.getElementById('edit-tag-category').value = category;
+    document.getElementById('edit-tag-name').value = tagName;
+    document.getElementById('edit-tag-category').value = categoryName;
     document.getElementById('edit-tag-active').value = isActive;
+    document.getElementById('edit-tag-color').value = colorCategory || 'neutral';
 
-    new bootstrap.Modal(document.getElementById('editTagModal')).show();
+    const modal = new bootstrap.Modal(document.getElementById('editTagModal'));
+    modal.show();
 }
 
 function updateTag() {

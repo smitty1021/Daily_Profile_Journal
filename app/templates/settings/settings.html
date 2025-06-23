@@ -180,7 +180,7 @@
                             <div class="tag-category-body" id="category-{{ category_id }}">
                                 {% if tags %}
                                     {% for tag in tags %}
-                                    <div class="tag-item {% if tag.is_default %}default-tag{% else %}user-tag{% endif %}" data-tag-id="{{ tag.id }}">
+                                    <div class="tag-item {{ tag|tag_color }}" data-tag-id="{{ tag.id }}">
                                         <span class="tag-name">{{ tag.name }}</span>
                                         {% if not tag.is_default %}
                                         <div class="tag-actions">

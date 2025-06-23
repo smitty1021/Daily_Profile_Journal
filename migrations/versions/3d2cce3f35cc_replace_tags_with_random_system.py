@@ -1,8 +1,8 @@
-"""update_to_random_trading_system_tags
+"""replace_tags_with_random_system
 
-Revision ID: cc84d7c42c2b
-Revises: 1884c589f6fd
-Create Date: 2025-06-22 21:42:07.720000
+Revision ID: 3d2cce3f35cc
+Revises: a48b01750c17
+Create Date: 2025-06-22 21:46:38.651000
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from datetime import datetime
 
 # revision identifiers, used by Alembic.
-revision = 'cc84d7c42c2b'
-down_revision = '1884c589f6fd'
+revision = '3d2cce3f35cc'
+down_revision = 'a48b01750c17'
 branch_labels = None
 depends_on = None
 
@@ -22,7 +22,7 @@ def upgrade():
     # Get database connection
     connection = op.get_bind()
 
-    # Remove all existing default tags
+    # Remove all existing default tags first
     connection.execute(sa.text("DELETE FROM tag WHERE is_default = true"))
 
     # Insert Random's trading system tags

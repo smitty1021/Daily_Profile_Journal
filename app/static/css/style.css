@@ -468,34 +468,97 @@ Custom Flash Message (Notification) Styles
     border: none;
 }
 
-/* Random's Trading System Tag Colors */
+/* Random's Trading System Tag Colors - Matching Settings Style */
 .tag-good {
-    background-color: #d4edda !important;
-    border-color: #c3e6cb !important;
-    color: #155724 !important;
+    background-color: var(--bs-success-bg-subtle) !important;
+    border-color: var(--bs-success-border-subtle) !important;
+    color: var(--bs-success-text-emphasis) !important;
+    border-radius: 1rem !important;
+    padding: 0.25rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    border: 1px solid var(--bs-success-border-subtle) !important;
 }
 
 .tag-bad {
-    background-color: #f8d7da !important;
-    border-color: #f5c6cb !important;
-    color: #721c24 !important;
+    background-color: var(--bs-danger-bg-subtle) !important;
+    border-color: var(--bs-danger-border-subtle) !important;
+    color: var(--bs-danger-text-emphasis) !important;
+    border-radius: 1rem !important;
+    padding: 0.25rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    border: 1px solid var(--bs-danger-border-subtle) !important;
 }
 
 .tag-neutral {
-    background-color: #cce7ff !important;
-    border-color: #b8daff !important;
-    color: #004085 !important;
+    background-color: var(--bs-primary-bg-subtle) !important;
+    border-color: var(--bs-primary-border-subtle) !important;
+    color: var(--bs-primary-text-emphasis) !important;
+    border-radius: 1rem !important;
+    padding: 0.25rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    border: 1px solid var(--bs-primary-border-subtle) !important;
 }
 
 /* Hover effects */
 .tag-good:hover {
-    background-color: #c3e6cb !important;
+    background-color: var(--bs-success-bg-subtle) !important;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
 }
 
 .tag-bad:hover {
-    background-color: #f5c6cb !important;
+    background-color: var(--bs-danger-bg-subtle) !important;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
 }
 
 .tag-neutral:hover {
-    background-color: #b8daff !important;
+    background-color: var(--bs-primary-bg-subtle) !important;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+
+/* Badge variants for different contexts */
+.badge.tag-good {
+    background-color: var(--bs-success-bg-subtle) !important;
+    color: var(--bs-success-text-emphasis) !important;
+    border: 1px solid var(--bs-success-border-subtle) !important;
+}
+
+.badge.tag-bad {
+    background-color: var(--bs-danger-bg-subtle) !important;
+    color: var(--bs-danger-text-emphasis) !important;
+    border: 1px solid var(--bs-danger-border-subtle) !important;
+}
+
+.badge.tag-neutral {
+    background-color: var(--bs-primary-bg-subtle) !important;
+    color: var(--bs-primary-text-emphasis) !important;
+    border: 1px solid var(--bs-primary-border-subtle) !important;
+}
+
+/* Tag items in admin and other interfaces */
+.tag-item.tag-good {
+    background-color: var(--bs-success-bg-subtle) !important;
+    border-color: var(--bs-success-border-subtle) !important;
+    color: var(--bs-success-text-emphasis) !important;
+}
+
+.tag-item.tag-bad {
+    background-color: var(--bs-danger-bg-subtle) !important;
+    border-color: var(--bs-danger-border-subtle) !important;
+    color: var(--bs-danger-text-emphasis) !important;
+}
+
+.tag-item.tag-neutral {
+    background-color: var(--bs-primary-bg-subtle) !important;
+    border-color: var(--bs-primary-border-subtle) !important;
+    color: var(--bs-primary-text-emphasis) !important;
+}
+
+/* Ensure consistent styling across all tag displays */
+.tag-good, .tag-bad, .tag-neutral {
+    display: inline-flex !important;
+    align-items: center !important;
+    position: relative !important;
 }

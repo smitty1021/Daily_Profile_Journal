@@ -30,7 +30,7 @@
                         <strong>Tags:</strong>
                         {% if trade.tags %}
                             {% for tag in trade.tags %}
-                                <span class="badge me-1 mb-1 {{ tag.name|tag_color }}">
+                                <span class="badge me-1 mb-1 {{ tag|tag_color }}">
                                     {{ tag.name }}
                                 </span>
                             {% endfor %}
