@@ -4,587 +4,138 @@
     {{ title or "User Settings" }} - Trading Journal
 {% endblock %}
 
-{% block head_extra %}
-<style>
-    .tag-category-section {
-        border: 1px solid var(--bs-border-color);
-        border-radius: 0.375rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .tag-category-header {
-        background-color: var(--bs-secondary-bg);
-        border-bottom: 1px solid var(--bs-border-color);
-        padding: 0.75rem 1rem;
-        font-weight: 600;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .tag-category-body {
-        padding: 1rem;
-    }
-
-    .tag-item {
-        display: inline-flex;
-        align-items: center;
-        background-color: var(--bs-tertiary-bg);
-        border: 1px solid var(--bs-border-color);
-        border-radius: 1rem;
-        padding: 0.25rem 0.75rem;
-        margin: 0.25rem;
-        font-size: 0.875rem;
-        position: relative;
-    }
-
-    .tag-item.default-tag {
-        background-color: var(--bs-primary-bg-subtle);
-        border-color: var(--bs-primary-border-subtle);
-        color: var(--bs-primary-text-emphasis);
-    }
-
-    .tag-item.user-tag {
-        background-color: var(--bs-success-bg-subtle);
-        border-color: var(--bs-success-border-subtle);
-        color: var(--bs-success-text-emphasis);
-    }
-
-    .tag-actions {
-        margin-left: 0.5rem;
-        display: none;
-    }
-
-    .tag-item:hover .tag-actions {
-        display: inline-flex;
-    }
-
-    .tag-actions button {
-        background: none;
-        border: none;
-        padding: 0.125rem;
-        margin: 0 0.125rem;
-        cursor: pointer;
-        opacity: 0.7;
-        font-size: 0.75rem;
-    }
-
-    .tag-actions button:hover {
-        opacity: 1;
-    }
-
-    .add-tag-form {
-        background-color: var(--bs-light-bg-subtle);
-        border: 1px dashed var(--bs-border-color);
-        border-radius: 0.375rem;
-        padding: 1rem;
-        margin-top: 1rem;
-        display: none;
-    }
-
-    .add-tag-form.show {
-        display: block;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="container mt-4 mb-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0"><i class="fas fa-cog me-2"></i>{{ title or "User Settings" }}</h3>
-                </div>
-                <div class="card-body p-4">
-                    {# Theme Settings Section #}
-                    <div class="settings-section mb-4">
-                        <h4>Theme Preference</h4>
-                        <p>Your current theme is: <strong>{{ session.get('theme', 'dark')|title }}</strong></p>
-                        <form method="POST" action="{{ url_for('settings.view_settings') }}" class="mt-2">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="form_name" value="change_theme">
+    <div class="row mb-3">
+        <div class="col">
+            <h1 class="display-5"><i class="fas fa-user-cog me-2"></i>User Settings</h1>
+            <p class="lead">Manage your personal preferences and configurations.</p>
+        </div>
+    </div>
+    <hr class="mb-4">
 
-                            <button type="submit" name="theme" value="light"
-                                    class="btn theme-option-button {% if session.get('theme', 'dark') == 'light' %}btn-primary active{% else %}btn-outline-secondary{% endif %} me-2">
-                                <i class="fas fa-sun me-1"></i> Light Theme
-                            </button>
-                            <button type="submit" name="theme" value="dark"
-                                    class="btn theme-option-button {% if session.get('theme', 'dark') == 'dark' %}btn-primary active{% else %}btn-outline-secondary{% endif %}">
-                                <i class="fas fa-moon me-1"></i> Dark Theme
-                            </button>
-                        </form>
-                    </div>
-                    <hr>
-
-                    {# Tags Management Section #}
-                    <div class="settings-section">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h4><i class="fas fa-tags me-2"></i>Manage Your Trading Tags</h4>
-                            <div>
-                                <button type="button" class="btn btn-outline-primary btn-sm me-2" onclick="showAddTagForm()">
-                                    <i class="fas fa-plus me-1"></i>Add Custom Tag
-                                </button>
-                                <form style="display: inline;" method="POST" action="{{ url_for('settings.reset_default_tags') }}" onsubmit="return confirm('This will delete all your custom tags and restore defaults. Continue?')">
+    <!-- Configuration Sections -->
+    <div class="row gy-4">
+        <!-- Left Column: Settings Menu -->
+        <div class="col-md-8">
+            <h4>Personal Settings:</h4>
+            <div class="list-group mb-4">
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-palette me-2"></i>
+                            <strong>Theme Preference</strong>
+                            <p class="mb-1 text-muted">Switch between light and dark themes</p>
+                            <div class="mt-2">
+                                <form method="POST" action="{{ url_for('settings.view_settings') }}" class="d-inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-outline-warning btn-sm">
-                                        <i class="fas fa-undo me-1"></i>Reset to Defaults
+                                    <input type="hidden" name="form_name" value="change_theme">
+
+                                    <button type="submit" name="theme" value="light"
+                                            class="btn btn-sm {% if session.get('theme', 'dark') == 'light' %}btn-primary{% else %}btn-outline-secondary{% endif %} me-2">
+                                        <i class="fas fa-sun me-1"></i> Light
+                                    </button>
+                                    <button type="submit" name="theme" value="dark"
+                                            class="btn btn-sm {% if session.get('theme', 'dark') == 'dark' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                                        <i class="fas fa-moon me-1"></i> Dark
                                     </button>
                                 </form>
                             </div>
                         </div>
+                        <span class="badge bg-secondary">{{ session.get('theme', 'dark')|title }}</span>
+                    </div>
+                </div>
 
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Blue tags</strong> are defaults available to all users.
-                            <strong>Green tags</strong> are your custom tags that you can edit or delete.
+                <a href="{{ url_for('settings.manage_personal_tags') }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-user-tag me-2"></i>
+                            <strong>Manage Personal Tags</strong>
+                            <p class="mb-1 text-muted">Create and manage your custom trading tags</p>
                         </div>
+                        <span class="badge bg-secondary">{{ total_personal_tags }} Custom</span>
+                    </div>
+                </a>
+            </div>
 
-                        {# Add Tag Form (Initially Hidden) #}
-                        <div id="addTagForm" class="add-tag-form">
-                            <h6>Add New Custom Tag</h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <input type="text" id="newTagName" class="form-control" placeholder="Tag name" maxlength="50">
-                                </div>
-                                <div class="col-md-4">
-                                    <select id="newTagCategory" class="form-select">
-                                        {% for category in TagCategory %}
-                                        <option value="{{ category.name }}">{{ category.value }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-success" onclick="createTag()">Add</button>
-                                    <button type="button" class="btn btn-secondary" onclick="hideAddTagForm()">Cancel</button>
-                                </div>
-                            </div>
-                        </div>
+            <h4>Account Settings:</h4>
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action disabled" aria-disabled="true">
+                    <i class="fas fa-user-circle me-2"></i>Profile Settings (Coming Soon)
+                </a>
+                <a href="#" class="list-group-item list-group-item-action disabled" aria-disabled="true">
+                    <i class="fas fa-key me-2"></i>Change Password (Coming Soon)
+                </a>
+                <a href="#" class="list-group-item list-group-item-action disabled" aria-disabled="true">
+                    <i class="fas fa-bell me-2"></i>Notification Preferences (Coming Soon)
+                </a>
+            </div>
+        </div>
 
-                        <!-- Replace your tag category loop (around lines 140-170) with this: -->
+        <!-- Right Column: Statistics Overview -->
+        <div class="col-md-4">
+            <h4>Your Overview:</h4>
 
-                        {# Tags organized by category #}
-                        {% for category_display, tags in tags_by_category.items() %}
-                        <div class="tag-category-section">
-                            <div class="tag-category-header">
-                                <span>{{ category_display }}</span>
-                                <span class="badge bg-secondary">{{ tags|length }} tags</span>
-                            </div>
-                            <!-- Convert display name back to enum name for the ID -->
-                            {% set category_id = {
-                                'Setup & Strategy': 'SETUP_STRATEGY',
-                                'Market Conditions': 'MARKET_CONDITIONS',
-                                'Execution & Management': 'EXECUTION_MANAGEMENT',
-                                'Psychological & Emotional Factors': 'PSYCHOLOGICAL_EMOTIONAL'
-                            }[category_display] %}
-                            <div class="tag-category-body" id="category-{{ category_id }}">
-                                {% if tags %}
-                                    {% for tag in tags %}
-                                    <div class="tag-item {{ tag|tag_color }}" data-tag-id="{{ tag.id }}">
-                                        <span class="tag-name">{{ tag.name }}</span>
-                                        {% if not tag.is_default %}
-                                        <div class="tag-actions">
-                                            <button type="button" class="text-primary" onclick="editTag({{ tag.id }}, '{{ tag.name }}', '{{ tag.category.name }}')" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button type="button" class="text-danger" onclick="deleteTag({{ tag.id }}, '{{ tag.name }}')" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <p class="text-muted mb-0">No tags in this category</p>
-                                {% endif %}
-                            </div>
+            <!-- Tag Statistics Card -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Tag Statistics</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Available Tags:</span>
+                        <span class="fw-bold text-primary">{{ total_available_tags }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Default Tags:</span>
+                        <span class="fw-bold text-info">{{ total_default_tags }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Custom Tags:</span>
+                        <span class="fw-bold text-success">{{ total_personal_tags }}</span>
+                    </div>
+
+                    {% if tags_by_category %}
+                    <h6 class="card-subtitle mb-2 text-muted">Available by Category:</h6>
+                        {% for category, count in tags_by_category %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            {% if 'Setup' in category %}
+                                <span class="badge bg-primary-subtle text-primary-emphasis me-2" style="font-size: 0.7rem;">{{ category }}</span>
+                            {% elif 'Market' in category %}
+                                <span class="badge bg-success-subtle text-success-emphasis me-2" style="font-size: 0.7rem;">{{ category }}</span>
+                            {% elif 'Execution' in category %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis me-2" style="font-size: 0.7rem;">{{ category }}</span>
+                            {% elif 'Psychology' in category %}
+                                <span class="badge bg-danger-subtle text-danger-emphasis me-2" style="font-size: 0.7rem;">{{ category }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis me-2" style="font-size: 0.7rem;">{{ category }}</span>
+                            {% endif %}
+                            <span class="fw-bold">{{ count }}</span>
                         </div>
                         {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No tags available.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- User Activity Card -->
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Account Information</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Username:</span>
+                        <span class="fw-bold">{{ current_user.username }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Current Theme:</span>
+                        <span class="fw-bold">{{ session.get('theme', 'dark')|title }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Role:</span>
+                        <span class="badge bg-info">{{ current_user.role.value|title }}</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Custom Confirmation Modal -->
-    <div class="modal fade" id="customConfirmModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="confirmModalTitle">Confirm Action</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="confirmModalBody">
-                    Are you sure you want to proceed?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirmModalAction">Confirm</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
 </div>
-
-{# Edit Tag Modal #}
-<div class="modal fade" id="editTagModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Tag</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="editTagName" class="form-label">Tag Name</label>
-                    <input type="text" id="editTagName" class="form-control" maxlength="50">
-                </div>
-                <div class="mb-3">
-                    <label for="editTagCategory" class="form-label">Category</label>
-                    <select id="editTagCategory" class="form-select">
-                        {% for category in TagCategory %}
-                        <option value="{{ category.name }}">{{ category.value }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="saveTagEdit()">Save Changes</button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block scripts_extra %}
-<script>
-let currentEditingTagId = null;
-
-function showAddTagForm() {
-    document.getElementById('addTagForm').classList.add('show');
-    document.getElementById('newTagName').focus();
-}
-
-function hideAddTagForm() {
-    document.getElementById('addTagForm').classList.remove('show');
-    document.getElementById('newTagName').value = '';
-}
-
-function createTag() {
-    const name = document.getElementById('newTagName').value.trim();
-    const category = document.getElementById('newTagCategory').value;
-
-    if (!name) {
-        alert('Please enter a tag name');
-        return;
-    }
-
-    console.log('Creating tag:', name, category);
-
-    fetch('{{ url_for("settings.create_tag") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            name: name,
-            category: category
-        })
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Full response data:', data);
-
-        if (data.success) {
-            console.log('Tag creation successful, calling addTagToDOM with:', data.tag);
-            addTagToDOM(data.tag);
-            hideAddTagForm();
-            showAlert('success', data.message);
-        } else {
-            console.log('Tag creation failed:', data.message);
-            showAlert('danger', data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Fetch error:', error);
-        showAlert('danger', 'Error creating tag: ' + error.message);
-    });
-}
-
-function editTag(tagId, name, category) {
-    currentEditingTagId = tagId;
-    document.getElementById('editTagName').value = name;
-    document.getElementById('editTagCategory').value = category;
-
-    const modal = new bootstrap.Modal(document.getElementById('editTagModal'));
-    modal.show();
-}
-
-function saveTagEdit() {
-    if (!currentEditingTagId) return;
-
-    const name = document.getElementById('editTagName').value.trim();
-    const category = document.getElementById('editTagCategory').value;
-
-    if (!name) {
-        alert('Please enter a tag name');
-        return;
-    }
-
-    fetch(`{{ url_for("settings.edit_tag", tag_id=0) }}`.replace('0', currentEditingTagId), {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            name: name,
-            category: category
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            updateTagInDOM(data.tag);
-
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editTagModal'));
-            modal.hide();
-            showAlert('success', data.message);
-        } else {
-            showAlert('danger', data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showAlert('danger', 'Error updating tag');
-    });
-}
-
-function deleteTag(tagId, tagName) {
-    showCustomConfirm(
-        'Delete Tag',
-        `Are you sure you want to delete the tag "${tagName}"? This action cannot be undone.`,
-        function() {
-            // Actual delete logic
-            fetch(`{{ url_for("settings.delete_tag", tag_id=0) }}`.replace('0', tagId), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token() }}'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    removeTagFromDOM(tagId);
-                    showAlert('success', data.message);
-                } else {
-                    showAlert('danger', data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('danger', 'Error deleting tag');
-            });
-        },
-        'Delete'
-    );
-}
-
-let confirmCallback = null;
-
-function showCustomConfirm(title, message, callback, actionText = 'Confirm') {
-    document.getElementById('confirmModalTitle').textContent = title;
-    document.getElementById('confirmModalBody').textContent = message;
-    document.getElementById('confirmModalAction').textContent = actionText;
-
-    confirmCallback = callback;
-
-    const modal = new bootstrap.Modal(document.getElementById('customConfirmModal'));
-    modal.show();
-}
-
-// Handle confirm button click
-document.getElementById('confirmModalAction').addEventListener('click', function() {
-    if (confirmCallback) {
-        confirmCallback();
-        confirmCallback = null;
-    }
-
-    const modal = bootstrap.Modal.getInstance(document.getElementById('customConfirmModal'));
-    modal.hide();
-});
-
-// Replace your addTagToDOM function (around line 343) with this:
-
-function addTagToDOM(tag) {
-    console.log('addTagToDOM called with tag:', tag);
-
-    // The issue is here - we need to find the container by the category enum name
-    const categoryContainer = document.getElementById(`category-${tag.category}`);
-    console.log('Looking for category container:', `category-${tag.category}`);
-    console.log('Category container found:', categoryContainer);
-
-    if (!categoryContainer) {
-        console.error('Category container not found for:', tag.category);
-        // Let's see what category containers exist
-        const allCategories = document.querySelectorAll('[id^="category-"]');
-        console.log('Available categories:', Array.from(allCategories).map(el => el.id));
-
-        // Try to find the container by searching through all categories
-        let foundContainer = null;
-        allCategories.forEach(container => {
-            const categoryName = container.id.replace('category-', '');
-            console.log('Checking container:', categoryName, 'against tag category:', tag.category);
-            if (categoryName === tag.category) {
-                foundContainer = container;
-            }
-        });
-
-        if (foundContainer) {
-            console.log('Found container via search:', foundContainer.id);
-            addTagToFoundContainer(foundContainer, tag);
-        } else {
-            console.error('No matching category container found. Available:',
-                Array.from(allCategories).map(el => el.id));
-            showAlert('danger', 'Could not add tag to page - category not found');
-        }
-        return;
-    }
-
-    addTagToFoundContainer(categoryContainer, tag);
-}
-
-// Add this helper function after your addTagToDOM function:
-function addTagToFoundContainer(categoryContainer, tag) {
-    // Remove "No tags" message if it exists
-    const noTagsMsg = categoryContainer.querySelector('.text-muted');
-    if (noTagsMsg) {
-        console.log('Removing "no tags" message');
-        noTagsMsg.remove();
-    }
-
-    const tagDiv = document.createElement('div');
-    tagDiv.className = `tag-item ${tag.is_default ? 'default-tag' : 'user-tag'}`;
-    tagDiv.setAttribute('data-tag-id', tag.id);
-
-    tagDiv.innerHTML = `
-        <span class="tag-name">${tag.name}</span>
-        ${!tag.is_default ? `
-        <div class="tag-actions">
-            <button type="button" class="text-primary" onclick="editTag(${tag.id}, '${tag.name}', '${tag.category}')" title="Edit">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button type="button" class="text-danger" onclick="deleteTag(${tag.id}, '${tag.name}')" title="Delete">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-        ` : ''}
-    `;
-
-    console.log('Adding tag div to category container');
-    categoryContainer.appendChild(tagDiv);
-
-    // Update the badge count
-    const categoryName = categoryContainer.id.replace('category-', '');
-    updateCategoryBadge(categoryName);
-    console.log('Tag added successfully to DOM');
-}
-
-function updateTagInDOM(tag) {
-    const tagElement = document.querySelector(`[data-tag-id="${tag.id}"]`);
-    if (tagElement) {
-        const currentCategory = tagElement.closest('[id^="category-"]').id.replace('category-', '');
-
-        if (currentCategory !== tag.category) {
-            // Tag moved to different category
-            removeTagFromDOM(tag.id);
-            addTagToDOM(tag);
-        } else {
-            // Update tag in same category
-            tagElement.querySelector('.tag-name').textContent = tag.name;
-
-            const editBtn = tagElement.querySelector('.text-primary');
-            const deleteBtn = tagElement.querySelector('.text-danger');
-            if (editBtn) editBtn.setAttribute('onclick', `editTag(${tag.id}, '${tag.name}', '${tag.category}')`);
-            if (deleteBtn) deleteBtn.setAttribute('onclick', `deleteTag(${tag.id}, '${tag.name}')`);
-        }
-    }
-}
-
-function removeTagFromDOM(tagId) {
-    const tagElement = document.querySelector(`[data-tag-id="${tagId}"]`);
-    if (tagElement) {
-        const categoryContainer = tagElement.closest('[id^="category-"]');
-        const categoryName = categoryContainer.id.replace('category-', '');
-
-        tagElement.remove();
-
-        // Check if category is now empty
-        const remainingTags = categoryContainer.querySelectorAll('.tag-item');
-        if (remainingTags.length === 0) {
-            const noTagsMsg = document.createElement('p');
-            noTagsMsg.className = 'text-muted mb-0';
-            noTagsMsg.textContent = 'No tags in this category';
-            categoryContainer.appendChild(noTagsMsg);
-        }
-
-        updateCategoryBadge(categoryName);
-    }
-}
-
-function updateCategoryBadge(categoryName) {
-    const categorySection = document.getElementById(`category-${categoryName}`);
-    if (categorySection) {
-        const badge = categorySection.closest('.tag-category-section').querySelector('.badge');
-        const tagCount = categorySection.querySelectorAll('.tag-item').length;
-        if (badge) {
-            badge.textContent = `${tagCount} tags`;
-        }
-    }
-}
-
-function showAlert(type, message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-    alertDiv.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-
-    const cardBody = document.querySelector('.card-body');
-    cardBody.insertBefore(alertDiv, cardBody.firstChild);
-
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => {
-        const alert = bootstrap.Alert.getOrCreateInstance(alertDiv);
-        alert.close();
-    }, 5000);
-}
-
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle Enter key in add tag form
-    const newTagName = document.getElementById('newTagName');
-    if (newTagName) {
-        newTagName.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                createTag();
-            }
-        });
-    }
-
-    // Debug CSRF token
-    console.log('CSRF Token:', '{{ csrf_token() }}');
-    console.log('Settings page loaded successfully');
-});
-</script>
 {% endblock %}

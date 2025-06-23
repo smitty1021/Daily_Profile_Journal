@@ -171,7 +171,7 @@
 <div class="container mt-4 mb-5">
     <div class="row mb-3 align-items-center">
         <div class="col">
-            <h1 class="display-6"><i class="fas fa-tags me-2"></i>Manage Default Tags</h1>
+            <h1 class="display-6"><i class="fas fa-tags me-2"></i>Manage Default Trade Tags</h1>
             <p class="lead">Configure system-wide default tags available to all users.</p>
         </div>
         <div class="col-auto">
@@ -181,9 +181,7 @@
             <button type="button" class="btn btn-outline-warning" onclick="toggleBulkActions()">
                 <i class="fas fa-check-square me-1"></i> Bulk Actions
             </button>
-            <button type="button" class="btn btn-outline-info" onclick="toggleInactiveTags()" id="toggle-inactive-btn">
-                <i class="fas fa-eye me-1"></i> Show Inactive
-            </button>
+
             <a href="{{ url_for('admin.system_config') }}" class="btn btn-outline-success">
                 <i class="fas fa-arrow-left me-1"></i> Back to Config
             </a>
@@ -296,37 +294,16 @@
 
     {# Quick Actions #}
     <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card border-primary">
-                <div class="card-header bg-primary text-white">
-                    <i class="fas fa-magic me-2"></i>Quick Actions
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('admin.seed_default_tags') }}" id="seed-default-tags-form">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <button type="button" class="btn btn-outline-primary" onclick="confirmSeedDefaultTags()">
-                            <i class="fas fa-seedling me-1"></i> Recreate Default Tags
-                        </button>
-                    </form>
-                    <small class="text-muted d-block mt-2">
-                        This will add any missing default tags to the system.
-                    </small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card border-warning">
-                <div class="card-header bg-warning text-dark">
-                    <i class="fas fa-info-circle me-2"></i>Usage Info
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled mb-0">
-                        <li><i class="fas fa-check text-success me-2"></i>Default tags are available to all users</li>
-                        <li><i class="fas fa-check text-success me-2"></i>Users can select which defaults to use</li>
-                        <li><i class="fas fa-check text-success me-2"></i>Categories help organize tags</li>
-                    </ul>
-                </div>
-            </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.seed_default_tags') }}" id="seed-default-tags-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="button" class="btn btn-outline-primary" onclick="confirmSeedDefaultTags()">
+                    <i class="fas fa-seedling me-1"></i> Recreate Default Tags
+                </button>
+            </form>
+            <small class="text-muted d-block mt-2">
+                This will add any missing default tags to the system.
+            </small>
         </div>
     </div>
 </div>
@@ -384,6 +361,43 @@
 {% block scripts_extra %}
 <script src="{{ url_for('static', filename='js/custom-modals.js') }}"></script>
 <script>
+// Add this function at the top to show success notifications
+function showSuccessNotification(message, title = 'Success') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    notification.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        max-width: 400px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+
+    notification.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>${title}:</strong> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Auto-remove after 4 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 150);
+        }
+    }, 4000);
+}
+
+// Replace the showSuccessNotification function and all references with this simplified version
+
 let bulkActionsMode = false;
 let showingInactive = false;
 
@@ -391,20 +405,6 @@ function toggleInactiveTags() {
     showingInactive = !showingInactive;
     const inactiveTags = document.querySelectorAll('.tag-item.inactive');
     const toggleBtn = document.getElementById('toggle-inactive-btn');
-
-    if (showingInactive) {
-        // Show inactive tags
-        inactiveTags.forEach(tag => tag.classList.add('show-inactive'));
-        toggleBtn.innerHTML = '<i class="fas fa-eye-slash me-1"></i> Hide Inactive';
-        toggleBtn.classList.remove('btn-outline-info');
-        toggleBtn.classList.add('btn-info');
-    } else {
-        // Hide inactive tags
-        inactiveTags.forEach(tag => tag.classList.remove('show-inactive'));
-        toggleBtn.innerHTML = '<i class="fas fa-eye me-1"></i> Show Inactive';
-        toggleBtn.classList.remove('btn-info');
-        toggleBtn.classList.add('btn-outline-info');
-    }
 }
 
 function showAddTagForm() {
@@ -470,7 +470,7 @@ function createTag() {
     const isActive = document.getElementById('new-tag-active').value === 'true';
 
     if (!name) {
-        alert('Please enter a tag name');
+        showError('Please enter a tag name');
         return;
     }
 
@@ -490,15 +490,76 @@ function createTag() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            // Show success notification using global function
+            showSuccess(`Tag "${name}" created successfully!`);
+
+            // Add the new tag to the DOM instead of reloading
+            addNewTagToDOM(data.tag);
+
+            // Hide the form and clear it
+            hideAddTagForm();
         } else {
-            alert('Error: ' + data.message);
+            showError(data.message);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while creating the tag');
+        showError('An error occurred while creating the tag');
     });
+}
+
+function addNewTagToDOM(tag) {
+    // Determine target category container
+    const categoryMapping = {
+        'SETUP_STRATEGY': 'category-SETUP_STRATEGY',
+        'MARKET_CONDITIONS': 'category-MARKET_CONDITIONS',
+        'EXECUTION_MANAGEMENT': 'category-EXECUTION_MANAGEMENT',
+        'PSYCHOLOGICAL_EMOTIONAL': 'category-PSYCHOLOGICAL_EMOTIONAL'
+    };
+
+    const targetContainerId = categoryMapping[tag.category];
+    const targetContainer = document.getElementById(targetContainerId);
+
+    if (targetContainer) {
+        // Remove "no tags" message if present
+        const noTagsMessage = targetContainer.querySelector('.text-muted.fst-italic');
+        if (noTagsMessage) {
+            noTagsMessage.remove();
+        }
+
+        // Create new tag element
+        const tagElement = document.createElement('div');
+        tagElement.className = `tag-item ${tag.is_active ? '' : 'inactive'} tag-${tag.color_category || 'neutral'}`;
+        tagElement.setAttribute('data-tag-id', tag.id);
+
+        tagElement.innerHTML = `
+            <input type="checkbox" class="form-check-input me-2 tag-checkbox" style="display: none;" data-tag-id="${tag.id}">
+            <span class="tag-name">${tag.name}</span>
+            ${!tag.is_active ? '<span class="badge bg-secondary ms-2" style="font-size: 0.6rem;">INACTIVE</span>' : ''}
+            <div class="tag-actions">
+                <button type="button" class="action-btn btn-outline-warning"
+                        onclick="editTag(${tag.id}, '${tag.name}', '${tag.category}', ${tag.is_active ? 'true' : 'false'}, '${tag.color_category || 'neutral'}')"
+                        title="Edit Tag">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button type="button" class="action-btn btn-outline-danger"
+                        onclick="deleteTag(${tag.id}, '${tag.name}')"
+                        title="Delete Tag">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+
+        // Add to container with animation
+        targetContainer.appendChild(tagElement);
+        tagElement.style.animation = 'fadeIn 0.3s ease-in';
+        setTimeout(() => {
+            tagElement.style.animation = '';
+        }, 300);
+
+        // Update category counts
+        updateCategoryBadgeCounts();
+    }
 }
 
 function editTag(tagId, tagName, categoryName, isActive, colorCategory = 'neutral') {
@@ -517,10 +578,10 @@ function updateTag() {
     const name = document.getElementById('edit-tag-name').value.trim();
     const category = document.getElementById('edit-tag-category').value;
     const isActive = document.getElementById('edit-tag-active').value === 'true';
-    const colorCategory = document.getElementById('edit-tag-color').value; // Get color category
+    const colorCategory = document.getElementById('edit-tag-color').value;
 
     if (!name) {
-        alert('Please enter a tag name');
+        showError('Please enter a tag name');
         return;
     }
 
@@ -534,7 +595,7 @@ function updateTag() {
             name: name,
             category: category,
             is_active: isActive,
-            color_category: colorCategory  // Send color category
+            color_category: colorCategory
         })
     })
     .then(response => response.json())
@@ -547,22 +608,36 @@ function updateTag() {
             const modal = bootstrap.Modal.getInstance(document.getElementById('editTagModal'));
             modal.hide();
 
-            // Show success message (optional)
-            console.log('Tag updated successfully:', data.message);
+            // Show success notification using global function
+            showSuccess(`Tag "${name}" updated successfully!`);
         } else {
-            alert('Error: ' + data.message);
+            showError(data.message);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while updating the tag');
+        showError('An error occurred while updating the tag');
     });
 }
 
 function updateTagInDOM(tag) {
     const tagElement = document.querySelector(`[data-tag-id="${tag.id}"]`);
     if (tagElement) {
-        // Update tag name
+        // Get the current category container
+        const currentContainer = tagElement.closest('.tag-category-body');
+
+        // Determine the target category container
+        const categoryMapping = {
+            'SETUP_STRATEGY': 'category-SETUP_STRATEGY',
+            'MARKET_CONDITIONS': 'category-MARKET_CONDITIONS',
+            'EXECUTION_MANAGEMENT': 'category-EXECUTION_MANAGEMENT',
+            'PSYCHOLOGICAL_EMOTIONAL': 'category-PSYCHOLOGICAL_EMOTIONAL'
+        };
+
+        const targetContainerId = categoryMapping[tag.category];
+        const targetContainer = document.getElementById(targetContainerId);
+
+        // Update tag properties first
         tagElement.querySelector('.tag-name').textContent = tag.name;
 
         // Remove old color classes and add new one
@@ -596,7 +671,53 @@ function updateTagInDOM(tag) {
                 `editTag(${tag.id}, '${tag.name}', '${tag.category}', ${tag.is_active ? 'true' : 'false'}, '${tag.color_category || 'neutral'}')`
             );
         }
+
+        // Move tag to correct category if it changed
+        if (targetContainer && currentContainer !== targetContainer) {
+            // Check if target container has the "no tags" message and remove it
+            const noTagsMessage = targetContainer.querySelector('.text-muted.fst-italic');
+            if (noTagsMessage) {
+                noTagsMessage.remove();
+            }
+
+            // Move the tag element to the new category
+            targetContainer.appendChild(tagElement);
+
+            // Add animation for the move
+            tagElement.style.animation = 'fadeIn 0.3s ease-in';
+            setTimeout(() => {
+                tagElement.style.animation = '';
+            }, 300);
+
+            // Check if the old container is now empty and add "no tags" message
+            const remainingTags = currentContainer.querySelectorAll('.tag-item');
+            if (remainingTags.length === 0) {
+                const emptyMessage = document.createElement('p');
+                emptyMessage.className = 'text-muted fst-italic';
+                emptyMessage.textContent = 'No tags in this category yet.';
+                currentContainer.appendChild(emptyMessage);
+            }
+
+            // Update category badge counts
+            updateCategoryBadgeCounts();
+        }
     }
+}
+
+// Helper function to update category badge counts
+function updateCategoryBadgeCounts() {
+    const categories = ['SETUP_STRATEGY', 'MARKET_CONDITIONS', 'EXECUTION_MANAGEMENT', 'PSYCHOLOGICAL_EMOTIONAL'];
+
+    categories.forEach(category => {
+        const container = document.getElementById(`category-${category}`);
+        if (container) {
+            const tagCount = container.querySelectorAll('.tag-item').length;
+            const header = container.closest('.tag-category-section').querySelector('.tag-category-header .badge');
+            if (header) {
+                header.textContent = `${tagCount} tags`;
+            }
+        }
+    });
 }
 
 function deleteTag(tagId, tagName) {
@@ -617,17 +738,47 @@ function deleteTag(tagId, tagName) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    // Remove tag from DOM instead of reloading
+                    removeTagFromDOM(tagId, tagName);
+
+                    // Show success notification using global function
+                    showSuccess(`Tag "${tagName}" deleted successfully!`);
                 } else {
-                    alert('Error: ' + data.message);
+                    showError(data.message);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while deleting the tag');
+                showError('An error occurred while deleting the tag');
             });
         }
     });
+}
+
+function removeTagFromDOM(tagId, tagName) {
+    const tagElement = document.querySelector(`[data-tag-id="${tagId}"]`);
+    if (tagElement) {
+        const container = tagElement.closest('.tag-category-body');
+
+        // Add fade out animation
+        tagElement.style.animation = 'fadeOut 0.3s ease-out';
+
+        setTimeout(() => {
+            tagElement.remove();
+
+            // Check if container is now empty
+            const remainingTags = container.querySelectorAll('.tag-item');
+            if (remainingTags.length === 0) {
+                const emptyMessage = document.createElement('p');
+                emptyMessage.className = 'text-muted fst-italic';
+                emptyMessage.textContent = 'No tags in this category yet.';
+                container.appendChild(emptyMessage);
+            }
+
+            // Update category counts
+            updateCategoryBadgeCounts();
+        }, 300);
+    }
 }
 
 function bulkToggleStatus() {
@@ -669,9 +820,11 @@ function bulkToggleStatus() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    // Show success notification using global function
+                    showSuccess(`Successfully toggled status for ${tagIds.length} tags!`);
+                    setTimeout(() => location.reload(), 1000);
                 } else {
-                    alert('Error: ' + data.message);
+                    showError(data.message);
                 }
             });
         }
@@ -683,7 +836,7 @@ function bulkDeleteTags() {
     const tagIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.tagId);
 
     if (tagIds.length === 0) {
-        alert('Please select tags to delete');
+        showError('Please select tags to delete');
         return;
     }
 
@@ -709,10 +862,66 @@ function bulkDeleteTags() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    // Show success notification using global function
+                    showSuccess(`Successfully deleted ${tagIds.length} tags!`);
+                    setTimeout(() => location.reload(), 1000);
                 } else {
-                    alert('Error: ' + data.message);
+                    showError(data.message);
                 }
+            });
+        }
+    });
+}
+
+function bulkDeleteTags() {
+    const selectedCheckboxes = document.querySelectorAll('.tag-checkbox:checked');
+    const tagIds = Array.from(selectedCheckboxes).map(cb => cb.dataset.tagId);
+
+    if (tagIds.length === 0) {
+        // Use the same modal style as toggle status
+        showCustomConfirmation({
+            title: 'No Tags Selected',
+            message: 'Please select one or more tags to delete.',
+            confirmText: 'OK',
+            confirmClass: 'btn-primary',
+            icon: 'info-circle',
+            iconClass: 'text-info',
+            onConfirm: () => {} // Just close the modal
+        });
+        return;
+    }
+
+    showCustomConfirmation({
+        title: 'Bulk Delete Tags',
+        message: `Are you sure you want to permanently delete ${tagIds.length} selected tags? This action cannot be undone and will remove these tags from all users.`,
+        confirmText: `Delete ${tagIds.length} Tags`,
+        confirmClass: 'btn-danger',
+        icon: 'exclamation-triangle',
+        iconClass: 'text-danger',
+        onConfirm: () => {
+            fetch('{{ url_for("admin.bulk_default_tags_actions") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    action: 'delete_selected',
+                    tag_ids: tagIds
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccess(`Successfully deleted ${tagIds.length} tags!`);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showError(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showError('An error occurred while deleting the tags');
             });
         }
     });

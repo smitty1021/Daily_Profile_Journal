@@ -515,41 +515,66 @@ def admin_bulk_delete_users():
     return jsonify({'status': status, 'message': message, 'deleted_count': deleted_count, 'skipped_count': skipped_count, 'skipped_info': skipped_users_info})
 
 
+# Add this to your admin_bp.py route for system_config
+
 @admin_bp.route('/system-config')
 @login_required
 @admin_required
 def system_config():
-    """System configuration dashboard"""
+    """Admin system configuration dashboard"""
     try:
-        # Get instrument stats for the dashboard
-        from app.models import Instrument, Tag
+        # Existing instrument statistics
         total_instruments = Instrument.query.count()
         active_instruments = Instrument.query.filter_by(is_active=True).count()
         inactive_instruments = total_instruments - active_instruments
 
-        # Get instruments by asset class for overview
+        # Get instruments by asset class (active only)
         instruments_by_class = db.session.query(
             Instrument.asset_class,
-            db.func.count(Instrument.id).label('count')
+            db.func.count(Instrument.id)
         ).filter_by(is_active=True).group_by(Instrument.asset_class).all()
 
-        # Get tag stats for additional context (optional)
-        total_default_tags = Tag.query.filter_by(is_default=True).count()
-        active_default_tags = Tag.query.filter_by(is_default=True, is_active=True).count()
+        # NEW: Tag statistics
+        total_tags = Tag.query.filter_by(is_default=True).count()
+        active_tags = Tag.query.filter_by(is_default=True, is_active=True).count()
+        inactive_tags = total_tags - active_tags
 
-        current_app.logger.info(f"Admin {current_user.username} accessed system configuration.")
+        # Get tags by category (active default tags only)
+        from app.models import TagCategory
+        tags_by_category = []
+        for category in TagCategory:
+            count = Tag.query.filter_by(
+                is_default=True,
+                is_active=True,
+                category=category
+            ).count()
+            if count > 0:  # Only include categories with tags
+                # Convert enum to display name
+                category_name = category.value.replace(' & ', ' ').replace(' Factors', '')
+                if len(category_name) > 15:  # Shorten long category names
+                    category_name = category_name.replace('Psychological Emotional', 'Psychology')
+                    category_name = category_name.replace('Execution Management', 'Execution')
+                    category_name = category_name.replace('Market Conditions', 'Market')
+                tags_by_category.append((category_name, count))
+
+        current_app.logger.info(f"Admin {current_user.username} accessed system configuration")
 
         return render_template('admin/system_config.html',
                                title='System Configuration',
+                               # Instrument data
                                total_instruments=total_instruments,
                                active_instruments=active_instruments,
                                inactive_instruments=inactive_instruments,
                                instruments_by_class=instruments_by_class,
-                               total_default_tags=total_default_tags,
-                               active_default_tags=active_default_tags)
+                               # Tag data
+                               total_tags=total_tags,
+                               active_tags=active_tags,
+                               inactive_tags=inactive_tags,
+                               tags_by_category=tags_by_category)
+
     except Exception as e:
-        current_app.logger.error(f"Error loading system config: {e}", exc_info=True)
-        flash("Could not load system configuration.", "danger")
+        current_app.logger.error(f"Error loading system configuration: {e}", exc_info=True)
+        flash("Could not load system configuration data.", "danger")
         return redirect(url_for('admin.show_admin_dashboard'))
 
 

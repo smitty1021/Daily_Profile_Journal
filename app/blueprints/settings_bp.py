@@ -11,80 +11,139 @@ settings_bp = Blueprint('settings', __name__, template_folder='../templates/sett
 @settings_bp.route('/')
 @login_required
 def view_settings():
-    """Main settings page with tags management integrated"""
-    # Get user's tags organized by category
-    tags_by_category = Tag.get_tags_by_category(current_user.id)
+    """Updated settings page with statistics"""
+    try:
+        # Handle theme change
+        if request.method == 'POST' and request.form.get('form_name') == 'change_theme':
+            theme = request.form.get('theme')
+            if theme in ['light', 'dark']:
+                session['theme'] = theme
+                flash(f'Theme changed to {theme}!', 'success')
+                return redirect(url_for('settings.view_settings'))
 
-    # Handle theme changes
-    if request.method == 'POST' and request.form.get('form_name') == 'change_theme':
-        theme = request.form.get('theme', 'dark')
-        session['theme'] = theme
+        # Get tag statistics
+        total_available_tags = Tag.query.filter(
+            db.or_(
+                Tag.is_default == True,
+                Tag.user_id == current_user.id
+            )
+        ).filter(Tag.is_active == True).count()
 
-        # Update user settings
-        user_settings = Settings.get_for_user(current_user.id)
-        user_settings.theme = theme
-        try:
-            db.session.commit()
-            flash(f'Theme changed to {theme.title()}', 'success')
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"Error updating theme for user {current_user.id}: {e}")
-            flash('Error updating theme', 'danger')
+        total_default_tags = Tag.query.filter_by(is_default=True, is_active=True).count()
+        total_personal_tags = Tag.query.filter_by(user_id=current_user.id).count()
 
+        # Get tags by category (available to user)
+        from app.models import TagCategory
+        tags_by_category = []
+        for category in TagCategory:
+            count = Tag.query.filter(
+                db.or_(
+                    Tag.is_default == True,
+                    Tag.user_id == current_user.id
+                )
+            ).filter(
+                Tag.is_active == True,
+                Tag.category == category
+            ).count()
+
+            if count > 0:  # Only include categories with tags
+                # Convert enum to display name and shorten
+                category_name = category.value.replace(' & ', ' ').replace(' Factors', '')
+                if len(category_name) > 15:
+                    category_name = category_name.replace('Psychological Emotional', 'Psychology')
+                    category_name = category_name.replace('Execution Management', 'Execution')
+                    category_name = category_name.replace('Market Conditions', 'Market')
+                tags_by_category.append((category_name, count))
+
+        return render_template('settings/settings.html',
+                               title='User Settings',
+                               total_available_tags=total_available_tags,
+                               total_default_tags=total_default_tags,
+                               total_personal_tags=total_personal_tags,
+                               tags_by_category=tags_by_category)
+
+    except Exception as e:
+        current_app.logger.error(f"Error loading settings: {e}", exc_info=True)
+        flash("Could not load settings data.", "danger")
+        return render_template('settings/settings.html', title='User Settings')
+
+
+@settings_bp.route('/personal-tags')
+@login_required
+def manage_personal_tags():
+    """Personal tags management page"""
+    try:
+        # Get all tags available to the user (default + personal)
+        available_tags = Tag.query.filter(
+            db.or_(
+                Tag.is_default == True,
+                Tag.user_id == current_user.id
+            )
+        ).filter(Tag.is_active == True).order_by(Tag.category, Tag.name).all()
+
+        # Organize by category
+        from app.models import TagCategory
+        tags_by_category = {}
+        for category in TagCategory:
+            category_tags = [tag for tag in available_tags if tag.category == category]
+            tags_by_category[category.value] = category_tags
+
+        return render_template('settings/personal_tags.html',
+                               title='Manage Personal Tags',
+                               tags_by_category=tags_by_category,
+                               TagCategory=TagCategory)
+
+    except Exception as e:
+        current_app.logger.error(f"Error loading personal tags: {e}", exc_info=True)
+        flash("Could not load personal tags.", "danger")
         return redirect(url_for('settings.view_settings'))
-
-    return render_template('settings/settings.html',
-                           title='Settings',
-                           tags_by_category=tags_by_category,
-                           TagCategory=TagCategory)
-    # REMOVED: csrf_token=generate_csrf() - let the template use csrf_token() function
 
 
 @settings_bp.route('/tags/create', methods=['POST'])
 @login_required
 def create_tag():
-    """Create a new user tag via AJAX"""
+    """Create a new personal tag"""
     try:
-        # Debug logging
-        current_app.logger.info(f"Create tag request from user {current_user.id}")
-        current_app.logger.info(f"Request JSON: {request.json}")
-
-        name = request.json.get('name', '').strip()
-        category_name = request.json.get('category', '')
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        category_name = data.get('category', '')
+        color_category = data.get('color_category', 'neutral')  # Add color category support
+        is_active = data.get('is_active', True)  # Add is_active support
 
         if not name or not category_name:
             return jsonify({'success': False, 'message': 'Name and category are required'})
 
         # Validate category
         try:
+            from app.models import TagCategory
             category = TagCategory[category_name]
         except KeyError:
             return jsonify({'success': False, 'message': 'Invalid category'})
 
-        # Check for duplicates (including defaults)
+        # Check for duplicates (user's tags + default tags)
         existing = Tag.query.filter(
+            Tag.name == name,
             db.or_(
-                db.and_(Tag.name == name, Tag.user_id == current_user.id),
-                db.and_(Tag.name == name, Tag.is_default == True)
+                Tag.user_id == current_user.id,
+                Tag.is_default == True
             )
         ).first()
 
         if existing:
-            return jsonify({'success': False, 'message': 'Tag already exists'})
+            return jsonify({'success': False, 'message': 'Tag name already exists'})
 
-        # Create new tag
+        # Create new personal tag
         new_tag = Tag(
             name=name,
             category=category,
+            color_category=color_category,  # Set color category
             user_id=current_user.id,
             is_default=False,
-            is_active=True
+            is_active=is_active  # Set active status
         )
 
         db.session.add(new_tag)
         db.session.commit()
-
-        current_app.logger.info(f"Successfully created tag: {name}")
 
         return jsonify({
             'success': True,
@@ -93,35 +152,40 @@ def create_tag():
                 'id': new_tag.id,
                 'name': new_tag.name,
                 'category': new_tag.category.name,
-                'is_default': new_tag.is_default
+                'color_category': new_tag.color_category,
+                'is_default': new_tag.is_default,
+                'is_active': new_tag.is_active
             }
         })
 
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error creating tag: {e}")
-        return jsonify({'success': False, 'message': f'Error creating tag: {str(e)}'})
+        current_app.logger.error(f"Error creating personal tag: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Error creating tag'})
 
 
 @settings_bp.route('/tags/<int:tag_id>/edit', methods=['POST'])
 @login_required
 def edit_tag(tag_id):
-    """Edit a user tag via AJAX"""
+    """Edit a personal tag"""
     try:
         tag = Tag.query.get_or_404(tag_id)
 
-        # Users can only edit their own tags (not defaults)
+        # Ensure user owns this tag (not a default tag)
         if tag.user_id != current_user.id:
-            return jsonify({'success': False, 'message': 'Permission denied'})
+            return jsonify({'success': False, 'message': 'Cannot edit this tag'})
 
-        name = request.json.get('name', '').strip()
-        category_name = request.json.get('category', '')
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        category_name = data.get('category', '')
+        color_category = data.get('color_category', 'neutral')  # Add color category support
 
         if not name or not category_name:
             return jsonify({'success': False, 'message': 'Name and category are required'})
 
         # Validate category
         try:
+            from app.models import TagCategory
             category = TagCategory[category_name]
         except KeyError:
             return jsonify({'success': False, 'message': 'Invalid category'})
@@ -129,9 +193,10 @@ def edit_tag(tag_id):
         # Check for duplicates (excluding current tag)
         existing = Tag.query.filter(
             Tag.id != tag_id,
+            Tag.name == name,
             db.or_(
-                db.and_(Tag.name == name, Tag.user_id == current_user.id),
-                db.and_(Tag.name == name, Tag.is_default == True)
+                Tag.user_id == current_user.id,
+                Tag.is_default == True
             )
         ).first()
 
@@ -141,6 +206,7 @@ def edit_tag(tag_id):
         # Update tag
         tag.name = name
         tag.category = category
+        tag.color_category = color_category  # Update color category
         db.session.commit()
 
         return jsonify({
@@ -150,13 +216,15 @@ def edit_tag(tag_id):
                 'id': tag.id,
                 'name': tag.name,
                 'category': tag.category.name,
-                'is_default': tag.is_default
+                'color_category': tag.color_category,
+                'is_default': tag.is_default,
+                'is_active': tag.is_active
             }
         })
 
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error editing tag {tag_id}: {e}")
+        current_app.logger.error(f"Error editing personal tag {tag_id}: {e}", exc_info=True)
         return jsonify({'success': False, 'message': 'Error updating tag'})
 
 
@@ -246,22 +314,29 @@ def delete_tag(tag_id):
         return jsonify({'success': False, 'message': 'Error deleting tag'})
 
 
-@settings_bp.route('/tags/reset-defaults', methods=['POST'])
+@settings_bp.route('/reset-default-tags', methods=['POST'])
 @login_required
 def reset_default_tags():
-    """Reset user's tags to current defaults"""
+    """Reset user tags to only include defaults"""
     try:
-        # Delete user's custom tags
-        Tag.query.filter_by(user_id=current_user.id).delete()
+        # Delete all user's custom tags (not default tags)
+        user_tags = Tag.query.filter_by(user_id=current_user.id).all()
+        custom_tag_count = len(user_tags)
 
-        # Copy current defaults
-        copied_count = Tag.copy_defaults_to_user(current_user.id)
+        for tag in user_tags:
+            db.session.delete(tag)
 
-        flash(f'Reset complete! {copied_count} default tags have been restored.', 'success')
-        return redirect(url_for('settings.view_settings'))
+        db.session.commit()
+
+        # Flash warning message that will show up as notification
+        flash(f'Reset complete! Deleted {custom_tag_count} custom tags and restored default tags.', 'success')
+
+        current_app.logger.info(
+            f"User {current_user.username} reset tags to defaults, deleted {custom_tag_count} custom tags")
 
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error resetting tags for user {current_user.id}: {e}")
-        flash('Error resetting tags', 'danger')
-        return redirect(url_for('settings.view_settings'))
+        current_app.logger.error(f"Error resetting tags for user {current_user.id}: {e}", exc_info=True)
+        flash('Error resetting tags. Please try again.', 'danger')
+
+    return redirect(url_for('settings.manage_personal_tags'))
