@@ -107,11 +107,23 @@ def create_tag():
         data = request.get_json()
         name = data.get('name', '').strip()
         category_name = data.get('category', '')
-        color_category = data.get('color_category', 'neutral')  # Add color category support
-        is_active = data.get('is_active', True)  # Add is_active support
+        color_category = data.get('color_category', 'neutral')
+
+        # Improved is_active handling with explicit type checking
+        is_active = data.get('is_active')
+        if is_active is None:
+            is_active = True  # Default to active
+        elif isinstance(is_active, str):
+            is_active = is_active.lower() == 'true'
+        elif not isinstance(is_active, bool):
+            is_active = bool(is_active)
 
         if not name or not category_name:
             return jsonify({'success': False, 'message': 'Name and category are required'})
+
+        # Validate color category
+        if color_category not in ['neutral', 'good', 'bad']:
+            color_category = 'neutral'
 
         # Validate category
         try:
@@ -136,14 +148,17 @@ def create_tag():
         new_tag = Tag(
             name=name,
             category=category,
-            color_category=color_category,  # Set color category
+            color_category=color_category,
             user_id=current_user.id,
             is_default=False,
-            is_active=is_active  # Set active status
+            is_active=is_active
         )
 
         db.session.add(new_tag)
         db.session.commit()
+
+        # Log the creation for debugging
+        current_app.logger.info(f"User {current_user.username} created tag '{name}' with active status: {is_active}")
 
         return jsonify({
             'success': True,
@@ -178,11 +193,23 @@ def edit_tag(tag_id):
         data = request.get_json()
         name = data.get('name', '').strip()
         category_name = data.get('category', '')
-        color_category = data.get('color_category', 'neutral')  # Add color category support
-        is_active = data.get('is_active', True)
+        color_category = data.get('color_category', 'neutral')
+
+        # Improved is_active handling with explicit type checking
+        is_active = data.get('is_active')
+        if is_active is None:
+            is_active = tag.is_active  # Keep current value if not provided
+        elif isinstance(is_active, str):
+            is_active = is_active.lower() == 'true'
+        elif not isinstance(is_active, bool):
+            is_active = bool(is_active)
 
         if not name or not category_name:
             return jsonify({'success': False, 'message': 'Name and category are required'})
+
+        # Validate color category
+        if color_category not in ['neutral', 'good', 'bad']:
+            color_category = 'neutral'
 
         # Validate category
         try:
@@ -204,12 +231,21 @@ def edit_tag(tag_id):
         if existing:
             return jsonify({'success': False, 'message': 'Tag name already exists'})
 
+        # Store old values for logging
+        old_name = tag.name
+        old_active = tag.is_active
+
         # Update tag
         tag.name = name
         tag.category = category
-        tag.color_category = color_category  # Update color category
+        tag.color_category = color_category
         tag.is_active = is_active
         db.session.commit()
+
+        # Log the update for debugging
+        if old_active != is_active:
+            current_app.logger.info(
+                f"User {current_user.username} changed tag '{old_name}' active status from {old_active} to {is_active}")
 
         return jsonify({
             'success': True,
