@@ -104,14 +104,26 @@ def _populate_trade_form_choices(form):
 
 
 def _populate_filter_form_choices(filter_form):
-    """Populate dynamic choices for filter form - instrument choices handled in form __init__"""
+    """Populate dynamic choices for filter form"""
+    from app.models import Tag
+
+    # Trading models
     filter_form.trading_model_id.choices = [(0, 'All Models')] + \
                                            [(tm.id, tm.name) for tm in
                                             TradingModel.query.filter_by(user_id=current_user.id,
                                                                          is_active=True).order_by(
                                                 TradingModel.name).all()]
-    # Note: Instrument choices are now handled in TradeFilterForm.__init__() method
-    # This removes the dependency on TradeForm.instrument_choices
+
+    # Tags - get all user's tags and default tags
+    all_tags = Tag.query.filter(
+        db.or_(
+            Tag.is_default == True,
+            Tag.user_id == current_user.id
+        )
+    ).filter(Tag.is_active == True).order_by(Tag.name).all()
+
+    filter_form.tags.choices = [('', 'All Tags')] + [(str(tag.id), tag.name) for tag in all_tags]
+
     return filter_form
 
 
@@ -165,43 +177,54 @@ def view_trades_list():
             query = query.filter(Trade.tags.any(Tag.id == tag_id))
 
     # Handle sorting
-    sort_by = request.args.get('sort', 'date_desc')
+    sort_field = request.args.get('sort', 'date')
+    sort_order = request.args.get('order', 'desc')
 
-    if sort_by == 'pnl_desc':
-        # Filter to only include trades with exits (closed trades) when sorting by PnL
-        query = query.filter(Trade.exits.any())
-        # Order by date first, we'll sort by PnL in Python after pagination
-        query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
-    elif sort_by == 'pnl_asc':
-        # Filter to only include trades with exits (closed trades) when sorting by PnL
-        query = query.filter(Trade.exits.any())
-        # Order by date first, we'll sort by PnL in Python after pagination
-        query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
-    elif sort_by == 'date_asc':
-        # Sort by date ascending
-        query = query.order_by(Trade.trade_date.asc(), Trade.id.asc())
-    elif sort_by == 'date_desc':
-        # Sort by date descending
-        query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
+    # Define sorting logic
+    if sort_field == 'date':
+        if sort_order == 'asc':
+            query = query.order_by(Trade.trade_date.asc(), Trade.id.asc())
+        else:
+            query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
+    elif sort_field == 'instrument':
+        if sort_order == 'asc':
+            query = query.order_by(Trade.instrument_legacy.asc(), Trade.trade_date.desc())
+        else:
+            query = query.order_by(Trade.instrument_legacy.desc(), Trade.trade_date.desc())
+    elif sort_field == 'direction':
+        if sort_order == 'asc':
+            query = query.order_by(Trade.direction.asc(), Trade.trade_date.desc())
+        else:
+            query = query.order_by(Trade.direction.desc(), Trade.trade_date.desc())
+    elif sort_field == 'how_closed':
+        if sort_order == 'asc':
+            query = query.order_by(Trade.how_closed.asc(), Trade.trade_date.desc())
+        else:
+            query = query.order_by(Trade.how_closed.desc(), Trade.trade_date.desc())
     else:
-        # Default sorting by date descending
+        # Default sorting
         query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
 
+    # Pagination with dynamic page size
     page = request.args.get('page', 1, type=int)
-    per_page = current_app.config.get('PER_PAGE_TRADES', 10)
+    per_page = request.args.get('per_page', 10, type=int)
+
+    # Limit per_page to reasonable values
+    if per_page not in [10, 25, 50, 100]:
+        per_page = 10
 
     trades_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
-    # Only sort in Python if we're sorting by PnL (which can't be done in SQL due to calculated properties)
-    if sort_by == 'pnl_desc':
-        trades_pagination.items = sorted(trades_pagination.items,
-                                         key=lambda t: t.gross_pnl if t.gross_pnl is not None else 0,
-                                         reverse=True)
-    elif sort_by == 'pnl_asc':
-        trades_pagination.items = sorted(trades_pagination.items,
-                                         key=lambda t: t.gross_pnl if t.gross_pnl is not None else 0,
-                                         reverse=False)
-    # For date sorting, we let the database ORDER BY handle it (no Python sorting needed)
+    # Handle P&L sorting (needs to be done after pagination due to calculated properties)
+    if sort_field == 'pnl':
+        if sort_order == 'desc':
+            trades_pagination.items = sorted(trades_pagination.items,
+                                             key=lambda t: t.gross_pnl if t.gross_pnl is not None else 0,
+                                             reverse=True)
+        else:
+            trades_pagination.items = sorted(trades_pagination.items,
+                                             key=lambda t: t.gross_pnl if t.gross_pnl is not None else 0,
+                                             reverse=False)
 
     return render_template("trades/view_trades_list.html",
                            title="Trades List",
