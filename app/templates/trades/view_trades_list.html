@@ -6,14 +6,6 @@
     {{ title }} - Trading Journal
 {% endblock %}
 
-{% block page_header %}
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-        <h1>My Trades</h1>
-    </div>
-{% endblock %}
-
-{% block content %}
-
 {% block head_extra %}
 <style>
 /* Table Layout and Sticky Elements */
@@ -139,9 +131,83 @@
     color: var(--bs-secondary);
 }
 
+/* Action button styles - ADDED TO FIX MISSING STYLES */
+.action-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid;
+    transition: all 0.15s ease-in-out;
+}
+
+.action-btn.btn-outline-success {
+    color: #198754;
+    border-color: #198754;
+}
+
+.action-btn.btn-outline-success:hover {
+    background-color: #198754;
+    color: white;
+}
+
+.action-btn.btn-outline-info {
+    color: #0dcaf0;
+    border-color: #0dcaf0;
+}
+
+.action-btn.btn-outline-info:hover {
+    background-color: #0dcaf0;
+    color: #000;
+}
+
+.action-btn.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.action-btn.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+
+.action-btn.btn-outline-primary {
+    color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.action-btn.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.action-btn.btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.action-btn.btn-outline-danger:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+.active-filters-indicator {
+    background-color: rgba(13, 202, 240, 0.1);
+    color: #0dcaf0;
+    border-color: #0dcaf0;
+}
 </style>
 {% endblock %}
 
+{% block page_header %}
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+        <h1>My Trades</h1>
+    </div>
+{% endblock %}
+
+{% block content %}
 
 {# Collapsible Filter Section #}
 <div class="collapse mb-4" id="filterCollapse">
@@ -253,7 +319,7 @@
                 </div>
             </div>
 
-            {# Bulk Delete Form #}
+            {# Bulk Delete Form - FIXED FORM ACTION #}
             <form method="POST" action="{{ url_for('trades.bulk_delete_trades') }}" id="bulkDeleteForm">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
 
@@ -313,7 +379,7 @@
                                             <i class="fas fa-chevron-right chevron-icon" id="chevron-{{ trade.id }}"></i>
                                         </td>
 
-                                        <!-- Checkbox -->
+                                        <!-- Checkbox - FIXED FIELD NAME -->
                                         <td onclick="event.stopPropagation()">
                                             <div class="form-check">
                                                 <input class="form-check-input trade-checkbox" type="checkbox" name="trade_ids" value="{{ trade.id }}" id="trade_{{ trade.id }}">
@@ -625,9 +691,71 @@
     </div>
 </div>
 
-{# JavaScript for Filter Toggle and Bulk Delete #}
+{% endblock %}
+
+{% block scripts %}
 <script>
+// Trade details toggle functionality
+function toggleTradeDetails(tradeId) {
+    const detailsRow = document.getElementById('details-' + tradeId);
+    const chevron = document.getElementById('chevron-' + tradeId);
+
+    if (detailsRow.style.display === 'none') {
+        detailsRow.style.display = 'table-row';
+        chevron.classList.add('rotated');
+    } else {
+        detailsRow.style.display = 'none';
+        chevron.classList.remove('rotated');
+    }
+}
+
+// Page size change functionality
+function changePageSize(newSize) {
+    const currentParams = new URLSearchParams(window.location.search);
+    currentParams.set('per_page', newSize);
+    currentParams.delete('page'); // Reset to first page
+    window.location.href = '{{ url_for("trades.view_trades_list") }}?' + currentParams.toString();
+}
+
+// Column sorting functionality
 document.addEventListener('DOMContentLoaded', function() {
+    const sortableHeaders = document.querySelectorAll('.sortable');
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentSort = urlParams.get('sort') || 'date';
+    const currentOrder = urlParams.get('order') || 'desc';
+
+    // Set initial sort indicator
+    updateSortIndicators(currentSort, currentOrder);
+
+    sortableHeaders.forEach(header => {
+        header.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const sortField = this.dataset.sort;
+            const currentParams = new URLSearchParams(window.location.search);
+
+            // Determine new sort order
+            let newOrder = 'desc';
+            if (currentParams.get('sort') === sortField && currentParams.get('order') === 'desc') {
+                newOrder = 'asc';
+            }
+
+            // Update URL parameters
+            currentParams.set('sort', sortField);
+            currentParams.set('order', newOrder);
+            currentParams.delete('page'); // Reset to first page when sorting
+
+            // Navigate to new URL
+            window.location.href = '{{ url_for("trades.view_trades_list") }}?' + currentParams.toString();
+        });
+    });
+
+    // Prevent dropdown toggle when clicking on checkboxes or action buttons
+    document.querySelectorAll('.trade-checkbox, .btn').forEach(element => {
+        element.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+
     // Filter toggle functionality
     const filterCollapse = document.getElementById('filterCollapse');
     const filterToggleText = document.getElementById('filterToggleText');
@@ -688,274 +816,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-
-    // Optional: Auto-submit form when date inputs change
-    const dateInputs = document.querySelectorAll('#filterForm input[type="date"]');
-    if (dateInputs.length > 0) {
-        dateInputs.forEach(function(input) {
-            input.addEventListener('change', function() {
-                // Uncomment the line below to enable auto-submit on date change
-                // document.getElementById('filterForm').submit();
-            });
-        });
-    }
-});
-
-// Enhanced bulk delete confirmation function
-function confirmBulkDelete() {
-    const checkedBoxes = document.querySelectorAll('.trade-checkbox:checked');
-
-    if (checkedBoxes.length === 0) {
-        // Custom alert for no selection
-        showCustomAlert('No Trades Selected', 'Please select at least one trade to delete.', 'warning');
-        return;
-    }
-
-    // Get details of selected trades for the confirmation
-    const selectedTrades = [];
-    checkedBoxes.forEach(function(checkbox) {
-        const row = checkbox.closest('tr');
-        const date = row.querySelector('td:nth-child(2)').textContent.trim();
-        const instrument = row.querySelector('td:nth-child(3)').textContent.trim();
-        const direction = row.querySelector('td:nth-child(4) .badge').textContent.trim();
-        selectedTrades.push(`${date} - ${instrument} (${direction})`);
-    });
-
-    // Create detailed confirmation message
-    const count = checkedBoxes.length;
-    const tradeWord = count === 1 ? 'trade' : 'trades';
-
-    let message = `You are about to permanently delete ${count} ${tradeWord} and all associated data:\n\n`;
-
-    // Show first 5 trades, then indicate if there are more
-    const displayTrades = selectedTrades.slice(0, 5);
-    message += displayTrades.join('\n');
-
-    if (selectedTrades.length > 5) {
-        message += `\n... and ${selectedTrades.length - 5} more ${selectedTrades.length - 5 === 1 ? 'trade' : 'trades'}`;
-    }
-
-    message += '\n\nThis will delete:\n';
-    message += '• All entry and exit points\n';
-    message += '• Trade notes and analysis\n';
-    message += '• Screenshots and attachments\n';
-    message += '• Rating and performance data\n';
-    message += '• All associated trade history\n\n';
-    message += '⚠️ THIS ACTION CANNOT BE UNDONE ⚠️\n\n';
-    message += 'Are you absolutely sure you want to proceed?';
-
-    // Show enhanced confirmation dialog
-    showCustomConfirm(
-        'Confirm Bulk Trade Deletion',
-        message,
-        function() {
-            // User confirmed - submit the form
-            document.getElementById('bulkDeleteForm').submit();
-        },
-        function() {
-            // User cancelled - do nothing
-            console.log('Bulk delete cancelled by user');
-        }
-    );
-}
-
-// Custom alert function with better styling
-function showCustomAlert(title, message, type = 'info') {
-    const alertType = type === 'warning' ? 'warning' : 'info';
-    const iconClass = type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
-
-    const modalHtml = `
-        <div class="modal fade" id="customAlertModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header bg-${alertType} text-white">
-                        <h5 class="modal-title">
-                            <i class="fas ${iconClass} me-2"></i>${title}
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="mb-0">${message}</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // Remove existing modal if any
-    const existingModal = document.getElementById('customAlertModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-
-    // Add modal to page
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('customAlertModal'));
-    modal.show();
-
-    // Clean up when modal is hidden
-    document.getElementById('customAlertModal').addEventListener('hidden.bs.modal', function() {
-        this.remove();
-    });
-}
-
-// Custom confirmation dialog with better styling and trade details
-function showCustomConfirm(title, message, confirmCallback, cancelCallback) {
-    const modalHtml = `
-        <div class="modal fade" id="customConfirmModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-exclamation-triangle me-2"></i>${title}
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-danger border-0">
-                            <pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">${message}</pre>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelBtn">
-                            <i class="fas fa-times me-1"></i> Cancel
-                        </button>
-                        <button type="button" class="btn btn-danger" id="confirmBtn">
-                            <i class="fas fa-trash-alt me-1"></i> Yes, Delete All
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // Remove existing modal if any
-    const existingModal = document.getElementById('customConfirmModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-
-    // Add modal to page
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-    // Get modal elements
-    const modal = new bootstrap.Modal(document.getElementById('customConfirmModal'));
-    const confirmBtn = document.getElementById('confirmBtn');
-    const cancelBtn = document.getElementById('cancelBtn');
-
-    // Set up event listeners
-    confirmBtn.addEventListener('click', function() {
-        modal.hide();
-        if (confirmCallback) confirmCallback();
-    });
-
-    cancelBtn.addEventListener('click', function() {
-        modal.hide();
-        if (cancelCallback) cancelCallback();
-    });
-
-    // Clean up when modal is hidden
-    document.getElementById('customConfirmModal').addEventListener('hidden.bs.modal', function() {
-        this.remove();
-    });
-
-    // Show modal
-    modal.show();
-}
-
-// Single trade delete confirmation
-function confirmSingleDelete(tradeId, date, instrument, direction) {
-    const message = `Are you sure you want to permanently delete this trade?\n\n${date} - ${instrument} (${direction})\n\nThis action cannot be undone.`;
-
-    showCustomConfirm(
-        'Confirm Trade Deletion',
-        message,
-        function() {
-            // Create a form and submit it
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
-
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = 'csrf_token';
-            csrfToken.value = '{{ csrf_token }}';
-
-            form.appendChild(csrfToken);
-            document.body.appendChild(form);
-            form.submit();
-        },
-        function() {
-            console.log('Delete cancelled by user');
-        }
-    );
-}
-</script>
-{% block scripts %}
-<script>
-function toggleTradeDetails(tradeId) {
-    const detailsRow = document.getElementById('details-' + tradeId);
-    const chevron = document.getElementById('chevron-' + tradeId);
-
-    if (detailsRow.style.display === 'none') {
-        detailsRow.style.display = 'table-row';
-        chevron.classList.add('rotated');
-    } else {
-        detailsRow.style.display = 'none';
-        chevron.classList.remove('rotated');
-    }
-}
-
-function changePageSize(newSize) {
-    const currentParams = new URLSearchParams(window.location.search);
-    currentParams.set('per_page', newSize);
-    currentParams.delete('page'); // Reset to first page
-    window.location.href = '{{ url_for("trades.view_trades_list") }}?' + currentParams.toString();
-}
-
-// Column sorting functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const sortableHeaders = document.querySelectorAll('.sortable');
-    const urlParams = new URLSearchParams(window.location.search);
-    const currentSort = urlParams.get('sort') || 'date';
-    const currentOrder = urlParams.get('order') || 'desc';
-
-    // Set initial sort indicator
-    updateSortIndicators(currentSort, currentOrder);
-
-    sortableHeaders.forEach(header => {
-        header.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const sortField = this.dataset.sort;
-            const currentParams = new URLSearchParams(window.location.search);
-
-            // Determine new sort order
-            let newOrder = 'desc';
-            if (currentParams.get('sort') === sortField && currentParams.get('order') === 'desc') {
-                newOrder = 'asc';
-            }
-
-            // Update URL parameters
-            currentParams.set('sort', sortField);
-            currentParams.set('order', newOrder);
-            currentParams.delete('page'); // Reset to first page when sorting
-
-            // Navigate to new URL
-            window.location.href = '{{ url_for("trades.view_trades_list") }}?' + currentParams.toString();
-        });
-    });
-
-    // Prevent dropdown toggle when clicking on checkboxes or action buttons
-    document.querySelectorAll('.trade-checkbox, .btn').forEach(element => {
-        element.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
-    });
 });
 
 function updateSortIndicators(sortField, order) {
@@ -968,6 +828,45 @@ function updateSortIndicators(sortField, order) {
     const currentHeader = document.querySelector(`[data-sort="${sortField}"]`);
     if (currentHeader) {
         currentHeader.classList.add(order === 'asc' ? 'sorted-asc' : 'sorted-desc');
+    }
+}
+
+// Enhanced bulk delete confirmation function
+function confirmBulkDelete() {
+    const checkedBoxes = document.querySelectorAll('.trade-checkbox:checked');
+
+    if (checkedBoxes.length === 0) {
+        alert('Please select at least one trade to delete.');
+        return;
+    }
+
+    const count = checkedBoxes.length;
+    const tradeWord = count === 1 ? 'trade' : 'trades';
+    const message = `Are you sure you want to permanently delete ${count} selected ${tradeWord}?\n\nThis action cannot be undone.`;
+
+    if (confirm(message)) {
+        document.getElementById('bulkDeleteForm').submit();
+    }
+}
+
+// Single trade delete confirmation
+function confirmSingleDelete(tradeId, date, instrument, direction) {
+    const message = `Are you sure you want to permanently delete this trade?\n\n${date} - ${instrument} (${direction})\n\nThis action cannot be undone.`;
+
+    if (confirm(message)) {
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
+
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrf_token';
+        csrfToken.value = '{{ csrf_token }}';
+
+        form.appendChild(csrfToken);
+        document.body.appendChild(form);
+        form.submit();
     }
 }
 </script>
