@@ -131,6 +131,31 @@
     color: var(--bs-secondary);
 }
 
+/* Pagination styling for dark theme */
+.pagination .page-link {
+    background-color: transparent;
+    border-color: #495057;
+    color: #adb5bd;
+}
+
+.pagination .page-link:hover {
+    background-color: #495057;
+    border-color: #6c757d;
+    color: #fff;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+}
+
+.pagination .page-item.disabled .page-link {
+    background-color: transparent;
+    border-color: #495057;
+    color: #6c757d;
+}
+
 /* Action button styles - ADDED TO FIX MISSING STYLES */
 .action-btn {
     padding: 0.375rem 0.75rem;
@@ -199,6 +224,72 @@
     border-color: #0dcaf0;
 }
 </style>
+
+<!-- CRITICAL: LOAD JAVASCRIPT FUNCTIONS FIRST -->
+<script>
+// ===== ESSENTIAL FUNCTIONS - LOADED IMMEDIATELY =====
+console.log('🚀 Loading essential functions...');
+
+window.toggleTradeDetails = function(tradeId) {
+    console.log('🎯 toggleTradeDetails called with:', tradeId);
+    var detailsRow = document.getElementById('details-' + tradeId);
+    var chevron = document.getElementById('chevron-' + tradeId);
+
+    if (detailsRow && chevron) {
+        if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
+            detailsRow.style.display = 'table-row';
+            chevron.classList.remove('fa-chevron-right');
+            chevron.classList.add('fa-chevron-down');
+            console.log('✅ Showing details for trade', tradeId);
+        } else {
+            detailsRow.style.display = 'none';
+            chevron.classList.remove('fa-chevron-down');
+            chevron.classList.add('fa-chevron-right');
+            console.log('✅ Hiding details for trade', tradeId);
+        }
+    } else {
+        console.error('❌ Missing elements for trade', tradeId);
+    }
+};
+
+window.changePageSize = function(newSize) {
+    console.log('🎉 changePageSize called with:', newSize);
+    var currentParams = new URLSearchParams(window.location.search);
+    currentParams.set('per_page', newSize);
+    currentParams.delete('page');
+    var newUrl = '{{ url_for("trades.view_trades_list") }}?' + currentParams.toString();
+    console.log('🔄 Redirecting to:', newUrl);
+    window.location.href = newUrl;
+};
+
+window.confirmBulkDelete = function() {
+    var checkedBoxes = document.querySelectorAll('.trade-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+        alert('Please select trades to delete.');
+        return;
+    }
+    if (confirm('Delete ' + checkedBoxes.length + ' trades? Cannot be undone.')) {
+        document.getElementById('bulkDeleteForm').submit();
+    }
+};
+
+window.confirmSingleDelete = function(tradeId, date, instrument, direction) {
+    if (confirm('Delete ' + date + ' - ' + instrument + ' (' + direction + ')? Cannot be undone.')) {
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
+        var csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = 'csrf_token';
+        csrfToken.value = '{{ csrf_token }}';
+        form.appendChild(csrfToken);
+        document.body.appendChild(form);
+        form.submit();
+    }
+};
+
+console.log('✅ All functions loaded and ready!');
+</script>
 {% endblock %}
 
 {% block page_header %}
@@ -597,54 +688,24 @@
                 </div>
             </form>
 
-            {# FIXED PAGINATION WITH ALL BUTTONS #}
+            {# USE EXISTING PAGINATION MACRO - MUCH SIMPLER #}
             {% if pagination.pages > 1 or pagination.total > 10 %}
             <div class="d-flex justify-content-center mt-4 mb-4">
                 <div class="d-flex align-items-center gap-3">
-                    <!-- Page Size -->
-                    <select id="pageSizeDropdown" class="form-select form-select-sm" style="width: 70px;" onchange="changePageSize(this.value)">
-                        <option value="10" {{ 'selected' if request.args.get('per_page', '10') == '10' else '' }}>10</option>
-                        <option value="25" {{ 'selected' if request.args.get('per_page', '10') == '25' else '' }}>25</option>
-                        <option value="50" {{ 'selected' if request.args.get('per_page', '10') == '50' else '' }}>50</option>
-                        <option value="100" {{ 'selected' if request.args.get('per_page', '10') == '100' else '' }}>100</option>
-                    </select>
-
-                    <!-- Page Info -->
-                    <span class="text-white-50">
-                        Page {{ pagination.page }} of {{ pagination.pages }}
-                    </span>
-
-                    <!-- Navigation -->
-                    {% if pagination.pages > 1 %}
-                    <div class="btn-group">
-                        <!-- First Page -->
-                        {% if pagination.page > 1 %}
-                        {% set first_args = request.args.copy() %}
-                        {% set _ = first_args.update({'page': 1}) %}
-                        <a href="{{ url_for('trades.view_trades_list', **first_args) }}" class="btn btn-sm btn-outline-light">‹‹</a>
-                        {% endif %}
-
-                        <!-- Previous Page -->
-                        {% if pagination.has_prev %}
-                        {% set prev_args = request.args.copy() %}
-                        {% set _ = prev_args.update({'page': pagination.prev_num}) %}
-                        <a href="{{ url_for('trades.view_trades_list', **prev_args) }}" class="btn btn-sm btn-outline-light">‹</a>
-                        {% endif %}
-
-                        <!-- Next Page -->
-                        {% if pagination.has_next %}
-                        {% set next_args = request.args.copy() %}
-                        {% set _ = next_args.update({'page': pagination.next_num}) %}
-                        <a href="{{ url_for('trades.view_trades_list', **next_args) }}" class="btn btn-sm btn-outline-light">›</a>
-                        {% endif %}
-
-                        <!-- Last Page -->
-                        {% if pagination.page < pagination.pages %}
-                        {% set last_args = request.args.copy() %}
-                        {% set _ = last_args.update({'page': pagination.pages}) %}
-                        <a href="{{ url_for('trades.view_trades_list', **last_args) }}" class="btn btn-sm btn-outline-light">››</a>
-                        {% endif %}
+                    <!-- Page Size Dropdown -->
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-white-50 small">Show:</span>
+                        <select id="pageSizeDropdown" class="form-select form-select-sm" style="width: 70px;" onchange="changePageSize(this.value)">
+                            <option value="10" {{ 'selected' if request.args.get('per_page', '10') == '10' else '' }}>10</option>
+                            <option value="25" {{ 'selected' if request.args.get('per_page', '10') == '25' else '' }}>25</option>
+                            <option value="50" {{ 'selected' if request.args.get('per_page', '10') == '50' else '' }}>50</option>
+                            <option value="100" {{ 'selected' if request.args.get('per_page', '10') == '100' else '' }}>100</option>
+                        </select>
                     </div>
+
+                    <!-- Use your existing pagination macro -->
+                    {% if pagination.pages > 1 %}
+                    {{ pagi.render_pagination(pagination, 'trades.view_trades_list', request.args) }}
                     {% endif %}
                 </div>
             </div>
