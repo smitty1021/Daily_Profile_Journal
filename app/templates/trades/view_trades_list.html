@@ -8,32 +8,117 @@
 
 {% block head_extra %}
 <style>
-/* Table Layout and Sticky Elements */
+/* FIXED: Remove double scrollbar and ensure footer visibility */
 .table-container {
     position: relative;
-    max-height: calc(100vh - 280px);
+    max-height: 640px !important; /* Fixed absolute height - won't grow */
     overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+}
+
+/* Ensure page can scroll to see footer */
+body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.container-fluid {
+    overflow: visible !important;
 }
 
 .table-fixed {
     table-layout: fixed;
     width: 100%;
+    margin-bottom: 0; /* Remove margin to prevent scroll issues */
 }
 
+/* FIXED: Consistent font sizes, centered text, and reduced row height */
 .table-fixed th,
 .table-fixed td {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding: 8px 6px !important;
-    font-size: 0.875rem;
+    padding: 6px 4px !important; /* Reduced from 8px to 6px */
+    font-size: 0.875rem !important; /* Increased from 0.8rem to 0.875rem for better readability */
+    font-weight: normal !important; /* Remove any bold weights */
+    line-height: 1.2 !important; /* Tighter line height */
+    vertical-align: middle !important; /* Center text vertically */
+    text-align: center !important; /* Center text horizontally */
+    color: #adb5bd !important; /* Toned down text color for dark theme */
 }
 
+/* Ensure all text elements have consistent sizing and centering */
+.table-fixed td strong,
+.table-fixed td small,
+.table-fixed td span {
+    font-size: 0.875rem !important; /* Increased from 0.8rem */
+    font-weight: normal !important;
+    color: inherit !important;
+}
+
+/* Badges should be centered and consistent */
+.table-fixed .badge {
+    font-size: 0.8rem !important; /* Increased from 0.75rem */
+    font-weight: normal !important;
+    padding: 0.25rem 0.5rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 60px !important; /* Consistent badge width */
+}
+
+/* Small text should actually be smaller */
+.table-fixed .small,
+.table-fixed small {
+    font-size: 0.8rem !important; /* Increased from 0.75rem */
+    font-weight: normal !important;
+    color: inherit !important;
+}
+
+/* Expandable row cursor */
+.trade-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.trade-row:hover {
+    background-color: var(--bs-secondary-bg-subtle);
+}
+
+/* Chevron icon for expandable rows */
+.chevron-icon {
+    transition: transform 0.3s ease;
+    color: #adb5bd;
+    cursor: pointer;
+}
+
+.chevron-icon.rotated {
+    transform: rotate(90deg);
+}
+
+/* FIXED: Sticky header that stays at top */
 .sticky-header {
     position: sticky;
     top: 0;
     z-index: 10;
     background-color: var(--bs-dark) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Add shadow for better separation */
+}
+
+/* REMOVED: Arrow and checkbox icons from headers */
+.table-header-clean {
+    /* Clean headers without icons */
+}
+
+/* Remove the main container overflow issues */
+.container-fluid {
+    overflow: visible !important;
+}
+
+.main-content {
+    overflow: visible !important;
 }
 
 .sticky-pagination {
@@ -118,10 +203,10 @@
     background-color: var(--bs-dark) !important;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments - FIXED */
 @media (max-width: 1200px) {
     .table-container {
-        max-height: calc(100vh - 300px);
+        max-height: calc(100vh - 320px); /* Adjust for smaller screens */
     }
 }
 
@@ -131,32 +216,89 @@
     color: var(--bs-secondary);
 }
 
-/* Pagination styling for dark theme */
-.pagination .page-link {
+/* FIXED: Pagination arrow styling - remove borders and make them theme appropriate */
+.pagination-arrow-grey {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
     background-color: transparent;
-    border-color: #495057;
-    color: #adb5bd;
+    color: var(--bs-body-color);
+    text-decoration: none;
+    border-radius: 0.375rem;
+    transition: all 0.15s ease-in-out;
 }
 
-.pagination .page-link:hover {
-    background-color: #495057;
-    border-color: #6c757d;
-    color: #fff;
+.pagination-arrow-grey:hover {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-body-color);
+    text-decoration: none;
 }
 
-.pagination .page-item.active .page-link {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-    color: #fff;
-}
-
-.pagination .page-item.disabled .page-link {
+.pagination-arrow-grey.disabled {
+    color: var(--bs-secondary);
     background-color: transparent;
-    border-color: #495057;
-    color: #6c757d;
+    cursor: not-allowed;
 }
 
-/* Action button styles - ADDED TO FIX MISSING STYLES */
+.pagination-info {
+    font-size: 0.875rem;
+    color: var(--bs-body-color);
+    padding: 0 0.5rem;
+}
+
+/* REMOVED: Borderless action buttons for more compact rows */
+.table-fixed .btn-group .btn {
+    border: none !important;
+    padding: 0.25rem 0.4rem !important;
+    margin: 0 1px !important;
+    font-size: 0.75rem !important;
+    border-radius: 0.25rem !important;
+    transition: all 0.15s ease-in-out !important;
+}
+
+.table-fixed .btn-outline-secondary {
+    color: #6c757d !important;
+    background-color: transparent !important;
+}
+
+.table-fixed .btn-outline-secondary:hover {
+    background-color: #6c757d !important;
+    color: white !important;
+}
+
+.table-fixed .btn-outline-primary {
+    color: #0d6efd !important;
+    background-color: transparent !important;
+}
+
+.table-fixed .btn-outline-primary:hover {
+    background-color: #0d6efd !important;
+    color: white !important;
+}
+
+.table-fixed .btn-outline-warning {
+    color: #ffc107 !important;
+    background-color: transparent !important;
+}
+
+.table-fixed .btn-outline-warning:hover {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+.table-fixed .btn-outline-danger {
+    color: #dc3545 !important;
+    background-color: transparent !important;
+}
+
+.table-fixed .btn-outline-danger:hover {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
 .action-btn {
     padding: 0.375rem 0.75rem;
     font-size: 0.875rem;
@@ -223,14 +365,29 @@
     color: #0dcaf0;
     border-color: #0dcaf0;
 }
+
+/* FIXED: Footer bar consistency */
+.footer-container {
+    background-color: var(--bs-dark);
+    border-top: 1px solid var(--bs-border-color);
+    padding: 1rem 0;
+    margin-top: auto;
+}
+
+/* Make sure footer stays at bottom */
+.main-content-wrapper {
+    min-height: calc(100vh - 60px);
+    display: flex;
+    flex-direction: column;
+}
 </style>
 
-<!-- CRITICAL: LOAD JAVASCRIPT FUNCTIONS FIRST -->
+<!-- CRITICAL: LOAD JAVASCRIPT FUNCTIONS FIRST IN HEAD -->
 <script>
-// ===== ESSENTIAL FUNCTIONS - LOADED IMMEDIATELY =====
-console.log('🚀 Loading essential functions...');
+// ===== ESSENTIAL FUNCTIONS - LOADED IN HEAD SO THEY'RE AVAILABLE FOR ONCLICK =====
+console.log('🚀 Loading essential functions in head...');
 
-window.toggleTradeDetails = function(tradeId) {
+function toggleTradeDetails(tradeId) {
     console.log('🎯 toggleTradeDetails called with:', tradeId);
     var detailsRow = document.getElementById('details-' + tradeId);
     var chevron = document.getElementById('chevron-' + tradeId);
@@ -249,52 +406,78 @@ window.toggleTradeDetails = function(tradeId) {
         }
     } else {
         console.error('❌ Missing elements for trade', tradeId);
+        console.error('detailsRow:', detailsRow);
+        console.error('chevron:', chevron);
     }
-};
+}
 
-window.changePageSize = function(newSize) {
+function changePageSize(newSize) {
     console.log('🎉 changePageSize called with:', newSize);
     var currentParams = new URLSearchParams(window.location.search);
     currentParams.set('per_page', newSize);
-    currentParams.delete('page');
-    var newUrl = '{{ url_for("trades.view_trades_list") }}?' + currentParams.toString();
+    currentParams.delete('page'); // Reset to first page
+
+    // Build URL manually to avoid conflicts
+    var baseUrl = '{{ url_for("trades.view_trades_list") }}';
+    var params = [];
+
+    // Add per_page first
+    params.push('per_page=' + encodeURIComponent(newSize));
+
+    // Add other parameters except page
+    for (var pair of currentParams.entries()) {
+        if (pair[0] !== 'per_page' && pair[0] !== 'page') {
+            params.push(encodeURIComponent(pair[0]) + '=' + encodeURIComponent(pair[1]));
+        }
+    }
+
+    var newUrl = baseUrl + (params.length > 0 ? '?' + params.join('&') : '');
     console.log('🔄 Redirecting to:', newUrl);
     window.location.href = newUrl;
-};
+}
 
-window.confirmBulkDelete = function() {
-    var checkedBoxes = document.querySelectorAll('.trade-checkbox:checked');
-    if (checkedBoxes.length === 0) {
-        alert('Please select trades to delete.');
+function confirmSingleDelete(tradeId, date, instrument, direction) {
+    console.log('🗑️ confirmSingleDelete called with:', tradeId, date, instrument, direction);
+
+    // Wait for custom-modals.js to load
+    if (typeof showCustomConfirmation === 'undefined') {
+        console.log('⏳ Waiting for showCustomConfirmation to load...');
+        setTimeout(function() {
+            confirmSingleDelete(tradeId, date, instrument, direction);
+        }, 100);
         return;
     }
-    if (confirm('Delete ' + checkedBoxes.length + ' trades? Cannot be undone.')) {
-        document.getElementById('bulkDeleteForm').submit();
-    }
-};
 
-window.confirmSingleDelete = function(tradeId, date, instrument, direction) {
-    if (confirm('Delete ' + date + ' - ' + instrument + ' (' + direction + ')? Cannot be undone.')) {
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
-        var csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = 'csrf_token';
-        csrfToken.value = '{{ csrf_token }}';
-        form.appendChild(csrfToken);
-        document.body.appendChild(form);
-        form.submit();
-    }
-};
+    showCustomConfirmation({
+        title: 'Confirm Delete Trade',
+        message: `Are you sure you want to permanently delete this trade?<br><br><strong>${date} - ${instrument} (${direction})</strong><br><br>This action cannot be undone.`,
+        confirmText: 'Delete Trade',
+        confirmClass: 'btn-danger',
+        icon: 'exclamation-triangle',
+        iconClass: 'text-danger',
+        onConfirm: () => {
+            console.log('🔥 Deleting trade:', tradeId);
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
+            var csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrf_token';
+            csrfToken.value = '{{ csrf_token }}';
+            form.appendChild(csrfToken);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
 
-console.log('✅ All functions loaded and ready!');
+console.log('✅ Essential functions loaded in head!');
 </script>
 {% endblock %}
 
 {% block page_header %}
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-        <h1>My Trades</h1>
+        <h1>Trades List</h1>
     </div>
 {% endblock %}
 
@@ -346,22 +529,91 @@ console.log('✅ All functions loaded and ready!');
 <div class="row">
     <div class="col-12">
         {% if trades %}
-            {# Results Summary #}
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="text-muted">
-                    Showing {{ pagination.per_page * (pagination.page - 1) + 1 }} -
-                    {{ pagination.per_page * (pagination.page - 1) + trades|length }} of {{ pagination.total }} trades
-                </span>
-            </div>
-
-            {# Single Action Bar with All Controls #}
+            {# Action Bar with Pagination on Left - MOVED ABOVE TABLE #}
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-3">
-                    {# Select All Checkbox #}
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="selectAllTrades">
-                        <label class="form-check-label" for="selectAllTrades">Select All</label>
+                    {# MOVED: Pagination controls to left side #}
+                    {% if pagination.pages > 1 or pagination.total > 10 %}
+                    <div class="d-flex align-items-center gap-3 pagination-controls">
+                        {# Results Summary #}
+                        <div class="text-muted">
+                            Trades {{ pagination.per_page * (pagination.page - 1) + 1 }} to {{ pagination.per_page * (pagination.page - 1) + trades|length }} of {{ pagination.total }}
+                        </div>
+
+                        {# Page Size Dropdown #}
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small">Page Size:</span>
+                            <select id="pageSizeDropdown" class="form-select form-select-sm" style="width: 80px;" onchange="changePageSize(this.value)">
+                                <option value="25" {{ 'selected' if request.args.get('per_page', '25')|string == '25' else '' }}>25</option>
+                                <option value="50" {{ 'selected' if request.args.get('per_page', '25')|string == '50' else '' }}>50</option>
+                                <option value="100" {{ 'selected' if request.args.get('per_page', '25')|string == '100' else '' }}>100</option>
+                                <option value="250" {{ 'selected' if request.args.get('per_page', '25')|string == '250' else '' }}>250</option>
+                            </select>
+                        </div>
+
+                        {# Navigation Arrows and Page Info #}
+                        {% if pagination.pages > 1 %}
+                        <div class="d-flex align-items-center gap-2">
+                            {# First Page Arrow #}
+                            {% if pagination.page > 1 %}
+                            {% set args_without_page = request.args.copy() %}
+                            {% set _ = args_without_page.pop('page', None) %}
+                            <a href="{{ url_for('trades.view_trades_list', page=1, **args_without_page) }}" class="pagination-arrow-grey" title="First Page">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                            {% else %}
+                            <span class="pagination-arrow-grey disabled" title="First Page">
+                                <i class="fas fa-angle-double-left"></i>
+                            </span>
+                            {% endif %}
+
+                            {# Previous Page Arrow #}
+                            {% if pagination.has_prev %}
+                            {% set args_without_page = request.args.copy() %}
+                            {% set _ = args_without_page.pop('page', None) %}
+                            <a href="{{ url_for('trades.view_trades_list', page=pagination.prev_num, **args_without_page) }}" class="pagination-arrow-grey" title="Previous Page">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                            {% else %}
+                            <span class="pagination-arrow-grey disabled" title="Previous Page">
+                                <i class="fas fa-angle-left"></i>
+                            </span>
+                            {% endif %}
+
+                            {# Page X of Y - Clean Style #}
+                            <span class="pagination-info">
+                                Page {{ pagination.page }} of {{ pagination.pages }}
+                            </span>
+
+                            {# Next Page Arrow #}
+                            {% if pagination.has_next %}
+                            {% set args_without_page = request.args.copy() %}
+                            {% set _ = args_without_page.pop('page', None) %}
+                            <a href="{{ url_for('trades.view_trades_list', page=pagination.next_num, **args_without_page) }}" class="pagination-arrow-grey" title="Next Page">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                            {% else %}
+                            <span class="pagination-arrow-grey disabled" title="Next Page">
+                                <i class="fas fa-angle-right"></i>
+                            </span>
+                            {% endif %}
+
+                            {# Last Page Arrow #}
+                            {% if pagination.page < pagination.pages %}
+                            {% set args_without_page = request.args.copy() %}
+                            {% set _ = args_without_page.pop('page', None) %}
+                            <a href="{{ url_for('trades.view_trades_list', page=pagination.pages, **args_without_page) }}" class="pagination-arrow-grey" title="Last Page">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                            {% else %}
+                            <span class="pagination-arrow-grey disabled" title="Last Page">
+                                <i class="fas fa-angle-double-right"></i>
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
+                    {% endif %}
 
                     {# Active Filter Indicators #}
                     {% set active_filters = [] %}
@@ -402,314 +654,295 @@ console.log('✅ All functions loaded and ready!');
                         <span id="filterToggleText">Show Filters</span>
                         <i class="fas fa-chevron-down ms-1" id="filterToggleIcon"></i>
                     </button>
-
-                    {# Delete Selected Button - At the end #}
-                    <button type="button" onclick="confirmBulkDelete()" class="action-btn btn-outline-danger">
-                        <i class="fas fa-trash-alt me-1"></i> Delete Selected
-                    </button>
                 </div>
             </div>
 
-            {# Bulk Delete Form - FIXED FORM ACTION #}
-            <form method="POST" action="{{ url_for('trades.bulk_delete_trades') }}" id="bulkDeleteForm">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            {# Trades Table with proper container #}
+            <div>
+                <div class="table-container">
+                    <table class="table table-hover mb-0 table-fixed">
+                        <thead class="table-dark sticky-header">
+                            <tr>
+                                {# REORGANIZED: New header order with chevron first #}
+                                <th width="30" class="text-center table-header-clean"></th>
+                                <th width="80" class="sortable" data-sort="date">
+                                    Date <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th width="80" class="sortable" data-sort="instrument">
+                                    Instrument <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th width="120" class="sortable" data-sort="model">
+                                    Model <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th width="70" class="sortable" data-sort="direction">
+                                    Direction <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th width="60" class="sortable" data-sort="contracts">
+                                    Contracts <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th width="70" class="sortable" data-sort="entry_time">
+                                    Entry Time <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th width="80" class="sortable" data-sort="entry">
+                                    Entry Price <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th width="80" class="sortable" data-sort="exit">
+                                    Exit Price <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th width="90">Time in Trade</th>
+                                <th width="90" class="sortable" data-sort="how_closed">
+                                    How Closed <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th width="80" class="sortable" data-sort="avg_rating">
+                                    Avg Rating <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th width="90" class="sortable" data-sort="pnl">
+                                    P&L <i class="fas fa-sort sort-icon"></i>
+                                </th>
+                                <th width="160"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for trade in trades %}
+                        <!-- Main trade row - REORGANIZED ORDER -->
+                        <tr class="trade-row {% if trade.gross_pnl > 0 %}table-success-subtle{% elif trade.gross_pnl < 0 %}table-danger-subtle{% endif %}"
+                            data-trade-id="{{ trade.id }}" onclick="toggleTradeDetails({{ trade.id }})">
 
-                {# Trades Table with fixed layout #}
-                <div class="card">
-                    <div class="card-body p-0">
-                        <div class="table-container">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0 table-fixed">
-                                    <thead class="table-dark sticky-header">
-                                        <tr>
-                                            <th width="30" class="text-center"><i class="fas fa-chevron-right"></i></th>
-                                            <th width="40" class="text-center"><i class="fas fa-check-square"></i></th>
-                                            <th width="80" class="sortable" data-sort="date">
-                                                Date <i class="fas fa-sort sort-icon"></i>
-                                            </th>
-                                            <th width="80" class="sortable" data-sort="instrument">
-                                                Instrument <i class="fas fa-sort sort-icon"></i>
-                                            </th>
-                                            <th width="70" class="sortable" data-sort="direction">
-                                                Direction <i class="fas fa-sort sort-icon"></i>
-                                            </th>
-                                            <th width="120" class="sortable" data-sort="model">
-                                                Model <i class="fas fa-sort sort-icon"></i>
-                                            </th>
-                                            <th width="80" class="sortable" data-sort="entry">
-                                                Entry <i class="fas fa-sort sort-icon"></i>
-                                            </th>
-                                            <th width="80" class="sortable" data-sort="exit">
-                                                Exit <i class="fas fa-sort sort-icon"></i>
-                                            </th>
-                                            <th width="70" class="sortable" data-sort="entry_time">
-                                                Entry Time <i class="fas fa-sort sort-icon"></i>
-                                            </th>
-                                            <th width="90">Time in Trade</th>
-                                            <th width="60" class="sortable" data-sort="contracts">
-                                                Contracts <i class="fas fa-sort sort-icon"></i>
-                                            </th>
-                                            <th width="90" class="sortable" data-sort="pnl">
-                                                P&L <i class="fas fa-sort sort-icon"></i>
-                                            </th>
-                                            <th width="90" class="sortable" data-sort="how_closed">
-                                                How Closed <i class="fas fa-sort sort-icon"></i>
-                                            </th>
-                                            <th width="120">Tags</th>
-                                            <th width="160">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for trade in trades %}
-                                    <!-- Main trade row -->
-                                    <tr class="trade-row {% if trade.gross_pnl > 0 %}table-success-subtle{% elif trade.gross_pnl < 0 %}table-danger-subtle{% endif %}"
-                                        data-trade-id="{{ trade.id }}" onclick="toggleTradeDetails({{ trade.id }})">
+                            <!-- Dropdown arrow -->
+                            <td class="text-center">
+                                <i class="fas fa-chevron-right chevron-icon" id="chevron-{{ trade.id }}"></i>
+                            </td>
 
-                                        <!-- Dropdown arrow -->
-                                        <td class="text-center">
-                                            <i class="fas fa-chevron-right chevron-icon" id="chevron-{{ trade.id }}"></i>
-                                        </td>
+                            <!-- Date -->
+                            <td>{{ trade.trade_date.strftime('%d %b %y') }}</td>
 
-                                        <!-- Checkbox - FIXED FIELD NAME -->
-                                        <td onclick="event.stopPropagation()">
-                                            <div class="form-check">
-                                                <input class="form-check-input trade-checkbox" type="checkbox" name="trade_ids" value="{{ trade.id }}" id="trade_{{ trade.id }}">
-                                                <label class="form-check-label" for="trade_{{ trade.id }}"></label>
-                                            </div>
-                                        </td>
+                            <!-- Instrument -->
+                            <td>{{ trade.instrument }}</td>
 
-                                        <!-- Date -->
-                                        <td>{{ trade.trade_date.strftime('%d %b %y') }}</td>
+                            <!-- Model -->
+                            <td>
+                                {% if trade.trading_model %}
+                                    {{ trade.trading_model.name }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
 
-                                        <!-- Instrument -->
-                                        <td><strong>{{ trade.instrument }}</strong></td>
+                            <!-- Direction - Transparent with PROPERLY colored text -->
+                            <td>
+                                {% if trade.direction == 'Long' %}
+                                    <span class="badge-transparent" style="color: #198754 !important; font-weight: bold;">{{ trade.direction }}</span>
+                                {% elif trade.direction == 'Short' %}
+                                    <span class="badge-transparent" style="color: #dc3545 !important; font-weight: bold;">{{ trade.direction }}</span>
+                                {% else %}
+                                    <span class="badge-transparent" style="color: #6c757d !important; font-weight: bold;">{{ trade.direction }}</span>
+                                {% endif %}
+                            </td>
 
-                                        <!-- Direction -->
-                                        <td>
-                                            <span class="badge {% if trade.direction == 'Long' %}bg-success{% elif trade.direction == 'Short' %}bg-danger{% else %}bg-secondary{% endif %}">
-                                                {{ trade.direction }}
-                                            </span>
-                                        </td>
+                            <!-- Contracts -->
+                            <td>{{ trade.total_contracts_entered }}</td>
 
-                                        <!-- Model -->
-                                        <td>
-                                            {% if trade.trading_model %}
-                                                <small class="text-muted">{{ trade.trading_model.name }}</small>
-                                            {% else %}
-                                                <small class="text-muted">N/A</small>
-                                            {% endif %}
-                                        </td>
+                            <!-- Entry Time -->
+                            <td>
+                                {% if trade.entries.first() and trade.entries.first().entry_time %}
+                                    {{ trade.entries.first().entry_time.strftime('%H:%M') }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
 
-                                        <!-- Entry Price -->
-                                        <td>
-                                            {% if trade.average_entry_price is not none %}
-                                                {{ "%.2f"|format(trade.average_entry_price) }}
-                                            {% else %}
-                                                <span class="text-muted">N/A</span>
-                                            {% endif %}
-                                        </td>
+                            <!-- Entry Price -->
+                            <td>
+                                {% if trade.average_entry_price is not none %}
+                                    {{ "%.2f"|format(trade.average_entry_price) }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
 
-                                        <!-- Exit Price -->
-                                        <td>
-                                            {% if trade.average_exit_price is not none %}
-                                                {{ "%.2f"|format(trade.average_exit_price) }}
-                                            {% else %}
-                                                <span class="text-warning">Open</span>
-                                            {% endif %}
-                                        </td>
+                            <!-- Exit Price -->
+                            <td>
+                                {% if trade.average_exit_price is not none %}
+                                    {{ "%.2f"|format(trade.average_exit_price) }}
+                                {% else %}
+                                    Open
+                                {% endif %}
+                            </td>
 
-                                        <!-- Entry Time -->
-                                        <td>
-                                            {% if trade.entries.first() and trade.entries.first().entry_time %}
-                                                {{ trade.entries.first().entry_time.strftime('%H:%M') }}
-                                            {% else %}
-                                                <span class="text-muted">N/A</span>
-                                            {% endif %}
-                                        </td>
+                            <!-- Time in Trade -->
+                            <td>
+                                {% if trade.time_in_trade %}
+                                    {{ trade.time_in_trade }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
 
-                                        <!-- Time in Trade -->
-                                        <td>
-                                            {% if trade.time_in_trade %}
-                                                {{ trade.time_in_trade }}
-                                            {% else %}
-                                                <span class="text-muted">N/A</span>
-                                            {% endif %}
-                                        </td>
+                            <!-- How Closed -->
+                            <td>
+                                {% if trade.how_closed %}
+                                    {{ trade.how_closed }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
 
-                                        <!-- Contracts -->
-                                        <td>{{ trade.total_contracts_entered }}</td>
+                            <!-- Average Rating - WITH PROPER COLORING -->
+                            <td>
+                                {% if trade.entry_rating or trade.management_rating or trade.rules_rating or trade.target_rating or trade.preparation_rating %}
+                                    {% set ratings = [] %}
+                                    {% if trade.preparation_rating %}{% set _ = ratings.append(trade.preparation_rating) %}{% endif %}
+                                    {% if trade.rules_rating %}{% set _ = ratings.append(trade.rules_rating) %}{% endif %}
+                                    {% if trade.management_rating %}{% set _ = ratings.append(trade.management_rating) %}{% endif %}
+                                    {% if trade.target_rating %}{% set _ = ratings.append(trade.target_rating) %}{% endif %}
+                                    {% if trade.entry_rating %}{% set _ = ratings.append(trade.entry_rating) %}{% endif %}
+                                    {% set avg_rating = (ratings|sum / ratings|length)|round(1) %}
+                                    {% if avg_rating >= 4 %}
+                                        <span style="color: #198754 !important; font-weight: bold;">{{ avg_rating }}</span>
+                                    {% elif avg_rating >= 3 %}
+                                        <span style="color: #ffc107 !important; font-weight: bold;">{{ avg_rating }}</span>
+                                    {% else %}
+                                        <span style="color: #dc3545 !important; font-weight: bold;">{{ avg_rating }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span style="color: #6c757d !important;">Not Rated</span>
+                                {% endif %}
+                            </td>
 
-                                        <!-- P&L -->
-                                        <td>
-                                            <span class="{% if trade.gross_pnl > 0 %}text-success{% elif trade.gross_pnl < 0 %}text-danger{% else %}text-muted{% endif %}">
-                                                ${{ "%.2f"|format(trade.gross_pnl) }}
-                                            </span>
-                                        </td>
+                            <!-- P&L - Transparent with PROPERLY colored text -->
+                            <td>
+                                {% if trade.gross_pnl > 0 %}
+                                    <span class="badge-transparent" style="color: #198754 !important; font-weight: bold;">
+                                        ${{ "%.2f"|format(trade.gross_pnl) }}
+                                    </span>
+                                {% elif trade.gross_pnl < 0 %}
+                                    <span class="badge-transparent" style="color: #dc3545 !important; font-weight: bold;">
+                                        ${{ "%.2f"|format(trade.gross_pnl) }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge-transparent" style="color: #6c757d !important; font-weight: bold;">
+                                        ${{ "%.2f"|format(trade.gross_pnl) }}
+                                    </span>
+                                {% endif %}
+                            </td>
 
-                                        <!-- How Closed -->
-                                        <td>
-                                            {% if trade.how_closed %}
-                                                <small class="text-muted">{{ trade.how_closed }}</small>
-                                            {% else %}
-                                                <span class="text-muted">-</span>
-                                            {% endif %}
-                                        </td>
+                            <!-- Actions - Right aligned -->
+                            <td onclick="event.stopPropagation()" style="text-align: right;">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{{ url_for('journal.manage_daily_journal', date_str=trade.trade_date.strftime('%Y-%m-%d')) }}"
+                                       class="btn btn-outline-secondary btn-sm"
+                                       title="View Daily Journal for {{ trade.trade_date.strftime('%d %b %Y') }}">
+                                        <i class="fas fa-book"></i>
+                                    </a>
+                                    <a href="{{ url_for('trades.view_trade_detail', trade_id=trade.id) }}"
+                                       class="btn btn-outline-primary btn-sm" title="View Trade">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('trades.edit_trade', trade_id=trade.id) }}"
+                                       class="btn btn-outline-warning btn-sm" title="Edit Trade">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-sm"
+                                            onclick="confirmSingleDelete({{ trade.id }}, '{{ trade.trade_date.strftime('%m/%d/%Y') }}', '{{ trade.instrument }}', '{{ trade.direction }}')"
+                                            title="Delete Trade">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
 
-                                        <!-- Tags -->
-                                        <td>
-                                            {% if trade.tags %}
-                                                {% for tag in trade.tags[:2] %}
-                                                    <span class="badge badge-sm me-1 {{ tag|tag_color }}">{{ tag.name }}</span>
-                                                {% endfor %}
-                                                {% if trade.tags|length > 2 %}
-                                                    <span class="text-muted small">+{{ trade.tags|length - 2 }}</span>
-                                                {% endif %}
-                                            {% else %}
-                                                <span class="text-muted">-</span>
-                                            {% endif %}
-                                        </td>
-
-                                        <!-- Actions -->
-                                        <td onclick="event.stopPropagation()">
-                                            <div class="btn-group btn-group-sm" role="group">
-                                                <a href="{{ url_for('journal.manage_daily_journal', date_str=trade.trade_date.strftime('%Y-%m-%d')) }}"
-                                                   class="btn btn-outline-secondary btn-sm"
-                                                   title="View Daily Journal for {{ trade.trade_date.strftime('%d %b %Y') }}">
-                                                    <i class="fas fa-book"></i>
-                                                </a>
-                                                <a href="{{ url_for('trades.view_trade_detail', trade_id=trade.id) }}"
-                                                   class="btn btn-outline-primary btn-sm" title="View Trade">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <a href="{{ url_for('trades.edit_trade', trade_id=trade.id) }}"
-                                                   class="btn btn-outline-warning btn-sm" title="Edit Trade">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-outline-danger btn-sm"
-                                                        onclick="confirmSingleDelete({{ trade.id }}, '{{ trade.trade_date.strftime('%m/%d/%Y') }}', '{{ trade.instrument }}', '{{ trade.direction }}')"
-                                                        title="Delete Trade">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- Expandable details row -->
-                                    <tr class="trade-details-row" id="details-{{ trade.id }}" style="display: none;">
-                                        <td colspan="15" class="p-0">
-                                            <div class="trade-details-content p-3" style="background-color: var(--bs-light);">
-                                                <div class="row">
-                                                    <!-- Left Column - Entry/Exit Details -->
-                                                    <div class="col-md-4">
-                                                        <h6><i class="fas fa-sign-in-alt me-1"></i>Entry Details</h6>
-                                                        {% if trade.entries.count() > 0 %}
-                                                            {% for entry in trade.entries %}
-                                                            <div class="small mb-1">
-                                                                <strong>#{{ loop.index }}:</strong> {{ entry.contracts }} contracts @ {{ "%.2f"|format(entry.entry_price) }}
-                                                                <span class="text-muted">({{ entry.entry_time.strftime('%H:%M') if entry.entry_time else 'N/A' }})</span>
-                                                            </div>
-                                                            {% endfor %}
-                                                            <div class="text-muted small mt-1">
-                                                                <strong>Total:</strong> {{ trade.total_contracts_entered }} contracts @ avg {{ "%.2f"|format(trade.average_entry_price) if trade.average_entry_price else 'N/A' }}
-                                                            </div>
-                                                        {% else %}
-                                                            <div class="text-muted small">No entry data</div>
-                                                        {% endif %}
-
-                                                        <h6 class="mt-3"><i class="fas fa-sign-out-alt me-1"></i>Exit Details</h6>
-                                                        {% if trade.exits.count() > 0 %}
-                                                            {% for exit in trade.exits %}
-                                                            <div class="small mb-1">
-                                                                <strong>#{{ loop.index }}:</strong> {{ exit.contracts }} contracts @ {{ "%.2f"|format(exit.exit_price) }}
-                                                                <span class="text-muted">({{ exit.exit_time.strftime('%H:%M') if exit.exit_time else 'N/A' }})</span>
-                                                            </div>
-                                                            {% endfor %}
-                                                            <div class="text-muted small mt-1">
-                                                                <strong>Total:</strong> {{ trade.total_contracts_exited }} contracts @ avg {{ "%.2f"|format(trade.average_exit_price) if trade.average_exit_price else 'N/A' }}
-                                                            </div>
-                                                        {% else %}
-                                                            <div class="text-muted small">No exit data</div>
-                                                        {% endif %}
-                                                    </div>
-
-                                                    <!-- Middle Column - Performance Metrics -->
-                                                    <div class="col-md-4">
-                                                        <h6><i class="fas fa-chart-line me-1"></i>Performance</h6>
-                                                        <div class="small mb-1">
-                                                            <strong>R-Multiple:</strong>
-                                                            {% if trade.pnl_in_r is not none %}
-                                                                <span class="{% if trade.pnl_in_r > 0 %}text-success{% elif trade.pnl_in_r < 0 %}text-danger{% else %}text-muted{% endif %}">
-                                                                    {{ "%.2f"|format(trade.pnl_in_r) }}R
-                                                                </span>
-                                                            {% else %}
-                                                                <span class="text-muted">N/A</span>
-                                                            {% endif %}
-                                                        </div>
-                                                        <div class="small mb-1"><strong>MAE:</strong> {{ trade.mae if trade.mae else 'N/A' }} points</div>
-                                                        <div class="small mb-1"><strong>MFE:</strong> {{ trade.mfe if trade.mfe else 'N/A' }} points</div>
-                                                        <div class="small mb-1"><strong>Stop Loss:</strong> {{ trade.initial_stop_loss if trade.initial_stop_loss else 'N/A' }}</div>
-                                                        <div class="small mb-1"><strong>Target:</strong> {{ trade.terminus_target if trade.terminus_target else 'N/A' }}</div>
-                                                        {% if trade.news_event %}
-                                                        <div class="small mb-1"><strong>News:</strong> {{ trade.news_event }}</div>
-                                                        {% endif %}
-                                                    </div>
-
-                                                    <!-- Right Column - Ratings & Tags -->
-                                                    <div class="col-md-4">
-                                                        <h6><i class="fas fa-star me-1"></i>Ratings</h6>
-                                                        <div class="small mb-1"><strong>Entry:</strong> {{ trade.entry_rating if trade.entry_rating else 'N/A' }}/5</div>
-                                                        <div class="small mb-1"><strong>Management:</strong> {{ trade.management_rating if trade.management_rating else 'N/A' }}/5</div>
-                                                        <div class="small mb-1"><strong>Rules:</strong> {{ trade.rules_rating if trade.rules_rating else 'N/A' }}/5</div>
-
-                                                        {% if trade.tags %}
-                                                        <h6 class="mt-3"><i class="fas fa-tags me-1"></i>All Tags</h6>
-                                                        <div>
-                                                            {% for tag in trade.tags %}
-                                                                <span class="badge badge-sm me-1 mb-1 {{ tag|tag_color }}">{{ tag.name }}</span>
-                                                            {% endfor %}
-                                                        </div>
-                                                        {% endif %}
-
-                                                        {% if trade.trade_notes %}
-                                                        <h6 class="mt-3"><i class="fas fa-sticky-note me-1"></i>Notes</h6>
-                                                        <div class="small text-muted">{{ trade.trade_notes[:100] }}{% if trade.trade_notes|length > 100 %}...{% endif %}</div>
-                                                        {% endif %}
-                                                    </div>
+                        <!-- Expandable details row -->
+                        <tr class="trade-details-row" id="details-{{ trade.id }}" style="display: none;">
+                            <td colspan="14" class="p-0">
+                                <div class="trade-details-content p-3" style="background-color: var(--bs-light);">
+                                    <div class="row">
+                                        <!-- Left Column - Entry/Exit Details -->
+                                        <div class="col-md-4">
+                                            <h6><i class="fas fa-sign-in-alt me-1"></i>Entry Details</h6>
+                                            {% if trade.entries.count() > 0 %}
+                                                {% for entry in trade.entries %}
+                                                <div class="small mb-1">
+                                                    <strong>#{{ loop.index }}:</strong> {{ entry.contracts }} contracts @ {{ "%.2f"|format(entry.entry_price) }}
+                                                    <span class="text-muted">({{ entry.entry_time.strftime('%H:%M') if entry.entry_time else 'N/A' }})</span>
                                                 </div>
+                                                {% endfor %}
+                                                <div class="text-muted small mt-1">
+                                                    <strong>Total:</strong> {{ trade.total_contracts_entered }} contracts @ avg {{ "%.2f"|format(trade.average_entry_price) if trade.average_entry_price else 'N/A' }}
+                                                </div>
+                                            {% else %}
+                                                <div class="text-muted small">No entry data</div>
+                                            {% endif %}
+
+                                            <h6 class="mt-3"><i class="fas fa-sign-out-alt me-1"></i>Exit Details</h6>
+                                            {% if trade.exits.count() > 0 %}
+                                                {% for exit in trade.exits %}
+                                                <div class="small mb-1">
+                                                    <strong>#{{ loop.index }}:</strong> {{ exit.contracts }} contracts @ {{ "%.2f"|format(exit.exit_price) }}
+                                                    <span class="text-muted">({{ exit.exit_time.strftime('%H:%M') if exit.exit_time else 'N/A' }})</span>
+                                                </div>
+                                                {% endfor %}
+                                                <div class="text-muted small mt-1">
+                                                    <strong>Total:</strong> {{ trade.total_contracts_exited }} contracts @ avg {{ "%.2f"|format(trade.average_exit_price) if trade.average_exit_price else 'N/A' }}
+                                                </div>
+                                            {% else %}
+                                                <div class="text-muted small">No exit data</div>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- Middle Column - Performance Metrics -->
+                                        <div class="col-md-4">
+                                            <h6><i class="fas fa-chart-line me-1"></i>Performance</h6>
+                                            <div class="small mb-1">
+                                                <strong>R-Multiple:</strong>
+                                                {% if trade.pnl_in_r is not none %}
+                                                    <span class="{% if trade.pnl_in_r > 0 %}text-success{% elif trade.pnl_in_r < 0 %}text-danger{% else %}text-muted{% endif %}">
+                                                        {{ "%.2f"|format(trade.pnl_in_r) }}R
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted">N/A</span>
+                                                {% endif %}
                                             </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
+                                            <div class="small mb-1"><strong>MAE:</strong> {{ trade.mae if trade.mae else 'N/A' }} points</div>
+                                            <div class="small mb-1"><strong>MFE:</strong> {{ trade.mfe if trade.mfe else 'N/A' }} points</div>
+                                            <div class="small mb-1"><strong>Stop Loss:</strong> {{ trade.initial_stop_loss if trade.initial_stop_loss else 'N/A' }}</div>
+                                            <div class="small mb-1"><strong>Target:</strong> {{ trade.terminus_target if trade.terminus_target else 'N/A' }}</div>
+                                            {% if trade.news_event %}
+                                            <div class="small mb-1"><strong>News:</strong> {{ trade.news_event }}</div>
+                                            {% endif %}
+                                        </div>
 
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </form>
+                                        <!-- Right Column - Ratings & Tags -->
+                                        <div class="col-md-4">
+                                            <h6><i class="fas fa-star me-1"></i>Ratings</h6>
+                                            <div class="small mb-1"><strong>Preparation:</strong> {{ trade.preparation_rating if trade.preparation_rating else 'N/A' }}/5</div>
+                                            <div class="small mb-1"><strong>Rules:</strong> {{ trade.rules_rating if trade.rules_rating else 'N/A' }}/5</div>
+                                            <div class="small mb-1"><strong>Management:</strong> {{ trade.management_rating if trade.management_rating else 'N/A' }}/5</div>
+                                            <div class="small mb-1"><strong>Target:</strong> {{ trade.target_rating if trade.target_rating else 'N/A' }}/5</div>
+                                            <div class="small mb-1"><strong>Entry:</strong> {{ trade.entry_rating if trade.entry_rating else 'N/A' }}/5</div>
 
-            {# USE EXISTING PAGINATION MACRO - MUCH SIMPLER #}
-            {% if pagination.pages > 1 or pagination.total > 10 %}
-            <div class="d-flex justify-content-center mt-4 mb-4">
-                <div class="d-flex align-items-center gap-3">
-                    <!-- Page Size Dropdown -->
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="text-white-50 small">Show:</span>
-                        <select id="pageSizeDropdown" class="form-select form-select-sm" style="width: 70px;" onchange="changePageSize(this.value)">
-                            <option value="10" {{ 'selected' if request.args.get('per_page', '10') == '10' else '' }}>10</option>
-                            <option value="25" {{ 'selected' if request.args.get('per_page', '10') == '25' else '' }}>25</option>
-                            <option value="50" {{ 'selected' if request.args.get('per_page', '10') == '50' else '' }}>50</option>
-                            <option value="100" {{ 'selected' if request.args.get('per_page', '10') == '100' else '' }}>100</option>
-                        </select>
-                    </div>
+                                            {% if trade.tags %}
+                                            <h6 class="mt-3"><i class="fas fa-tags me-1"></i>All Tags</h6>
+                                            <div>
+                                                {% for tag in trade.tags %}
+                                                    <span class="badge badge-sm me-1 mb-1 {{ tag|tag_color }}">{{ tag.name }}</span>
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
 
-                    <!-- Use your existing pagination macro -->
-                    {% if pagination.pages > 1 %}
-                    {{ pagi.render_pagination(pagination, 'trades.view_trades_list', request.args) }}
-                    {% endif %}
+                                            {% if trade.trade_notes %}
+                                            <h6 class="mt-3"><i class="fas fa-sticky-note me-1"></i>Notes</h6>
+                                            <div class="small text-muted">{{ trade.trade_notes[:100] }}{% if trade.trade_notes|length > 100 %}...{% endif %}</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            {% endif %}
 
         {% else %}
             {# No Trades Message with Action Buttons #}
@@ -774,162 +1007,92 @@ console.log('✅ All functions loaded and ready!');
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/custom-modals.js') }}"></script>
 <script>
-// GLOBAL FUNCTIONS - DEFINED FIRST
-function toggleTradeDetails(tradeId) {
-    console.log('toggleTradeDetails called with tradeId:', tradeId);
-    const detailsRow = document.getElementById('details-' + tradeId);
-    const chevron = document.getElementById('chevron-' + tradeId);
-
-    if (detailsRow && chevron) {
-        if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
-            detailsRow.style.display = 'table-row';
-            chevron.classList.remove('fa-chevron-right');
-            chevron.classList.add('fa-chevron-down');
-            console.log('✓ Showing details for trade', tradeId);
-        } else {
-            detailsRow.style.display = 'none';
-            chevron.classList.remove('fa-chevron-down');
-            chevron.classList.add('fa-chevron-right');
-            console.log('✓ Hiding details for trade', tradeId);
-        }
-    } else {
-        console.error('✗ Could not find detailsRow or chevron for trade', tradeId);
-    }
-}
-
-function changePageSize(newSize) {
-    console.log('✓ changePageSize called with:', newSize);
-    const currentParams = new URLSearchParams(window.location.search);
-    currentParams.set('per_page', newSize);
-    currentParams.delete('page'); // Reset to first page
-    const newUrl = '{{ url_for("trades.view_trades_list") }}?' + currentParams.toString();
-    console.log('✓ Redirecting to:', newUrl);
-    window.location.href = newUrl;
-}
-
-// DOM READY
+// DOM READY FUNCTIONS - These run after the page loads
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Ready - Setting up event handlers');
 
-    // 1. PAGE SIZE DROPDOWN - CRITICAL FIX
-    const pageSizeSelect = document.getElementById('pageSize');
-    if (pageSizeSelect) {
-        console.log('✓ Found pageSize select element');
-        pageSizeSelect.addEventListener('change', function(e) {
-            console.log('Page size changed to:', this.value);
-            changePageSize(this.value);
+    // Test function availability
+    console.log('toggleTradeDetails available:', typeof toggleTradeDetails);
+    console.log('confirmSingleDelete available:', typeof confirmSingleDelete);
+
+    // 1. FILTER TOGGLE FUNCTIONALITY
+    const filterToggle = document.querySelector('[data-bs-target="#filterCollapse"]');
+    const filterToggleText = document.getElementById('filterToggleText');
+    const filterToggleIcon = document.getElementById('filterToggleIcon');
+    const filterCollapse = document.getElementById('filterCollapse');
+
+    if (filterToggle && filterCollapse) {
+        filterCollapse.addEventListener('show.bs.collapse', function() {
+            if (filterToggleText) filterToggleText.textContent = 'Hide Filters';
+            if (filterToggleIcon) {
+                filterToggleIcon.classList.remove('fa-chevron-down');
+                filterToggleIcon.classList.add('fa-chevron-up');
+            }
         });
-    } else {
-        console.error('✗ pageSize select element NOT FOUND');
+
+        filterCollapse.addEventListener('hide.bs.collapse', function() {
+            if (filterToggleText) filterToggleText.textContent = 'Show Filters';
+            if (filterToggleIcon) {
+                filterToggleIcon.classList.remove('fa-chevron-up');
+                filterToggleIcon.classList.add('fa-chevron-down');
+            }
+        });
     }
 
-    // 2. TRADE ROW CLICKS - FIX THE ONCLICK ATTRIBUTES
-    // Remove the onclick attributes and add proper event listeners
-    const tradeRows = document.querySelectorAll('.trade-row[data-trade-id]');
-    console.log('Found', tradeRows.length, 'trade rows');
-
-    tradeRows.forEach(function(row, index) {
-        const tradeId = row.getAttribute('data-trade-id');
-        console.log('Setting up click handler for trade row', index, 'with ID:', tradeId);
-
-        row.addEventListener('click', function(e) {
-            console.log('Trade row clicked:', tradeId);
-            console.log('Click target:', e.target);
-
-            // Don't toggle if clicking on checkbox, buttons, or inside them
-            if (e.target.closest('.form-check') ||
-                e.target.closest('.btn') ||
-                e.target.closest('.trade-checkbox')) {
-                console.log('Click ignored - clicked on interactive element');
-                return;
-            }
-
-            console.log('Calling toggleTradeDetails for:', tradeId);
-            toggleTradeDetails(tradeId);
-        });
-    });
-
-    // 3. PREVENT EVENT BUBBLING ON INTERACTIVE ELEMENTS
-    document.querySelectorAll('.trade-checkbox, .btn, .form-check').forEach(element => {
-        element.addEventListener('click', function(e) {
-            console.log('Stopping propagation for:', e.target);
-            e.stopPropagation();
-        });
-    });
-
-    // 4. SORTING HEADERS
+    // 2. SORTING HEADERS
     const sortableHeaders = document.querySelectorAll('.sortable');
     console.log('Found', sortableHeaders.length, 'sortable headers');
 
     sortableHeaders.forEach(header => {
         header.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
+
             const sortField = this.dataset.sort;
+            console.log('🔄 Sorting by:', sortField);
+
+            // Get current URL parameters
             const currentParams = new URLSearchParams(window.location.search);
+            const currentSort = currentParams.get('sort');
+            const currentOrder = currentParams.get('order');
+
+            // Determine new order (toggle between asc/desc)
             let newOrder = 'desc';
-            if (currentParams.get('sort') === sortField && currentParams.get('order') === 'desc') {
+            if (currentSort === sortField && currentOrder === 'desc') {
                 newOrder = 'asc';
             }
-            currentParams.set('sort', sortField);
-            currentParams.set('order', newOrder);
-            currentParams.delete('page');
-            window.location.href = '{{ url_for("trades.view_trades_list") }}?' + currentParams.toString();
+
+            // Build URL manually to avoid conflicts
+            const baseUrl = '{{ url_for("trades.view_trades_list") }}';
+            const params = [];
+
+            // Add sort and order first
+            params.push('sort=' + encodeURIComponent(sortField));
+            params.push('order=' + encodeURIComponent(newOrder));
+
+            // Add other parameters except sort, order, and page
+            for (const pair of currentParams.entries()) {
+                if (pair[0] !== 'sort' && pair[0] !== 'order' && pair[0] !== 'page') {
+                    params.push(encodeURIComponent(pair[0]) + '=' + encodeURIComponent(pair[1]));
+                }
+            }
+
+            const newUrl = baseUrl + (params.length > 0 ? '?' + params.join('&') : '');
+            console.log('🎯 Navigating to:', newUrl);
+            window.location.href = newUrl;
         });
     });
 
-    // 5. SELECT ALL CHECKBOX
-    const selectAllCheckbox = document.getElementById('selectAllTrades');
-    const tradeCheckboxes = document.querySelectorAll('.trade-checkbox');
+    // 3. DEBUG: Check if elements exist
+    const tradeRows = document.querySelectorAll('.trade-row[data-trade-id]');
+    console.log('Found trade rows:', tradeRows.length);
 
-    if (selectAllCheckbox && tradeCheckboxes.length > 0) {
-        selectAllCheckbox.addEventListener('change', function() {
-            tradeCheckboxes.forEach(function(checkbox) {
-                checkbox.checked = selectAllCheckbox.checked;
-            });
-        });
+    const deleteButtons = document.querySelectorAll('button[onclick*="confirmSingleDelete"]');
+    console.log('Found delete buttons:', deleteButtons.length);
 
-        tradeCheckboxes.forEach(function(checkbox) {
-            checkbox.addEventListener('change', function() {
-                const checkedBoxes = document.querySelectorAll('.trade-checkbox:checked');
-                selectAllCheckbox.checked = checkedBoxes.length === tradeCheckboxes.length;
-                selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < tradeCheckboxes.length;
-            });
-        });
-    }
-
-    console.log('✓ All event handlers set up successfully');
+    console.log('✅ All event handlers set up successfully');
 });
-
-// BULK DELETE
-function confirmBulkDelete() {
-    const checkedBoxes = document.querySelectorAll('.trade-checkbox:checked');
-    if (checkedBoxes.length === 0) {
-        alert('Please select at least one trade to delete.');
-        return;
-    }
-    const count = checkedBoxes.length;
-    const message = `Delete ${count} selected trade${count > 1 ? 's' : ''}? This cannot be undone.`;
-    if (confirm(message)) {
-        document.getElementById('bulkDeleteForm').submit();
-    }
-}
-
-// SINGLE DELETE
-function confirmSingleDelete(tradeId, date, instrument, direction) {
-    const message = `Delete trade: ${date} - ${instrument} (${direction})?\n\nThis cannot be undone.`;
-    if (confirm(message)) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = 'csrf_token';
-        csrfToken.value = '{{ csrf_token }}';
-        form.appendChild(csrfToken);
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
 </script>
 {% endblock %}

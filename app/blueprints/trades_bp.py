@@ -210,8 +210,8 @@ def view_trades_list():
     per_page = request.args.get('per_page', 10, type=int)
 
     # Limit per_page to reasonable values
-    if per_page not in [10, 25, 50, 100]:
-        per_page = 10
+    if per_page not in [25, 50, 100, 250]:
+        per_page = 25
 
     trades_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
