@@ -597,14 +597,14 @@
                 </div>
             </form>
 
-            {# Enhanced Pagination with Page Size Control #}
+            {# Simple, Clean Pagination - Centered #}
             {% if pagination.pages > 1 or pagination.total > 10 %}
-            <div class="pagination-container sticky-pagination">
-                <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-center mt-4">
+                <div class="d-flex align-items-center gap-3 p-3 border rounded" style="background-color: #f8f9fa;">
                     <!-- Page Size Control -->
                     <div class="d-flex align-items-center gap-2">
-                        <label for="pageSize" class="form-label mb-0">Page Size:</label>
-                        <select id="pageSize" class="form-select form-select-sm" style="width: auto;" onchange="changePageSize(this.value)">
+                        <span class="small text-muted">Page Size:</span>
+                        <select id="pageSize" class="form-select form-select-sm" style="width: 70px;">
                             <option value="10" {{ 'selected' if request.args.get('per_page', '10') == '10' else '' }}>10</option>
                             <option value="25" {{ 'selected' if request.args.get('per_page', '10') == '25' else '' }}>25</option>
                             <option value="50" {{ 'selected' if request.args.get('per_page', '10') == '50' else '' }}>50</option>
@@ -613,19 +613,54 @@
                     </div>
 
                     <!-- Page Info -->
-                    <div class="page-info">
-                        <span class="text-muted">
-                            {{ ((pagination.page - 1) * pagination.per_page + 1) }} to
-                            {{ (pagination.page * pagination.per_page) if (pagination.page * pagination.per_page) < pagination.total else pagination.total }}
-                            of {{ pagination.total }}
-                        </span>
-                    </div>
+                    <span class="small text-muted">
+                        {{ ((pagination.page - 1) * pagination.per_page + 1) }} to
+                        {{ (pagination.page * pagination.per_page) if (pagination.page * pagination.per_page) < pagination.total else pagination.total }}
+                        of {{ pagination.total }}
+                    </span>
 
-                    <!-- Pagination Controls -->
+                    <!-- Navigation Controls -->
                     {% if pagination.pages > 1 %}
-                    <nav aria-label="Trade pagination">
-                        {{ pagi.render_pagination(pagination, 'trades.view_trades_list', query_params=request.args) }}
-                    </nav>
+                    <div class="btn-group btn-group-sm">
+                        <!-- First Page -->
+                        {% if pagination.page > 1 %}
+                        {% set first_page_args = request.args.copy() %}
+                        {% set _ = first_page_args.update({'page': 1}) %}
+                        <a href="{{ url_for('trades.view_trades_list', **first_page_args) }}" class="btn btn-outline-secondary">
+                            ‹‹
+                        </a>
+                        {% endif %}
+
+                        <!-- Previous Page -->
+                        {% if pagination.has_prev %}
+                        {% set prev_page_args = request.args.copy() %}
+                        {% set _ = prev_page_args.update({'page': pagination.prev_num}) %}
+                        <a href="{{ url_for('trades.view_trades_list', **prev_page_args) }}" class="btn btn-outline-secondary">
+                            ‹
+                        </a>
+                        {% endif %}
+
+                        <!-- Page indicator -->
+                        <span class="btn btn-outline-secondary disabled">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+
+                        <!-- Next Page -->
+                        {% if pagination.has_next %}
+                        {% set next_page_args = request.args.copy() %}
+                        {% set _ = next_page_args.update({'page': pagination.next_num}) %}
+                        <a href="{{ url_for('trades.view_trades_list', **next_page_args) }}" class="btn btn-outline-secondary">
+                            ›
+                        </a>
+                        {% endif %}
+
+                        <!-- Last Page -->
+                        {% if pagination.page < pagination.pages %}
+                        {% set last_page_args = request.args.copy() %}
+                        {% set _ = last_page_args.update({'page': pagination.pages}) %}
+                        <a href="{{ url_for('trades.view_trades_list', **last_page_args) }}" class="btn btn-outline-secondary">
+                            ››
+                        </a>
+                        {% endif %}
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -695,21 +730,23 @@
 
 {% block scripts %}
 <script>
-// Trade details toggle functionality
+// Trade details toggle functionality - MUST BE DEFINED FIRST
 function toggleTradeDetails(tradeId) {
     const detailsRow = document.getElementById('details-' + tradeId);
     const chevron = document.getElementById('chevron-' + tradeId);
 
-    if (detailsRow.style.display === 'none') {
-        detailsRow.style.display = 'table-row';
-        chevron.classList.add('rotated');
-    } else {
-        detailsRow.style.display = 'none';
-        chevron.classList.remove('rotated');
+    if (detailsRow && chevron) {
+        if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
+            detailsRow.style.display = 'table-row';
+            chevron.classList.add('rotated');
+        } else {
+            detailsRow.style.display = 'none';
+            chevron.classList.remove('rotated');
+        }
     }
 }
 
-// Page size change functionality
+// Page size change functionality - MUST BE DEFINED FIRST
 function changePageSize(newSize) {
     const currentParams = new URLSearchParams(window.location.search);
     currentParams.set('per_page', newSize);
@@ -717,8 +754,38 @@ function changePageSize(newSize) {
     window.location.href = '{{ url_for("trades.view_trades_list") }}?' + currentParams.toString();
 }
 
-// Column sorting functionality
+// DOM Ready event handler
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, setting up event handlers...');
+
+    // 1. Fix page size dropdown - CRITICAL FIX
+    const pageSizeSelect = document.getElementById('pageSize');
+    if (pageSizeSelect) {
+        console.log('Found page size select, adding event listener');
+        pageSizeSelect.addEventListener('change', function() {
+            console.log('Page size changed to:', this.value);
+            changePageSize(this.value);
+        });
+    } else {
+        console.log('Page size select not found!');
+    }
+
+    // 2. Set up trade row click handlers for dropdown arrows
+    const tradeRows = document.querySelectorAll('.trade-row');
+    tradeRows.forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            // Don't toggle if clicking on checkbox or buttons
+            if (e.target.closest('.trade-checkbox') || e.target.closest('.btn')) {
+                return;
+            }
+            const tradeId = this.getAttribute('data-trade-id');
+            if (tradeId) {
+                toggleTradeDetails(tradeId);
+            }
+        });
+    });
+
+    // 3. Sortable headers
     const sortableHeaders = document.querySelectorAll('.sortable');
     const urlParams = new URLSearchParams(window.location.search);
     const currentSort = urlParams.get('sort') || 'date';
@@ -749,27 +816,25 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Prevent dropdown toggle when clicking on checkboxes or action buttons
+    // 4. Prevent event bubbling on checkboxes and buttons
     document.querySelectorAll('.trade-checkbox, .btn').forEach(element => {
         element.addEventListener('click', function(e) {
             e.stopPropagation();
         });
     });
 
-    // Filter toggle functionality
+    // 5. Filter toggle functionality
     const filterCollapse = document.getElementById('filterCollapse');
     const filterToggleText = document.getElementById('filterToggleText');
     const filterToggleIcon = document.getElementById('filterToggleIcon');
 
     if (filterCollapse && filterToggleText && filterToggleIcon) {
-        // Handle filter collapse show event
         filterCollapse.addEventListener('show.bs.collapse', function() {
             filterToggleText.textContent = 'Hide Filters';
             filterToggleIcon.classList.remove('fa-chevron-down');
             filterToggleIcon.classList.add('fa-chevron-up');
         });
 
-        // Handle filter collapse hide event
         filterCollapse.addEventListener('hide.bs.collapse', function() {
             filterToggleText.textContent = 'Show Filters';
             filterToggleIcon.classList.remove('fa-chevron-up');
@@ -777,7 +842,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Auto-show filters if any filters are currently active
+    // 6. Auto-show filters if any filters are currently active
     {% set auto_show_filters = [] %}
     {% if filter_form.start_date.data %}{% set _ = auto_show_filters.append('1') %}{% endif %}
     {% if filter_form.end_date.data %}{% set _ = auto_show_filters.append('1') %}{% endif %}
@@ -795,19 +860,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     {% endif %}
 
-    // Bulk delete checkbox functionality
+    // 7. Bulk delete checkbox functionality
     const selectAllCheckbox = document.getElementById('selectAllTrades');
     const tradeCheckboxes = document.querySelectorAll('.trade-checkbox');
 
     if (selectAllCheckbox && tradeCheckboxes.length > 0) {
-        // Handle "Select All" checkbox change
         selectAllCheckbox.addEventListener('change', function() {
             tradeCheckboxes.forEach(function(checkbox) {
                 checkbox.checked = selectAllCheckbox.checked;
             });
         });
 
-        // Handle individual checkbox changes to update "Select All" state
         tradeCheckboxes.forEach(function(checkbox) {
             checkbox.addEventListener('change', function() {
                 const checkedBoxes = document.querySelectorAll('.trade-checkbox:checked');
