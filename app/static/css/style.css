@@ -508,6 +508,13 @@ Custom Flash Message (Notification) Styles
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* Override Bootstrap badge font-weight for tags */
+.badge.tag-good,
+.badge.tag-bad,
+.badge.tag-neutral {
+    font-weight: normal !important;
+}
+
 /* Random's Trading System Tag Colors - Matching Settings Style */
 .tag-good {
     background-color: var(--bs-success-bg-subtle) !important;

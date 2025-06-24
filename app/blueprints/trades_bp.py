@@ -1,25 +1,19 @@
-# Step 1: Update the imports and helper functions in your trades_bp.py
 
-# --- IMPORTS SECTION (Replace the existing imports) ---
 from flask import (Blueprint, render_template, request, redirect,
                    url_for, flash, current_app, Response, abort)
-from ..forms import TradeForm
-from ..models import Trade, Instrument  # Make sure Instrument is imported
-from .. import db
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
+from flask_wtf.csrf import generate_csrf
 import os
 import uuid
 import csv
 import io
 from datetime import date as py_date, datetime as py_datetime, time as py_time
-from app.models import TagUsageStats
-# This import is required for the fix
-from flask_wtf.csrf import generate_csrf
 
+# App imports - NO DUPLICATES
 from app.extensions import db
-from app.models import Trade, EntryPoint, ExitPoint, TradingModel, NewsEventItem, TradeImage, Instrument, Tag, TagCategory
-from app.models import Trade, Tag, EntryPoint, ExitPoint, TradingModel, NewsEventItem, TradeImage, Instrument, TagUsageStats
+from app.models import (Trade, EntryPoint, ExitPoint, TradingModel, NewsEventItem,
+                       TradeImage, Instrument, Tag, TagCategory, TagUsageStats)
 from app.forms import TradeForm, EntryPointForm, ExitPointForm, TradeFilterForm, ImportTradesForm
 from app.utils import (_parse_form_float, _parse_form_int, _parse_form_time,
                        get_news_event_options, record_activity)
@@ -218,12 +212,15 @@ def view_trades_list():
 
 
 # --- ADD TRADE ---
+# Also fix the add_trade function in trades_bp.py
+# Replace the relevant part of add_trade function:
+
 @trades_bp.route('/add', methods=['GET', 'POST'])
 @login_required
 def add_trade():
     form = TradeForm()
 
-    _populate_tags_choices(form)  # Call the function defined above
+    _populate_tags_choices(form)
     _populate_trade_form_choices(form)
 
     if request.method == 'GET':
@@ -236,15 +233,37 @@ def add_trade():
 
     if form.validate_on_submit():
         try:
-            instrument = form.instrument.data
-            point_value_for_trade = Instrument.get_point_value(instrument)
+            # FIXED: Handle instrument properly
+            instrument_id = form.instrument.data
+            if not instrument_id:
+                flash('Please select an instrument.', 'danger')
+                return render_template('trades/add_trade.html',
+                                       title='Log New Trade',
+                                       form=form,
+                                       instrument_point_values=instrument_point_values,
+                                       default_trade_date=py_date.today().strftime('%Y-%m-%d'))
 
+            # Get the instrument object
+            instrument_obj = Instrument.query.get(int(instrument_id))
+            if not instrument_obj:
+                flash('Invalid instrument selected.', 'danger')
+                return render_template('trades/add_trade.html',
+                                       title='Log New Trade',
+                                       form=form,
+                                       instrument_point_values=instrument_point_values,
+                                       default_trade_date=py_date.today().strftime('%Y-%m-%d'))
+
+            # Create new trade
             new_trade = Trade(user_id=current_user.id)
-            # --- (All your new_trade.field = form.field.data assignments remain the same) ---
-            new_trade.instrument = instrument
+
+            # FIXED: Set instrument fields properly
+            new_trade.instrument_id = instrument_obj.id
+            new_trade.instrument_legacy = instrument_obj.symbol
+            new_trade.point_value = instrument_obj.point_value
+
+            # Set other fields
             new_trade.trade_date = form.trade_date.data
             new_trade.direction = form.direction.data
-            new_trade.point_value = point_value_for_trade
             new_trade.initial_stop_loss = _parse_form_float(form.initial_stop_loss.data)
             new_trade.terminus_target = _parse_form_float(form.terminus_target.data)
             new_trade.is_dca = form.is_dca.data
@@ -267,71 +286,58 @@ def add_trade():
             new_trade.trading_model_id = form.trading_model_id.data if form.trading_model_id.data and form.trading_model_id.data != 0 else None
             new_trade.news_event = form.news_event_select.data if form.news_event_select.data else None
 
-            # --- MODIFIED: The old tags assignment has been removed ---
-
             db.session.add(new_trade)
-            db.session.flush()
+            db.session.flush()  # Get the trade ID
 
-            # --- MODIFIED: Added the logic to process and link the selected tags ---
+            # Add entries
+            for entry_form in form.entries:
+                if (entry_form.entry_time.data and entry_form.contracts.data and entry_form.entry_price.data):
+                    new_entry = EntryPoint(
+                        trade_id=new_trade.id,
+                        entry_time=entry_form.entry_time.data,
+                        contracts=entry_form.contracts.data,
+                        entry_price=entry_form.entry_price.data
+                    )
+                    db.session.add(new_entry)
+
+            # Add exits
+            for exit_form in form.exits:
+                if (exit_form.exit_time.data and exit_form.contracts.data and exit_form.exit_price.data):
+                    new_exit = ExitPoint(
+                        trade_id=new_trade.id,
+                        exit_time=exit_form.exit_time.data,
+                        contracts=exit_form.contracts.data,
+                        exit_price=exit_form.exit_price.data
+                    )
+                    db.session.add(new_exit)
+
+            # Add tags
             if form.tags.data:
-                # Filter out any non-digit strings and convert to integers
-                tag_ids = []
                 for tag_id in form.tags.data:
-                    if isinstance(tag_id, str) and tag_id.isdigit():
-                        tag_ids.append(int(tag_id))
-                    elif isinstance(tag_id, int):
-                        tag_ids.append(tag_id)
+                    tag = Tag.query.get(int(tag_id))
+                    if tag and (tag.user_id == current_user.id or tag.is_default):
+                        new_trade.tags.append(tag)
 
-                # Get the actual tag objects
-                selected_tags = Tag.query.filter(Tag.id.in_(tag_ids)).all()
-                new_trade.tags = selected_tags
-                TagUsageStats.record_tag_usage(current_user.id, tag_ids)
-
-                # --- (The rest of the function for processing entries, exits, and images remains the same) ---
-            for entry_data in form.entries.data:
-                if entry_data.get('entry_time') and entry_data.get('contracts') is not None and entry_data.get(
-                        'entry_price') is not None:
-                    entry = EntryPoint(trade_id=new_trade.id, entry_time=entry_data['entry_time'],
-                                       contracts=entry_data['contracts'], entry_price=entry_data['entry_price'])
-                    db.session.add(entry)
-            for exit_data in form.exits.data:
-                if exit_data.get('exit_time') and exit_data.get('contracts') is not None and exit_data.get(
-                        'exit_price') is not None:
-                    exit_point = ExitPoint(trade_id=new_trade.id, exit_time=exit_data['exit_time'],
-                                           contracts=exit_data['contracts'], exit_price=exit_data['exit_price'])
-                    db.session.add(exit_point)
-                elif any(val for key, val in exit_data.items() if key != 'id' and val is not None and val != ''):
-                    flash(
-                        f"An exit for trade was partially filled and not saved. Please provide all of time, contracts, and price for a complete exit log.",
-                        "warning")
+            # Handle image uploads
             if form.trade_images.data:
-                for image_file in form.trade_images.data:
-                    if image_file and _is_allowed_image(image_file.filename):
-                        original_filename = secure_filename(image_file.filename)
-                        file_ext = os.path.splitext(original_filename)[1].lower()
-                        unique_filename = f"{uuid.uuid4().hex}{file_ext}"
-                        upload_folder = current_app.config['UPLOAD_FOLDER']
-                        if not os.path.exists(upload_folder):
-                            os.makedirs(upload_folder)
-                        file_path = os.path.join(upload_folder, unique_filename)
-                        try:
-                            image_file.save(file_path)
-                            trade_image = TradeImage(trade_id=new_trade.id, user_id=current_user.id,
-                                                     filename=original_filename, filepath=unique_filename,
-                                                     filesize=os.path.getsize(file_path), mime_type=image_file.mimetype)
-                            db.session.add(trade_image)
-                        except Exception as e_save:
-                            current_app.logger.error(
-                                f"Failed to save image {original_filename} for trade {new_trade.id}: {e_save}",
-                                exc_info=True)
-                            flash(f"Could not save image: {original_filename}", "warning")
-                    elif image_file:
-                        flash(f"Image type not allowed for file: {image_file.filename}", "warning")
+                for file in form.trade_images.data:
+                    if file and _is_allowed_image(file.filename):
+                        filename = secure_filename(file.filename)
+                        unique_filename = f"{uuid.uuid4().hex}_{filename}"
+                        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
+                        file.save(file_path)
+
+                        new_image = TradeImage(
+                            trade_id=new_trade.id,
+                            filename=filename,
+                            filepath=unique_filename
+                        )
+                        db.session.add(new_image)
+
             db.session.commit()
-            record_activity('trade_logged', f"Logged new trade ID: {new_trade.id} for {new_trade.instrument}")
-            flash(
-                f'Trade for {new_trade.instrument} on {new_trade.trade_date.strftime("%Y-%m-%d")} logged successfully!',
-                'success')
+            record_activity(current_user.id, 'trade_logged',
+                            f'Trade logged for {instrument_obj.symbol} on {new_trade.trade_date}')
+            flash(f'Trade for {instrument_obj.symbol} logged successfully!', 'success')
             return redirect(url_for('trades.view_trades_list'))
 
         except Exception as e:
@@ -363,9 +369,12 @@ def view_trade_detail(trade_id):
 
 
 # --- EDIT TRADE ---
+# Fixed edit_trade function with correct entry/exit handling
 @trades_bp.route('/<int:trade_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_trade(trade_id):
+    from app.models import Instrument
+
     trade_to_edit = db.get_or_404(Trade, trade_id)
     if trade_to_edit.user_id != current_user.id:
         abort(403)
@@ -375,33 +384,62 @@ def edit_trade(trade_id):
     _populate_tags_choices(form)
 
     if request.method == 'GET':
-        while len(form.entries) > 0: form.entries.pop_entry()
+        # FIXED: Properly set instrument field to the ID, not the symbol
+        if trade_to_edit.instrument_id:
+            form.instrument.data = str(trade_to_edit.instrument_id)
+        elif trade_to_edit.instrument_legacy:
+            # Find instrument by symbol and set the ID
+            instrument = Instrument.query.filter_by(
+                symbol=trade_to_edit.instrument_legacy.upper(),
+                is_active=True
+            ).first()
+            if instrument:
+                form.instrument.data = str(instrument.id)
+
+        # Populate entries
+        while len(form.entries) > 0:
+            form.entries.pop_entry()
         for entry in trade_to_edit.entries.all():
             entry_form_data = {
                 'id': entry.id, 'entry_time': entry.entry_time,
                 'contracts': entry.contracts, 'entry_price': entry.entry_price
             }
             form.entries.append_entry(data=entry_form_data)
-        if not form.entries.entries: form.entries.append_entry(None)
+        if not form.entries.entries:
+            form.entries.append_entry(None)
 
-        while len(form.exits) > 0: form.exits.pop_entry()
+        # Populate exits
+        while len(form.exits) > 0:
+            form.exits.pop_entry()
         for exit_item in trade_to_edit.exits.all():
             exit_form_data = {
                 'id': exit_item.id, 'exit_time': exit_item.exit_time,
                 'contracts': exit_item.contracts, 'exit_price': exit_item.exit_price
             }
             form.exits.append_entry(data=exit_form_data)
-        if not form.exits.entries: form.exits.append_entry(None)
+        if not form.exits.entries:
+            form.exits.append_entry(None)
+
+        # Populate tags
         if trade_to_edit.tags:
             form.tags.data = [str(tag.id) for tag in trade_to_edit.tags]
 
     if form.validate_on_submit():
         try:
-            # Populate main trade object fields from the form
-            trade_to_edit.instrument = form.instrument.data
+            # FIXED: Handle instrument assignment properly
+            instrument_id = form.instrument.data
+            if instrument_id:
+                # Set the instrument_id directly
+                trade_to_edit.instrument_id = int(instrument_id)
+                # Also update the legacy field with the symbol for consistency
+                instrument = Instrument.query.get(int(instrument_id))
+                if instrument:
+                    trade_to_edit.instrument_legacy = instrument.symbol
+                    trade_to_edit.point_value = instrument.point_value
+
+            # Rest of the form processing
             trade_to_edit.trade_date = form.trade_date.data
             trade_to_edit.direction = form.direction.data
-            trade_to_edit.point_value = Instrument.get_point_value(form.instrument.data)
             trade_to_edit.initial_stop_loss = _parse_form_float(form.initial_stop_loss.data)
             trade_to_edit.terminus_target = _parse_form_float(form.terminus_target.data)
             trade_to_edit.is_dca = form.is_dca.data
@@ -423,118 +461,119 @@ def edit_trade(trade_id):
             trade_to_edit.errors_notes = form.errors_notes.data
             trade_to_edit.improvements_notes = form.improvements_notes.data
             trade_to_edit.screenshot_link = form.screenshot_link.data
+
+            # FIXED: Handle entries with proper data access
+            existing_entry_ids = {entry.id for entry in trade_to_edit.entries.all()}
+            form_entry_ids = set()
+
+            for entry_form in form.entries:
+                # Check if this entry has an ID (existing entry)
+                entry_id = getattr(entry_form, 'id', None)
+                if entry_id and hasattr(entry_id, 'data') and entry_id.data:
+                    form_entry_ids.add(entry_id.data)
+                    existing_entry = EntryPoint.query.get(entry_id.data)
+                    if existing_entry and existing_entry.trade_id == trade_to_edit.id:
+                        existing_entry.entry_time = entry_form.entry_time.data
+                        existing_entry.contracts = entry_form.contracts.data
+                        existing_entry.entry_price = entry_form.entry_price.data
+                else:
+                    # New entry
+                    if (hasattr(entry_form, 'entry_time') and entry_form.entry_time.data and
+                            hasattr(entry_form, 'contracts') and entry_form.contracts.data and
+                            hasattr(entry_form, 'entry_price') and entry_form.entry_price.data):
+                        new_entry = EntryPoint(
+                            trade_id=trade_to_edit.id,
+                            entry_time=entry_form.entry_time.data,
+                            contracts=entry_form.contracts.data,
+                            entry_price=entry_form.entry_price.data
+                        )
+                        db.session.add(new_entry)
+
+            # Remove deleted entries
+            for entry_id in existing_entry_ids - form_entry_ids:
+                entry_to_delete = EntryPoint.query.get(entry_id)
+                if entry_to_delete:
+                    db.session.delete(entry_to_delete)
+
+            # FIXED: Handle exits with proper data access
+            existing_exit_ids = {exit.id for exit in trade_to_edit.exits.all()}
+            form_exit_ids = set()
+
+            for exit_form in form.exits:
+                # Check if this exit has an ID (existing exit)
+                exit_id = getattr(exit_form, 'id', None)
+                if exit_id and hasattr(exit_id, 'data') and exit_id.data:
+                    form_exit_ids.add(exit_id.data)
+                    existing_exit = ExitPoint.query.get(exit_id.data)
+                    if existing_exit and existing_exit.trade_id == trade_to_edit.id:
+                        existing_exit.exit_time = exit_form.exit_time.data
+                        existing_exit.contracts = exit_form.contracts.data
+                        existing_exit.exit_price = exit_form.exit_price.data
+                else:
+                    # New exit
+                    if (hasattr(exit_form, 'exit_time') and exit_form.exit_time.data and
+                            hasattr(exit_form, 'contracts') and exit_form.contracts.data and
+                            hasattr(exit_form, 'exit_price') and exit_form.exit_price.data):
+                        new_exit = ExitPoint(
+                            trade_id=trade_to_edit.id,
+                            exit_time=exit_form.exit_time.data,
+                            contracts=exit_form.contracts.data,
+                            exit_price=exit_form.exit_price.data
+                        )
+                        db.session.add(new_exit)
+
+            # Remove deleted exits
+            for exit_id in existing_exit_ids - form_exit_ids:
+                exit_to_delete = ExitPoint.query.get(exit_id)
+                if exit_to_delete:
+                    db.session.delete(exit_to_delete)
+
+            # Handle tags
+            trade_to_edit.tags.clear()
             if form.tags.data:
-                # Filter out any non-digit strings and convert to integers
-                tag_ids = []
                 for tag_id in form.tags.data:
-                    if isinstance(tag_id, str) and tag_id.isdigit():
-                        tag_ids.append(int(tag_id))
-                    elif isinstance(tag_id, int):
-                        tag_ids.append(tag_id)
+                    tag = Tag.query.get(int(tag_id))
+                    if tag and (tag.user_id == current_user.id or tag.is_default):
+                        trade_to_edit.tags.append(tag)
 
-                # Get the actual tag objects
-                selected_tags = Tag.query.filter(Tag.id.in_(tag_ids)).all()
-                trade_to_edit.tags = selected_tags
-                TagUsageStats.record_tag_usage(current_user.id, tag_ids)
-            else:
-                trade_to_edit.tags = []
-
-            # Handle Entries: Update existing, Add new, Delete removed
-            current_entry_ids_in_db = {entry.id for entry in trade_to_edit.entries}
-            submitted_entry_ids = set()
-            new_entries_to_add = []
-
-            for entry_form_data in form.entries.data:
-                entry_id = entry_form_data.get('id')
-                if entry_form_data.get('entry_time') and entry_form_data.get(
-                        'contracts') is not None and entry_form_data.get('entry_price') is not None:
-                    if entry_id:
-                        entry_to_update = EntryPoint.query.get(entry_id)
-                        if entry_to_update and entry_to_update.trade_id == trade_to_edit.id:
-                            entry_to_update.entry_time = entry_form_data['entry_time']
-                            entry_to_update.contracts = entry_form_data['contracts']
-                            entry_to_update.entry_price = entry_form_data['entry_price']
-                            submitted_entry_ids.add(entry_id)
-                    else:
-                        new_entries_to_add.append(EntryPoint(
-                            trade_id=trade_to_edit.id, entry_time=entry_form_data['entry_time'],
-                            contracts=entry_form_data['contracts'], entry_price=entry_form_data['entry_price']
-                        ))
-            for id_to_delete in current_entry_ids_in_db - submitted_entry_ids:
-                entry_to_delete = EntryPoint.query.get(id_to_delete)
-                if entry_to_delete: db.session.delete(entry_to_delete)
-            for new_entry in new_entries_to_add:
-                db.session.add(new_entry)
-
-            # Handle Exits: Update existing, Add new, Delete removed
-            current_exit_ids_in_db = {exit_item.id for exit_item in trade_to_edit.exits}
-            submitted_exit_ids = set()
-            new_exits_to_add = []
-            for exit_form_data in form.exits.data:
-                exit_id = exit_form_data.get('id')
-                if exit_form_data.get('exit_time') and exit_form_data.get(
-                        'contracts') is not None and exit_form_data.get('exit_price') is not None:
-                    if exit_id:
-                        exit_to_update = ExitPoint.query.get(exit_id)
-                        if exit_to_update and exit_to_update.trade_id == trade_to_edit.id:
-                            exit_to_update.exit_time = exit_form_data['exit_time']
-                            exit_to_update.contracts = exit_form_data['contracts']
-                            exit_to_update.exit_price = exit_form_data['exit_price']
-                            submitted_exit_ids.add(exit_id)
-                    else:
-                        new_exits_to_add.append(ExitPoint(
-                            trade_id=trade_to_edit.id, exit_time=exit_form_data['exit_time'],
-                            contracts=exit_form_data['contracts'], exit_price=exit_form_data['exit_price']
-                        ))
-            for id_to_delete in current_exit_ids_in_db - submitted_exit_ids:
-                exit_to_delete = ExitPoint.query.get(id_to_delete)
-                if exit_to_delete: db.session.delete(exit_to_delete)
-            for new_exit in new_exits_to_add:
-                db.session.add(new_exit)
-
-            # Handle image deletion
-            for image in trade_to_edit.images:  # Iterate over a copy if modifying the list
-                if request.form.get(f'delete_image_{image.id}'):
-                    image_path_to_delete = os.path.join(current_app.config['UPLOAD_FOLDER'], image.filepath)
-                    if os.path.exists(image_path_to_delete):
+            # Handle images (existing code for image deletion)
+            for key in request.form.keys():
+                if key.startswith('delete_image_'):
+                    image_id = int(key.split('_')[-1])
+                    image_to_delete = TradeImage.query.get(image_id)
+                    if image_to_delete and image_to_delete.trade_id == trade_to_edit.id:
                         try:
-                            os.remove(image_path_to_delete)
+                            os.remove(image_to_delete.full_disk_path)
                         except OSError:
-                            current_app.logger.warning(f"Could not delete image file on disk: {image.filepath}")
-                    db.session.delete(image)
+                            pass
+                        db.session.delete(image_to_delete)
 
-            # Handle new image uploads
+            # Handle new images
             if form.trade_images.data:
-                for image_file in form.trade_images.data:
-                    if image_file and _is_allowed_image(image_file.filename):
-                        original_filename = secure_filename(image_file.filename)
-                        file_ext = os.path.splitext(original_filename)[1].lower()
-                        unique_filename = f"{uuid.uuid4().hex}{file_ext}"
-                        upload_folder = current_app.config['UPLOAD_FOLDER']
-                        file_path = os.path.join(upload_folder, unique_filename)
-                        try:
-                            image_file.save(file_path)
-                            trade_image = TradeImage(
-                                trade_id=trade_to_edit.id, user_id=current_user.id, filename=original_filename,
-                                filepath=unique_filename, filesize=os.path.getsize(file_path),
-                                mime_type=image_file.mimetype)
-                            db.session.add(trade_image)
-                        except Exception as e_save:
-                            current_app.logger.error(
-                                f"Failed to save new image during edit {original_filename} for trade {trade_to_edit.id}: {e_save}",
-                                exc_info=True)
+                for file in form.trade_images.data:
+                    if file and _is_allowed_image(file.filename):
+                        filename = secure_filename(file.filename)
+                        unique_filename = f"{uuid.uuid4().hex}_{filename}"
+                        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
+                        file.save(file_path)
+
+                        new_image = TradeImage(
+                            trade_id=trade_to_edit.id,
+                            filename=filename,
+                            filepath=unique_filename
+                        )
+                        db.session.add(new_image)
 
             db.session.commit()
-            TagUsageStats.cleanup_unused_stats(current_user.id)
             flash('Trade updated successfully!', 'success')
             return redirect(url_for('trades.view_trade_detail', trade_id=trade_to_edit.id))
+
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error editing trade {trade_id}: {e}", exc_info=True)
             flash(f'An error occurred while updating the trade: {str(e)}', 'danger')
 
     # Get instrument point values for JavaScript calculations
-    from app.models import Instrument
     instrument_point_values = Instrument.get_instrument_point_values()
 
     return render_template('trades/edit_trade.html',

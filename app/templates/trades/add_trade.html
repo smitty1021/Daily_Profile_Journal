@@ -210,7 +210,7 @@
     <!-- NEW: Trade Stats Dashboard (Auto-calculated) -->
     <div id="trade-stats-dashboard" class="card mb-4" style="display: none;">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Live Trade Statistics</h5>
+            <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Trade Statistics</h5>
         </div>
         <div class="card-body">
             <div class="row g-3">
@@ -583,183 +583,214 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function calculateStats() {
-        console.log('=== Calculating Stats ===');
+    // Fix for the P&L calculation in edit_trade.html and add_trade.html
+// Replace the calculateStats function with this corrected version:
 
-        try {
-            const instrument = document.querySelector('[name="instrument"]')?.value || '';
-            const direction = document.querySelector('[name="direction"]')?.value || '';
-            const stopLoss = parseFloat(document.querySelector('[name="initial_stop_loss"]')?.value || '0');
-            const target = parseFloat(document.querySelector('[name="terminus_target"]')?.value || '0');
+function calculateStats() {
+    console.log('=== Calculating Stats ===');
 
-            // Get ALL entry data
-            const entryFields = document.querySelectorAll('[name^="entries-"][name$="-entry_price"]');
-            const entryContractFields = document.querySelectorAll('[name^="entries-"][name$="-contracts"]');
-            const entryTimeFields = document.querySelectorAll('[name^="entries-"][name$="-entry_time"]');
+    try {
+        const instrumentSelectElement = document.querySelector('[name="instrument"]');
+        const instrumentId = instrumentSelectElement?.value || '';
+        const direction = document.querySelector('[name="direction"]')?.value || '';
+        const stopLoss = parseFloat(document.querySelector('[name="initial_stop_loss"]')?.value || '0');
+        const target = parseFloat(document.querySelector('[name="terminus_target"]')?.value || '0');
 
-            let totalEntryContracts = 0;
-            let weightedEntryPrice = 0;
-            let firstEntryTime = '';
+        // FIXED: Get point value by looking up the instrument symbol from the select option text
+        let pointValue = 1.0; // Default fallback
 
-            // Calculate weighted average entry price
-            for (let i = 0; i < entryFields.length; i++) {
-                const price = parseFloat(entryFields[i].value || '0');
-                const contracts = parseInt(entryContractFields[i]?.value || '0');
-                const time = entryTimeFields[i]?.value || '';
+        if (instrumentId && instrumentSelectElement) {
+            // Find the selected option and extract the symbol from its text
+            const selectedOption = instrumentSelectElement.querySelector(`option[value="${instrumentId}"]`);
+            if (selectedOption) {
+                const optionText = selectedOption.textContent; // e.g., "NQ (E-mini NASDAQ-100)"
+                // Extract symbol (everything before the first space or parenthesis)
+                const symbolMatch = optionText.match(/^([A-Z]+)/);
+                if (symbolMatch) {
+                    const symbol = symbolMatch[1];
+                    console.log(`Found symbol: ${symbol} for instrument ID: ${instrumentId}`);
 
-                if (price > 0 && contracts > 0) {
-                    weightedEntryPrice += price * contracts;
-                    totalEntryContracts += contracts;
-                    if (!firstEntryTime) firstEntryTime = time;
+                    // Now look up the point value by symbol
+                    if (instrumentPointValues[symbol]) {
+                        pointValue = instrumentPointValues[symbol];
+                        console.log(`Point value for ${symbol}: $${pointValue}`);
+                    } else {
+                        console.warn(`No point value found for symbol: ${symbol}`);
+                        // Fallback to common values
+                        const fallbackValues = {
+                            'NQ': 20.0, 'ES': 50.0, 'YM': 5.0,
+                            'MNQ': 2.0, 'MES': 5.0, 'MYM': 0.5
+                        };
+                        pointValue = fallbackValues[symbol] || 1.0;
+                    }
                 }
             }
-
-            const avgEntryPrice = totalEntryContracts > 0 ? weightedEntryPrice / totalEntryContracts : 0;
-
-            // Get ALL exit data
-            const exitFields = document.querySelectorAll('[name^="exits-"][name$="-exit_price"]');
-            const exitContractFields = document.querySelectorAll('[name^="exits-"][name$="-contracts"]');
-            const exitTimeFields = document.querySelectorAll('[name^="exits-"][name$="-exit_time"]');
-
-            let totalExitContracts = 0;
-            let weightedExitPrice = 0;
-            let lastExitTime = '';
-
-            // Calculate weighted average exit price
-            for (let i = 0; i < exitFields.length; i++) {
-                const price = parseFloat(exitFields[i].value || '0');
-                const contracts = parseInt(exitContractFields[i]?.value || '0');
-                const time = exitTimeFields[i]?.value || '';
-
-                if (price > 0 && contracts > 0) {
-                    weightedExitPrice += price * contracts;
-                    totalExitContracts += contracts;
-                    lastExitTime = time;
-                }
-            }
-
-            const avgExitPrice = totalExitContracts > 0 ? weightedExitPrice / totalExitContracts : 0;
-
-            // Get point value for calculations
-            const pointValue = instrumentPointValues[instrument] || instrumentPointValues['Other'] || 1.0;
-
-            // Show dashboard if we have basic trade data
-            if (avgEntryPrice > 0 && totalEntryContracts > 0) {
-                dashboard.style.display = 'block';
-            } else {
-                dashboard.style.display = 'none';
-                return;
-            }
-
-            // Calculate Risk:Reward
-            let riskRewardText = '--:--';
-            if (avgEntryPrice > 0 && stopLoss > 0 && target > 0) {
-                let risk, reward;
-                if (direction === 'Long') {
-                    risk = Math.abs(avgEntryPrice - stopLoss);
-                    reward = Math.abs(target - avgEntryPrice);
-                } else if (direction === 'Short') {
-                    risk = Math.abs(stopLoss - avgEntryPrice);
-                    reward = Math.abs(avgEntryPrice - target);
-                }
-
-                if (risk > 0) {
-                    const ratio = reward / risk;
-                    riskRewardText = `1:${ratio.toFixed(2)}`;
-                }
-            }
-
-            // Calculate Time in Trade
-            let timeInTradeText = '--:--';
-            if (firstEntryTime && lastExitTime) {
-                const [entryHour, entryMin] = firstEntryTime.split(':').map(Number);
-                const [exitHour, exitMin] = lastExitTime.split(':').map(Number);
-
-                const entryMinutes = entryHour * 60 + entryMin;
-                const exitMinutes = exitHour * 60 + exitMin;
-
-                let diffMinutes = exitMinutes - entryMinutes;
-                if (diffMinutes < 0) diffMinutes += 24 * 60;
-
-                const hours = Math.floor(diffMinutes / 60);
-                const minutes = diffMinutes % 60;
-                timeInTradeText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-            }
-
-            // Calculate Points Risked
-            let pointsRiskedText = '--';
-            let dollarRiskText = '$--';
-            if (avgEntryPrice > 0 && stopLoss > 0 && totalEntryContracts > 0) {
-                let pointsRisk;
-                if (direction === 'Long') {
-                    pointsRisk = Math.abs(avgEntryPrice - stopLoss);
-                } else if (direction === 'Short') {
-                    pointsRisk = Math.abs(stopLoss - avgEntryPrice);
-                }
-
-                if (pointsRisk > 0) {
-                    pointsRiskedText = pointsRisk.toFixed(2);
-                    const dollarRisk = pointsRisk * totalEntryContracts * pointValue;
-                    dollarRiskText = `${dollarRisk.toFixed(2)}`;
-                }
-            }
-
-            // Calculate Gross P&L
-            let grossPnlText = '$--';
-            let pnlClass = '';
-            if (avgEntryPrice > 0 && avgExitPrice > 0 && totalExitContracts > 0) {
-                let pnlPerContract;
-                if (direction === 'Long') {
-                    pnlPerContract = avgExitPrice - avgEntryPrice;
-                } else if (direction === 'Short') {
-                    pnlPerContract = avgEntryPrice - avgExitPrice;
-                }
-
-                const grossPnl = pnlPerContract * totalExitContracts * pointValue;
-                grossPnlText = `${grossPnl.toFixed(2)}`;
-
-                if (grossPnl > 0) {
-                    pnlClass = 'text-profit';
-                } else if (grossPnl < 0) {
-                    pnlClass = 'text-loss';
-                } else {
-                    pnlClass = 'text-breakeven';
-                }
-            }
-
-            // Calculate Overall Trade Rating
-            let overallRatingText = '--/5';
-            const ratings = [
-                'preparation_rating', 'rules_rating', 'management_rating',
-                'target_rating', 'entry_rating'
-            ];
-
-            const ratingValues = ratings.map(name => {
-                const value = parseInt(document.querySelector(`[name="${name}"]`)?.value || '0');
-                return value > 0 ? value : null;
-            }).filter(v => v !== null);
-
-            if (ratingValues.length > 0) {
-                const avgRating = ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length;
-                overallRatingText = `${avgRating.toFixed(1)}/5`;
-            }
-
-            // Update display
-            document.getElementById('risk-reward-display').textContent = riskRewardText;
-            document.getElementById('time-in-trade-display').textContent = timeInTradeText;
-            document.getElementById('points-risked-display').textContent = pointsRiskedText;
-            document.getElementById('dollar-risk-display').textContent = dollarRiskText;
-
-            const pnlElement = document.getElementById('gross-pnl-display');
-            pnlElement.textContent = grossPnlText;
-            pnlElement.className = `fw-bold ${pnlClass}`;
-
-            document.getElementById('overall-rating-display').textContent = overallRatingText;
-
-        } catch (error) {
-            console.error('Error calculating trade stats:', error);
         }
+
+        console.log(`Using point value: $${pointValue} for calculation`);
+
+        // Get ALL entry data
+        const entryFields = document.querySelectorAll('[name^="entries-"][name$="-entry_price"]');
+        const entryContractFields = document.querySelectorAll('[name^="entries-"][name$="-contracts"]');
+        const entryTimeFields = document.querySelectorAll('[name^="entries-"][name$="-entry_time"]');
+
+        let totalEntryContracts = 0;
+        let weightedEntryPrice = 0;
+        let firstEntryTime = '';
+
+        // Calculate weighted average entry price
+        for (let i = 0; i < entryFields.length; i++) {
+            const price = parseFloat(entryFields[i].value || '0');
+            const contracts = parseInt(entryContractFields[i]?.value || '0');
+            const time = entryTimeFields[i]?.value || '';
+
+            if (price > 0 && contracts > 0) {
+                weightedEntryPrice += price * contracts;
+                totalEntryContracts += contracts;
+                if (!firstEntryTime) firstEntryTime = time;
+            }
+        }
+
+        const avgEntryPrice = totalEntryContracts > 0 ? weightedEntryPrice / totalEntryContracts : 0;
+
+        // Get ALL exit data
+        const exitFields = document.querySelectorAll('[name^="exits-"][name$="-exit_price"]');
+        const exitContractFields = document.querySelectorAll('[name^="exits-"][name$="-contracts"]');
+        const exitTimeFields = document.querySelectorAll('[name^="exits-"][name$="-exit_time"]');
+
+        let totalExitContracts = 0;
+        let weightedExitPrice = 0;
+        let lastExitTime = '';
+
+        // Calculate weighted average exit price
+        for (let i = 0; i < exitFields.length; i++) {
+            const price = parseFloat(exitFields[i].value || '0');
+            const contracts = parseInt(exitContractFields[i]?.value || '0');
+            const time = exitTimeFields[i]?.value || '';
+
+            if (price > 0 && contracts > 0) {
+                weightedExitPrice += price * contracts;
+                totalExitContracts += contracts;
+                lastExitTime = time;
+            }
+        }
+
+        const avgExitPrice = totalExitContracts > 0 ? weightedExitPrice / totalExitContracts : 0;
+
+        // Show dashboard - it's always visible in edit mode
+        dashboard.style.display = 'block';
+
+        // Calculate Risk:Reward
+        let riskRewardText = '--:--';
+        if (avgEntryPrice > 0 && stopLoss > 0 && target > 0) {
+            let risk, reward;
+            if (direction === 'Long') {
+                risk = Math.abs(avgEntryPrice - stopLoss);
+                reward = Math.abs(target - avgEntryPrice);
+            } else if (direction === 'Short') {
+                risk = Math.abs(stopLoss - avgEntryPrice);
+                reward = Math.abs(avgEntryPrice - target);
+            }
+
+            if (risk > 0) {
+                const ratio = reward / risk;
+                riskRewardText = `1:${ratio.toFixed(2)}`;
+            }
+        }
+
+        // Calculate Time in Trade
+        let timeInTradeText = '--:--';
+        if (firstEntryTime && lastExitTime) {
+            const [entryHour, entryMin] = firstEntryTime.split(':').map(Number);
+            const [exitHour, exitMin] = lastExitTime.split(':').map(Number);
+
+            const entryMinutes = entryHour * 60 + entryMin;
+            const exitMinutes = exitHour * 60 + exitMin;
+
+            let diffMinutes = exitMinutes - entryMinutes;
+            if (diffMinutes < 0) diffMinutes += 24 * 60;
+
+            const hours = Math.floor(diffMinutes / 60);
+            const minutes = diffMinutes % 60;
+            timeInTradeText = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+
+        // Calculate Points Risked
+        let pointsRiskedText = '--';
+        let dollarRiskText = '$--';
+        if (avgEntryPrice > 0 && stopLoss > 0 && totalEntryContracts > 0) {
+            let pointsRisk;
+            if (direction === 'Long') {
+                pointsRisk = Math.abs(avgEntryPrice - stopLoss);
+            } else if (direction === 'Short') {
+                pointsRisk = Math.abs(stopLoss - avgEntryPrice);
+            }
+
+            if (pointsRisk > 0) {
+                pointsRiskedText = pointsRisk.toFixed(2);
+                const dollarRisk = pointsRisk * totalEntryContracts * pointValue;
+                dollarRiskText = `${dollarRisk.toFixed(2)}`;
+            }
+        }
+
+        // Calculate Gross P&L - FIXED WITH CORRECT POINT VALUE
+        let grossPnlText = '$--';
+        let pnlClass = '';
+        if (avgEntryPrice > 0 && avgExitPrice > 0 && totalExitContracts > 0) {
+            let pnlPerContract;
+            if (direction === 'Long') {
+                pnlPerContract = avgExitPrice - avgEntryPrice;
+            } else if (direction === 'Short') {
+                pnlPerContract = avgEntryPrice - avgExitPrice;
+            }
+
+            const grossPnl = pnlPerContract * totalExitContracts * pointValue;
+            grossPnlText = `${grossPnl.toFixed(2)}`;
+
+            console.log(`P&L Calculation: ${pnlPerContract} * ${totalExitContracts} * ${pointValue} = ${grossPnl}`);
+
+            if (grossPnl > 0) {
+                pnlClass = 'text-profit';
+            } else if (grossPnl < 0) {
+                pnlClass = 'text-loss';
+            } else {
+                pnlClass = 'text-breakeven';
+            }
+        }
+
+        // Calculate Overall Trade Rating
+        let overallRatingText = '--/5';
+        const ratings = [
+            'preparation_rating', 'rules_rating', 'management_rating',
+            'target_rating', 'entry_rating'
+        ];
+
+        const ratingValues = ratings.map(name => {
+            const value = parseInt(document.querySelector(`[name="${name}"]`)?.value || '0');
+            return value > 0 ? value : null;
+        }).filter(v => v !== null);
+
+        if (ratingValues.length > 0) {
+            const avgRating = ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length;
+            overallRatingText = `${avgRating.toFixed(1)}/5`;
+        }
+
+        // Update display
+        document.getElementById('risk-reward-display').textContent = riskRewardText;
+        document.getElementById('time-in-trade-display').textContent = timeInTradeText;
+        document.getElementById('points-risked-display').textContent = pointsRiskedText;
+        document.getElementById('dollar-risk-display').textContent = dollarRiskText;
+
+        const pnlElement = document.getElementById('gross-pnl-display');
+        pnlElement.textContent = grossPnlText;
+        pnlElement.className = `fw-bold ${pnlClass}`;
+
+        document.getElementById('overall-rating-display').textContent = overallRatingText;
+
+    } catch (error) {
+        console.error('Error calculating trade stats:', error);
     }
+}
 
     // --- DEFAULT DATE LOGIC ---
     const tradeDateInput = document.getElementById('{{ form.trade_date.id }}');

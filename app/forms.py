@@ -10,18 +10,29 @@ from wtforms.fields import SelectMultipleField
 
 
 class OptGroupSelectMultipleField(SelectMultipleField):
-    """Custom SelectMultipleField that handles optgroups correctly"""
+    """Custom SelectMultipleField that handles optgroups correctly with tag colors"""
 
     def iter_choices(self):
         """Iterate over choices, flattening optgroups for validation"""
         for choice in self.choices:
             if isinstance(choice, (list, tuple)) and len(choice) == 2:
-                # Check if this is an optgroup (group_label, [(value, label), ...])
+                # Check if this is an optgroup (group_label, [(value, label, color), ...])
                 group_label, group_choices = choice
-                if isinstance(group_choices, (list, tuple)):
+                if isinstance(group_choices, (list, tuple)) and group_choices:
                     # This is an optgroup, yield individual choices
-                    for value, label in group_choices:
-                        yield (value, label, value in (self.data or []))
+                    for choice_item in group_choices:
+                        if isinstance(choice_item, (list, tuple)):
+                            if len(choice_item) >= 3:
+                                # Format: (value, label, color)
+                                value, label, color = choice_item[0], choice_item[1], choice_item[2]
+                                yield (value, label, value in (self.data or []))
+                            elif len(choice_item) == 2:
+                                # Format: (value, label)
+                                value, label = choice_item
+                                yield (value, label, value in (self.data or []))
+                        else:
+                            # Single item
+                            yield (choice_item, choice_item, choice_item in (self.data or []))
                 else:
                     # This is a regular choice (value, label)
                     yield (choice[0], choice[1], choice[0] in (self.data or []))
@@ -260,29 +271,6 @@ class ExitPointForm(FlaskForm):
     contracts = IntegerField('Contracts', validators=[Optional(), NumberRange(min=1)],
                              render_kw={"placeholder": "e.g., 1"})
     exit_price = FloatField('Price', validators=[Optional()], render_kw={"placeholder": "e.g., 15010.50"})
-
-
-# Updated TradeForm and TradeFilterForm in app/forms.py
-
-class OptGroupSelectMultipleField(SelectMultipleField):
-    """Custom SelectMultipleField that handles optgroups correctly"""
-
-    def iter_choices(self):
-        """Iterate over choices, flattening optgroups for validation"""
-        for choice in self.choices:
-            if isinstance(choice, (list, tuple)) and len(choice) == 2:
-                # Check if this is an optgroup (group_label, [(value, label), ...])
-                group_label, group_choices = choice
-                if isinstance(group_choices, (list, tuple)):
-                    # This is an optgroup, yield individual choices
-                    for value, label in group_choices:
-                        yield (value, label, value in (self.data or []))
-                else:
-                    # This is a regular choice (value, label)
-                    yield (choice[0], choice[1], choice[0] in (self.data or []))
-            else:
-                # Fallback for other choice formats
-                yield (choice, choice, choice in (self.data or []))
 
 
 class TradeForm(FlaskForm):
