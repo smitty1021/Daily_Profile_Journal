@@ -85,9 +85,10 @@ body {
     box-shadow: 0 4px 6px rgba(0,0,0,0.15);
     border-bottom: 2px solid #6366f1;
 }
- # Header Atrributes
+
+/* Header Attributes */
 .sticky-header th {
-    font-size: 0.95rem !important;
+    font-size: 0.875rem !important; /* Same as table text */
     font-weight: 700 !important;
     letter-spacing: 0.5px;
     text-transform: uppercase;
@@ -98,10 +99,6 @@ body {
 
 .table-header-clean {
     /* Clean headers without icons */
-}
-
-.container-fluid {
-    overflow: visible !important;
 }
 
 .main-content {
@@ -191,55 +188,53 @@ body {
 }
 
 [data-bs-theme="dark"] .trade-details-row {
-    background: var(--bs-body-bg); /* Simplified */
+    background: var(--bs-body-bg);
     border-left: 4px solid var(--bs-primary);
 }
 
-.trade-details-content {
-    padding: 1.5rem !important;
+.trade-details-container {
+    padding: 1.5rem;
+    border-top: 1px solid var(--bs-border-color);
 }
 
+/* Enhanced Detail Sections */
 .detail-section {
-    background: var(--bs-body-bg);
-    border: 1px solid var(--bs-border-color);
+    background: white;
+    border: 1px solid #e9ecef;
     border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    padding: 1.25rem;
     height: 100%;
-    min-height: 200px;
 }
 
 [data-bs-theme="dark"] .detail-section {
-    background: rgba(55, 65, 81, 0.7);
-    border: 1px solid #4b5563;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-
-.detail-section:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    background: #383b40;
+    border-color: #495057;
 }
 
 .section-header {
     display: flex;
     align-items: center;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--bs-border-color);
     font-weight: 600;
-    font-size: 1rem;
-    color: var(--bs-body-color);
+    color: #495057;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
 }
 
 [data-bs-theme="dark"] .section-header {
-    border-bottom-color: #4b5563;
-    color: #f3f4f6;
+    color: #adb5bd;
+    border-bottom-color: #495057;
 }
 
 .section-header i {
-    color: var(--bs-primary);
     margin-right: 0.5rem;
-    font-size: 1.1rem;
+    color: #007bff;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
 }
 
 .metric-item {
@@ -247,92 +242,120 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #f1f3f4;
 }
 
 [data-bs-theme="dark"] .metric-item {
-    border-bottom-color: #4b5563;
-}
-
-.metric-item:last-child {
-    border-bottom: none;
+    border-bottom-color: #495057;
 }
 
 .metric-label {
-    font-weight: 600;
-    color: #6b7280;
+    font-weight: 500;
+    color: #6c757d;
     font-size: 0.9rem;
 }
 
 [data-bs-theme="dark"] .metric-label {
-    color: #9ca3af;
+    color: #adb5bd;
 }
 
 .metric-value {
-    font-weight: 700;
+    font-weight: 600;
     font-size: 0.95rem;
 }
 
-.profit-value {
-    color: #10b981 !important;
+/* Rating Dots System */
+.ratings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
 }
 
-.loss-value {
-    color: #ef4444 !important;
+.rating-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
 }
 
-.neutral-value {
-    color: #6b7280 !important;
+.rating-label {
+    font-weight: 500;
+    color: #6c757d;
+    font-size: 0.9rem;
+    min-width: 100px;
 }
 
-/* Dot Rating System */
+[data-bs-theme="dark"] .rating-label {
+    color: #adb5bd;
+}
+
 .rating-dots {
     display: flex;
     gap: 0.25rem;
-    align-items: center;
 }
 
 .rating-dot {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    border: 2px solid #e5e7eb;
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
     transition: all 0.2s ease;
 }
 
+[data-bs-theme="dark"] .rating-dot {
+    background-color: #495057;
+    border-color: #6c757d;
+}
+
+/* Color-coded rating dots with gradient from red to green */
 .rating-dot.filled-1 {
-    background-color: #ef4444;
-    border-color: #ef4444;
+    background: #dc3545;
+    border-color: #dc3545;
+    box-shadow: 0 0 4px rgba(220, 53, 69, 0.4);
 }
 
 .rating-dot.filled-2 {
-    background-color: #f97316;
-    border-color: #f97316;
+    background: #fd7e14;
+    border-color: #fd7e14;
+    box-shadow: 0 0 4px rgba(253, 126, 20, 0.4);
 }
 
 .rating-dot.filled-3 {
-    background-color: #eab308;
-    border-color: #eab308;
+    background: #ffc107;
+    border-color: #ffc107;
+    box-shadow: 0 0 4px rgba(255, 193, 7, 0.4);
 }
 
 .rating-dot.filled-4 {
-    background-color: #84cc16;
-    border-color: #84cc16;
+    background: #20c997;
+    border-color: #20c997;
+    box-shadow: 0 0 4px rgba(32, 201, 151, 0.4);
 }
 
 .rating-dot.filled-5 {
-    background-color: #22c55e;
-    border-color: #22c55e;
+    background: #198754;
+    border-color: #198754;
+    box-shadow: 0 0 4px rgba(25, 135, 84, 0.4);
 }
 
-.tag-container {
+/* Radar Chart Container */
+.radar-chart-container {
+    height: 200px;
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
 }
 
-/* Tag styling to match project */
+[data-bs-theme="dark"] .radar-chart-container {
+    background: #495057;
+    border-color: #6c757d;
+}
+
+/* Tag styling */
 .badge.tag-good {
     background-color: var(--bs-success) !important;
     color: white !important;
@@ -346,14 +369,6 @@ body {
 .badge.tag-neutral {
     background-color: var(--bs-primary) !important;
     color: white !important;
-}
-
-/* Radar Chart Container */
-.radar-chart-container {
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 [data-bs-theme="dark"] .tag-good {
@@ -371,12 +386,13 @@ body {
     color: #93c5fd;
 }
 
+/* Notes sections */
 .notes-section {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 0.5rem;
     padding: 1rem;
-    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
     font-style: italic;
     color: #4b5563;
     line-height: 1.6;
@@ -388,6 +404,7 @@ body {
     color: #d1d5db;
 }
 
+/* Links */
 .screenshot-link {
     display: inline-flex;
     align-items: center;
@@ -407,25 +424,7 @@ body {
     color: white !important;
 }
 
-.tradingview-link {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.5rem 1rem;
-    background: linear-gradient(135deg, #2962ff 0%, #1e3a8a 100%);
-    color: white !important;
-    text-decoration: none;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(41, 98, 255, 0.3);
-}
-
-.tradingview-link:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(41, 98, 255, 0.4);
-    color: white !important;
-}
-
+/* Entry/Exit Table */
 .entry-exit-table {
     width: 100%;
     margin-top: 0.75rem;
@@ -442,76 +441,26 @@ body {
 
 [data-bs-theme="dark"] .entry-exit-table th {
     background: #4b5563;
-    color: #f3f4f6;
+    color: #f9fafb;
     border-color: #6b7280;
 }
 
 .entry-exit-table td {
-    padding: 0.4rem 0.5rem;
+    padding: 0.5rem;
     font-size: 0.85rem;
     border: 1px solid #e5e7eb;
-    text-align: center;
 }
 
 [data-bs-theme="dark"] .entry-exit-table td {
-    border-color: #4b5563;
+    border-color: #6b7280;
 }
 
-.time-badge {
-    background: #e0e7ff;
-    color: #3730a3;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
-    font-size: 0.8rem;
-    font-weight: 600;
+/* Pagination styling */
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
-
-[data-bs-theme="dark"] .time-badge {
-    background: #312e81;
-    color: #c7d2fe;
-}
-
-.price-badge {
-    background: #f0fdf4;
-    color: #166534;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-[data-bs-theme="dark"] .price-badge {
-    background: #14532d;
-    color: #86efac;
-}
-
-.contracts-badge {
-    background: #fef3c7;
-    color: #92400e;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.375rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-
-[data-bs-theme="dark"] .contracts-badge {
-    background: #78350f;
-    color: #fde68a;
-}
-
-
-@media (max-width: 1200px) {
-    .table-container {
-        max-height: calc(100vh - 320px); /* Adjust for smaller screens */
-    }
-}
-
-
-.page-info {
-    font-size: 0.9rem;
-    color: var(--bs-secondary);
-}
-
 
 .pagination-arrow-grey {
     display: inline-flex;
@@ -519,239 +468,160 @@ body {
     justify-content: center;
     width: 32px;
     height: 32px;
-    border: none;
-    background-color: transparent;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    background: var(--bs-body-bg);
     color: var(--bs-body-color);
     text-decoration: none;
-    border-radius: 0.375rem;
-    transition: all 0.15s ease-in-out;
+    transition: all 0.2s ease;
 }
 
 .pagination-arrow-grey:hover {
-    background-color: var(--bs-secondary-bg);
-    color: var(--bs-body-color);
-    text-decoration: none;
+    background: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
 }
 
 .pagination-arrow-grey.disabled {
-    color: var(--bs-secondary);
-    background-color: transparent;
+    opacity: 0.5;
     cursor: not-allowed;
+    pointer-events: none;
 }
 
 .pagination-info {
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     color: var(--bs-body-color);
-    padding: 0 0.5rem;
+    font-weight: 500;
 }
 
-
-.table-fixed .btn-group .btn {
-    border: none !important;
-    padding: 0.25rem 0.4rem !important;
-    margin: 0 1px !important;
-    font-size: 0.75rem !important;
-    border-radius: 0.25rem !important;
-    transition: all 0.15s ease-in-out !important;
+/* Color coding for avg rating and P&L */
+.profit-value {
+    color: #198754 !important;
+    font-weight: bold !important;
 }
 
-.table-fixed .btn-outline-secondary {
-    color: #6c757d !important;
-    background-color: transparent !important;
-}
-
-.table-fixed .btn-outline-secondary:hover {
-    background-color: #6c757d !important;
-    color: white !important;
-}
-
-.table-fixed .btn-outline-primary {
-    color: #0d6efd !important;
-    background-color: transparent !important;
-}
-
-.table-fixed .btn-outline-primary:hover {
-    background-color: #0d6efd !important;
-    color: white !important;
-}
-
-.table-fixed .btn-outline-warning {
-    color: #ffc107 !important;
-    background-color: transparent !important;
-}
-
-.table-fixed .btn-outline-warning:hover {
-    background-color: #ffc107 !important;
-    color: #000 !important;
-}
-
-.table-fixed .btn-outline-danger {
+.loss-value {
     color: #dc3545 !important;
-    background-color: transparent !important;
+    font-weight: bold !important;
 }
 
-.table-fixed .btn-outline-danger:hover {
-    background-color: #dc3545 !important;
+.neutral-value {
+    color: #6c757d !important;
+}
+
+/* Rating color coding */
+.rating-1 { color: #dc3545 !important; font-weight: bold !important; }
+.rating-2 { color: #fd7e14 !important; font-weight: bold !important; }
+.rating-3 { color: #ffc107 !important; font-weight: bold !important; }
+.rating-4 { color: #20c997 !important; font-weight: bold !important; }
+.rating-5 { color: #198754 !important; font-weight: bold !important; }
+
+/* Remove borders from action buttons INCLUDING daily journal */
+.btn-outline-primary,
+.btn-outline-warning,
+.btn-outline-danger,
+.btn-outline-info {
+    border: none !important;
+}
+
+/* Transparent background for Log and Filter buttons */
+.btn-success,
+.btn-primary {
+    background: transparent !important;
+    border: 1px solid !important;
+    color: var(--bs-success) !important;
+}
+
+.btn-primary {
+    color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+}
+
+.btn-success {
+    border-color: var(--bs-success) !important;
+}
+
+.btn-success:hover,
+.btn-primary:hover {
+    background: var(--bs-primary) !important;
     color: white !important;
 }
 
-.action-btn {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-    border-radius: 0.375rem;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    border: 1px solid;
-    transition: all 0.15s ease-in-out;
+/* Remove colored background from how_closed */
+.how-closed-text {
+    background: none !important;
+    color: var(--bs-body-color) !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    font-weight: normal !important;
 }
 
-.action-btn.btn-outline-success {
-    color: #198754;
-    border-color: #198754;
-}
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .trade-details-container {
+        padding: 1rem;
+    }
 
-.action-btn.btn-outline-success:hover {
-    background-color: #198754;
-    color: white;
-}
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
 
-.action-btn.btn-outline-info {
-    color: #0dcaf0;
-    border-color: #0dcaf0;
-}
+    .rating-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
 
-.action-btn.btn-outline-info:hover {
-    background-color: #0dcaf0;
-    color: #000;
+    .radar-chart-container {
+        height: 150px;
+    }
 }
-
-.action-btn.btn-outline-secondary {
-    color: #6c757d;
-    border-color: #6c757d;
-}
-
-.action-btn.btn-outline-secondary:hover {
-    background-color: #6c757d;
-    color: white;
-}
-
-.action-btn.btn-outline-primary {
-    color: #0d6efd;
-    border-color: #0d6efd;
-}
-
-.action-btn.btn-outline-primary:hover {
-    background-color: #0d6efd;
-    color: white;
-}
-
-.action-btn.btn-outline-danger {
-    color: #dc3545;
-    border-color: #dc3545;
-}
-
-.action-btn.btn-outline-danger:hover {
-    background-color: #dc3545;
-    color: white;
-}
-
-.active-filters-indicator {
-    background-color: rgba(13, 202, 240, 0.1);
-    color: #0dcaf0;
-    border-color: #0dcaf0;
-}
-
-/* FIXED: Footer bar consistency */
-.footer-container {
-    background-color: var(--bs-dark);
-    border-top: 1px solid var(--bs-border-color);
-    padding: 1rem 0;
-    margin-top: auto;
-}
-
-/* Make sure footer stays at bottom */
-.main-content-wrapper {
-    min-height: calc(100vh - 60px);
-    display: flex;
-    flex-direction: column;
-}
-
-.entry-exit-simple {
-    background: var(--bs-tertiary-bg);
-    border-radius: 0.375rem;
-    padding: 0.75rem;
-    margin-top: 0.5rem;
-}
-
-.entry-exit-item {
-    background: var(--bs-body-bg);
-    padding: 0.5rem 0.75rem;
-    margin-bottom: 0.5rem;
-    border-radius: 0.25rem;
-    border: 1px solid var(--bs-border-color);
-    font-family: 'Courier New', monospace;
-    font-size: 0.85rem;
-}
-
-.entry-exit-item:last-child {
-    margin-bottom: 0;
-}
-
 </style>
 
-<!-- CRITICAL: LOAD JAVASCRIPT FUNCTIONS FIRST IN HEAD -->
+<!-- Essential JavaScript functions loaded in head -->
 <script>
-// ===== ESSENTIAL FUNCTIONS - LOADED IN HEAD SO THEY'RE AVAILABLE FOR ONCLICK =====
-console.log('🚀 Loading essential functions in head...');
+// Essential functions that need to be available immediately
+console.log('🚀 Loading essential trade list functions in head...');
 
-function toggleTradeDetails(tradeId) {
-    console.log('🎯 toggleTradeDetails called with:', tradeId);
-    var detailsRow = document.getElementById('details-' + tradeId);
-    var chevron = document.getElementById('chevron-' + tradeId);
-
-    if (detailsRow && chevron) {
-        if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
-            detailsRow.style.display = 'table-row';
-            chevron.classList.remove('fa-chevron-right');
-            chevron.classList.add('fa-chevron-down');
-            console.log('✅ Showing details for trade', tradeId);
+// URL manipulation for sorting and pagination
+function updateUrlAndRedirect(params) {
+    const currentUrl = new URL(window.location);
+    Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+            currentUrl.searchParams.set(key, params[key]);
         } else {
-            detailsRow.style.display = 'none';
-            chevron.classList.remove('fa-chevron-down');
-            chevron.classList.add('fa-chevron-right');
-            console.log('✅ Hiding details for trade', tradeId);
+            currentUrl.searchParams.delete(key);
         }
-    } else {
-        console.error('❌ Missing elements for trade', tradeId);
-        console.error('detailsRow:', detailsRow);
-        console.error('chevron:', chevron);
-    }
+    });
+    const newUrl = currentUrl.pathname + (currentUrl.search ? '?' + currentUrl.searchParams.toString() : '');
+    console.log('🔄 Redirecting to:', newUrl);
+    window.location.href = newUrl;
 }
 
 function changePageSize(newSize) {
-    console.log('🎉 changePageSize called with:', newSize);
-    var currentParams = new URLSearchParams(window.location.search);
-    currentParams.set('per_page', newSize);
-    currentParams.delete('page'); // Reset to first page
+    console.log('📄 Changing page size to:', newSize);
+    updateUrlAndRedirect({
+        per_page: newSize,
+        page: 1  // Reset to first page when changing page size
+    });
+}
 
-    // Build URL manually to avoid conflicts
-    var baseUrl = '{{ url_for("trades.view_trades_list") }}';
-    var params = [];
+function sortTable(field) {
+    console.log('🔄 Sorting by:', field);
+    const params = new URLSearchParams(window.location.search);
+    const currentSort = params.get('sort');
+    const currentOrder = params.get('order');
 
-    // Add per_page first
-    params.push('per_page=' + encodeURIComponent(newSize));
-
-    // Add other parameters except page
-    for (var pair of currentParams.entries()) {
-        if (pair[0] !== 'per_page' && pair[0] !== 'page') {
-            params.push(encodeURIComponent(pair[0]) + '=' + encodeURIComponent(pair[1]));
-        }
+    let newOrder = 'asc';
+    if (currentSort === field && currentOrder === 'asc') {
+        newOrder = 'desc';
     }
 
-    var newUrl = baseUrl + (params.length > 0 ? '?' + params.join('&') : '');
-    console.log('🔄 Redirecting to:', newUrl);
-    window.location.href = newUrl;
+    updateUrlAndRedirect({
+        sort: field,
+        order: newOrder,
+        page: 1  // Reset to first page when sorting
+    });
 }
 
 function confirmSingleDelete(tradeId, date, instrument, direction) {
@@ -760,95 +630,7 @@ function confirmSingleDelete(tradeId, date, instrument, direction) {
     console.log('⏳ Waiting for DOM ready to override this function...');
 }
 
-// Initialize radar charts for trade details
-function initializeRadarChart(tradeId, ratings) {
-    const canvas = document.getElementById(`radarChart-${tradeId}`);
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = 60;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw radar grid
-    ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
-
-    // Draw concentric circles
-    for (let i = 1; i <= 5; i++) {
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, (radius * i) / 5, 0, 2 * Math.PI);
-        ctx.stroke();
-    }
-
-    // Draw spokes
-    const labels = ['Prep', 'Rules', 'Mgmt', 'Target', 'Entry'];
-    const angleStep = (2 * Math.PI) / 5;
-
-    for (let i = 0; i < 5; i++) {
-        const angle = i * angleStep - Math.PI / 2;
-        const x = centerX + Math.cos(angle) * radius;
-        const y = centerY + Math.sin(angle) * radius;
-
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-
-        // Draw labels
-        ctx.fillStyle = '#6b7280';
-        ctx.font = '10px Arial';
-        ctx.textAlign = 'center';
-        const labelX = centerX + Math.cos(angle) * (radius + 15);
-        const labelY = centerY + Math.sin(angle) * (radius + 15);
-        ctx.fillText(labels[i], labelX, labelY);
-    }
-
-    // Draw data polygon
-    if (ratings.some(r => r !== null)) {
-        ctx.beginPath();
-        ctx.strokeStyle = '#3b82f6';
-        ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
-        ctx.lineWidth = 2;
-
-        for (let i = 0; i < 5; i++) {
-            const rating = ratings[i] || 0;
-            const angle = i * angleStep - Math.PI / 2;
-            const distance = (rating / 5) * radius;
-            const x = centerX + Math.cos(angle) * distance;
-            const y = centerY + Math.sin(angle) * distance;
-
-            if (i === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
-        }
-
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-
-        // Draw data points
-        ctx.fillStyle = '#3b82f6';
-        for (let i = 0; i < 5; i++) {
-            const rating = ratings[i] || 0;
-            const angle = i * angleStep - Math.PI / 2;
-            const distance = (rating / 5) * radius;
-            const x = centerX + Math.cos(angle) * distance;
-            const y = centerY + Math.sin(angle) * distance;
-
-            ctx.beginPath();
-            ctx.arc(x, y, 3, 0, 2 * Math.PI);
-            ctx.fill();
-        }
-    }
-}
-
-// Update the toggleTradeDetails function to initialize radar chart
+// Toggle trade details with enhanced radar chart
 function toggleTradeDetails(tradeId) {
     const detailsRow = document.getElementById(`details-${tradeId}`);
     const chevron = document.getElementById(`chevron-${tradeId}`);
@@ -861,8 +643,8 @@ function toggleTradeDetails(tradeId) {
 
             // Initialize radar chart after showing details
             setTimeout(() => {
-                const tradeData = getTradeRatings(tradeId); // You'll need to implement this
-                initializeRadarChart(tradeId, tradeData);
+                const ratings = extractTradeRatings(tradeId);
+                initializeRadarChart(tradeId, ratings);
             }, 100);
         } else {
             detailsRow.style.display = 'none';
@@ -872,839 +654,868 @@ function toggleTradeDetails(tradeId) {
     }
 }
 
+// Extract trade ratings from the DOM
+function extractTradeRatings(tradeId) {
+    const detailsRow = document.getElementById(`details-${tradeId}`);
+    if (!detailsRow) return [0, 0, 0, 0, 0];
+
+    const ratings = [0, 0, 0, 0, 0];
+    const ratingRows = detailsRow.querySelectorAll('.rating-row');
+
+    ratingRows.forEach((row, index) => {
+        if (index < 5) {
+            const filledDots = row.querySelectorAll('.rating-dot[class*="filled-"]');
+            if (filledDots.length > 0) {
+                const lastDot = filledDots[filledDots.length - 1];
+                const classList = Array.from(lastDot.classList);
+                const filledClass = classList.find(cls => cls.startsWith('filled-'));
+                if (filledClass) {
+                    const rating = parseInt(filledClass.split('-')[1]);
+                    if (!isNaN(rating)) {
+                        ratings[index] = rating;
+                    }
+                }
+            }
+        }
+    });
+
+    return ratings;
+}
+
+// Enhanced radar chart initialization
+function initializeRadarChart(tradeId, ratings) {
+    const canvas = document.getElementById(`radarChart-${tradeId}`);
+    if (!canvas) {
+        console.warn(`Radar chart canvas not found for trade ${tradeId}`);
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = 80;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Chart styling
+    const gridColor = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? '#6b7280' : '#e5e7eb';
+    const textColor = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? '#d1d5db' : '#374151';
+    const dataColor = '#3b82f6';
+    const dataFillColor = 'rgba(59, 130, 246, 0.15)';
+
+    // Draw radar grid (concentric circles)
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+
+    for (let i = 1; i <= 5; i++) {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, (radius * i) / 5, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+
+    // Draw spokes and labels
+    const labels = ['Prep', 'Rules', 'Mgmt', 'Target', 'Entry'];
+    const angleStep = (2 * Math.PI) / 5;
+
+    ctx.strokeStyle = gridColor;
+    for (let i = 0; i < 5; i++) {
+        const angle = i * angleStep - Math.PI / 2;
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+
+        // Draw spoke
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        // Draw label
+        ctx.fillStyle = textColor;
+        ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const labelDistance = radius + 20;
+        const labelX = centerX + Math.cos(angle) * labelDistance;
+        const labelY = centerY + Math.sin(angle) * labelDistance;
+
+        ctx.fillText(labels[i], labelX, labelY);
+    }
+
+    // Draw rating scale numbers
+    ctx.fillStyle = textColor;
+    ctx.font = '9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    for (let i = 1; i <= 5; i++) {
+        const r = (radius * i) / 5;
+        ctx.fillText(i.toString(), centerX + r + 5, centerY - 5);
+    }
+
+    // Draw data polygon if we have valid ratings
+    if (ratings && ratings.some(r => r !== null && r !== undefined && r > 0)) {
+        ctx.beginPath();
+        ctx.strokeStyle = dataColor;
+        ctx.fillStyle = dataFillColor;
+        ctx.lineWidth = 2;
+
+        let hasValidPoint = false;
+        for (let i = 0; i < 5; i++) {
+            const rating = ratings[i] || 0;
+            const angle = i * angleStep - Math.PI / 2;
+            const distance = (rating / 5) * radius;
+            const x = centerX + Math.cos(angle) * distance;
+            const y = centerY + Math.sin(angle) * distance;
+
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+
+            if (rating > 0) hasValidPoint = true;
+        }
+
+        if (hasValidPoint) {
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Draw data points
+            ctx.fillStyle = dataColor;
+            for (let i = 0; i < 5; i++) {
+                const rating = ratings[i] || 0;
+                if (rating > 0) {
+                    const angle = i * angleStep - Math.PI / 2;
+                    const distance = (rating / 5) * radius;
+                    const x = centerX + Math.cos(angle) * distance;
+                    const y = centerY + Math.sin(angle) * distance;
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+        }
+    } else {
+        // Show "No Data" message
+        ctx.fillStyle = textColor;
+        ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('No Ratings', centerX, centerY);
+    }
+}
+
 console.log('✅ Essential functions loaded in head!');
 </script>
 {% endblock %}
 
-{% block page_header %}
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-        <h1>Trades List</h1>
-    </div>
-{% endblock %}
-
 {% block content %}
-
-{# Collapsible Filter Section #}
-<div class="collapse mb-4" id="filterCollapse">
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-filter me-1"></i> Filter Trades</h5>
+<div class="container-fluid mt-4 mb-5">
+    <!-- Page Header with Action Buttons and Pagination on Same Line -->
+    <div class="row align-items-center" style="margin-bottom: 0.25rem;">
+        <div class="col">
+            <h1 class="display-6" style="margin-bottom: 0.25rem;">
+                <i class="fas fa-chart-line me-2"></i>{{ title }}
+            </h1>
         </div>
-        <div class="card-body">
-            <form method="GET" action="{{ url_for('trades.view_trades_list') }}" id="filterForm">
-                <div class="row">
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        {{ forms.render_field(filter_form.start_date, input_class="form-control form-control-sm", label_visible=true) }}
-                    </div>
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        {{ forms.render_field(filter_form.end_date, input_class="form-control form-control-sm", label_visible=true) }}
-                    </div>
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        {{ forms.render_field(filter_form.instrument, input_class="form-select form-select-sm", label_visible=true) }}
-                    </div>
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        {{ forms.render_field(filter_form.direction, input_class="form-select form-select-sm", label_visible=true) }}
-                    </div>
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        {{ forms.render_field(filter_form.trading_model_id, input_class="form-select form-select-sm", label_visible=true) }}
-                    </div>
-                    <div class="col-md-6 col-lg-4 mb-3">
-                        {{ forms.render_field(filter_form.tags, input_class="form-select form-select-sm", label_visible=true) }}
-                    </div>
+        <div class="col-auto d-flex align-items-center gap-4">
+
+
+            <!-- Pagination Controls -->
+            {% if trades and (pagination.pages > 1 or pagination.total > 10) %}
+            <div class="d-flex align-items-center gap-2">
+                <!-- Results Summary -->
+                <div class="text-muted small">
+                    {{ pagination.per_page * (pagination.page - 1) + 1 }}-{{ pagination.per_page * (pagination.page - 1) + trades|length }} of {{ pagination.total }}
                 </div>
 
-                <div class="d-flex gap-2 flex-wrap">
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="fas fa-search me-1"></i> Apply Filters
-                    </button>
-                    <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="fas fa-times me-1"></i> Clear All
+                <!-- Page Size Dropdown -->
+                <select id="pageSizeDropdown" class="form-select form-select-sm" style="width: 70px;" onchange="changePageSize(this.value)">
+                    <option value="25" {{ 'selected' if request.args.get('per_page', '25')|string == '25' else '' }}>25</option>
+                    <option value="50" {{ 'selected' if request.args.get('per_page', '25')|string == '50' else '' }}>50</option>
+                    <option value="100" {{ 'selected' if request.args.get('per_page', '25')|string == '100' else '' }}>100</option>
+                    <option value="250" {{ 'selected' if request.args.get('per_page', '25')|string == '250' else '' }}>250</option>
+                </select>
+
+                <!-- Navigation Arrows -->
+                {% if pagination.pages > 1 %}
+                <div class="d-flex align-items-center gap-1">
+                    <!-- First Page Arrow -->
+                    {% if pagination.page > 1 %}
+                    {% set args_without_page = request.args.copy() %}
+                    {% set _ = args_without_page.pop('page', None) %}
+                    <a href="{{ url_for('trades.view_trades_list', page=1, **args_without_page) }}" class="pagination-arrow-grey" title="First Page">
+                        <i class="fas fa-angle-double-left"></i>
                     </a>
+                    {% else %}
+                    <span class="pagination-arrow-grey disabled" title="First Page">
+                        <i class="fas fa-angle-double-left"></i>
+                    </span>
+                    {% endif %}
+
+                    <!-- Previous Page Arrow -->
+                    {% if pagination.has_prev %}
+                    {% set args_without_page = request.args.copy() %}
+                    {% set _ = args_without_page.pop('page', None) %}
+                    <a href="{{ url_for('trades.view_trades_list', page=pagination.prev_num, **args_without_page) }}" class="pagination-arrow-grey" title="Previous Page">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                    {% else %}
+                    <span class="pagination-arrow-grey disabled" title="Previous Page">
+                        <i class="fas fa-angle-left"></i>
+                    </span>
+                    {% endif %}
+
+                    <!-- Page Info -->
+                    <span class="pagination-info small">
+                        {{ pagination.page }}/{{ pagination.pages }}
+                    </span>
+
+                    <!-- Next Page Arrow -->
+                    {% if pagination.has_next %}
+                    {% set args_without_page = request.args.copy() %}
+                    {% set _ = args_without_page.pop('page', None) %}
+                    <a href="{{ url_for('trades.view_trades_list', page=pagination.next_num, **args_without_page) }}" class="pagination-arrow-grey" title="Next Page">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    {% else %}
+                    <span class="pagination-arrow-grey disabled" title="Next Page">
+                        <i class="fas fa-angle-right"></i>
+                    </span>
+                    {% endif %}
+
+                    <!-- Last Page Arrow -->
+                    {% if pagination.page < pagination.pages %}
+                    {% set args_without_page = request.args.copy() %}
+                    {% set _ = args_without_page.pop('page', None) %}
+                    <a href="{{ url_for('trades.view_trades_list', page=pagination.pages, **args_without_page) }}" class="pagination-arrow-grey" title="Last Page">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                    {% else %}
+                    <span class="pagination-arrow-grey disabled" title="Last Page">
+                        <i class="fas fa-angle-double-right"></i>
+                    </span>
+                    {% endif %}
                 </div>
-            </form>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div class="btn-group btn-group-sm">
+                <a href="{{ url_for('trades.add_trade') }}" class="btn btn-success btn-sm">
+                    <i class="fas fa-plus me-1"></i> Log New Trade
+                </a>
+                <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#filterModal">
+                    <i class="fas fa-filter me-1"></i> Filter Trades
+                </button>
+                <a href="{{ url_for('trades.import_trades') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-upload me-1"></i> Import
+                </a>
+                <a href="{{ url_for('trades.export_trades_csv') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-download me-1"></i> Export
+                </a>
+            </div>
         </div>
     </div>
-</div>
 
-{# Main Content Area - Trades List #}
-<div class="row">
-    <div class="col-12">
-        {% if trades %}
-            {# Action Bar with Pagination on Left - MOVED ABOVE TABLE #}
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-3">
-                    {# MOVED: Pagination controls to left side #}
-                    {% if pagination.pages > 1 or pagination.total > 10 %}
-                    <div class="d-flex align-items-center gap-3 pagination-controls">
-                        {# Results Summary #}
-                        <div class="text-muted">
-                            Trades {{ pagination.per_page * (pagination.page - 1) + 1 }} to {{ pagination.per_page * (pagination.page - 1) + trades|length }} of {{ pagination.total }}
-                        </div>
+    <!-- Trades Table -->
+    {% if trades %}
+        <div class="table-container">
+            <table class="table table-hover table-striped mb-0 table-fixed">
+                <thead class="sticky-header">
+                    <tr>
+                        <th width="30" class="text-center table-header-clean"></th>
+                        <th width="80" class="sortable" data-sort="date">
+                            Date <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th width="80" class="sortable" data-sort="instrument">
+                            Instrument <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th width="120" class="sortable" data-sort="model">
+                            Model <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th width="70" class="sortable" data-sort="direction">
+                            Direction <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th width="60" class="sortable" data-sort="contracts">
+                            Contracts <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th width="70" class="sortable" data-sort="entry_time">
+                            Entry Time <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th width="80" class="sortable" data-sort="entry">
+                            Entry Price <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th width="80" class="sortable" data-sort="exit">
+                            Exit Price <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th width="90" class="sortable" data-sort="time_in_trade">
+                            Time in Trade <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th width="90" class="sortable" data-sort="how_closed">
+                            How Closed <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th width="80" class="sortable" data-sort="avg_rating">
+                            Trade Rating <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th width="90" class="sortable" data-sort="pnl">
+                            P&L <i class="fas fa-sort sort-icon"></i>
+                        </th>
+                        <th width="160"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for trade in trades %}
+                <!-- Main trade row -->
+                <tr class="trade-row {% if trade.gross_pnl and trade.gross_pnl > 0 %}table-success-subtle{% elif trade.gross_pnl and trade.gross_pnl < 0 %}table-danger-subtle{% endif %}"
+                    data-trade-id="{{ trade.id }}" onclick="toggleTradeDetails({{ trade.id }})">
 
-                        {# Page Size Dropdown #}
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted small">Page Size:</span>
-                            <select id="pageSizeDropdown" class="form-select form-select-sm" style="width: 80px;" onchange="changePageSize(this.value)">
-                                <option value="25" {{ 'selected' if request.args.get('per_page', '25')|string == '25' else '' }}>25</option>
-                                <option value="50" {{ 'selected' if request.args.get('per_page', '25')|string == '50' else '' }}>50</option>
-                                <option value="100" {{ 'selected' if request.args.get('per_page', '25')|string == '100' else '' }}>100</option>
-                                <option value="250" {{ 'selected' if request.args.get('per_page', '25')|string == '250' else '' }}>250</option>
-                            </select>
-                        </div>
+                    <!-- Dropdown arrow -->
+                    <td class="text-center">
+                        <i class="fas fa-chevron-right chevron-icon" id="chevron-{{ trade.id }}"></i>
+                    </td>
 
-                        {# Navigation Arrows and Page Info #}
-                        {% if pagination.pages > 1 %}
-                        <div class="d-flex align-items-center gap-2">
-                            {# First Page Arrow #}
-                            {% if pagination.page > 1 %}
-                            {% set args_without_page = request.args.copy() %}
-                            {% set _ = args_without_page.pop('page', None) %}
-                            <a href="{{ url_for('trades.view_trades_list', page=1, **args_without_page) }}" class="pagination-arrow-grey" title="First Page">
-                                <i class="fas fa-angle-double-left"></i>
-                            </a>
-                            {% else %}
-                            <span class="pagination-arrow-grey disabled" title="First Page">
-                                <i class="fas fa-angle-double-left"></i>
-                            </span>
-                            {% endif %}
+                    <!-- Date -->
+                    <td>{{ trade.trade_date.strftime('%d %b %y') }}</td>
 
-                            {# Previous Page Arrow #}
-                            {% if pagination.has_prev %}
-                            {% set args_without_page = request.args.copy() %}
-                            {% set _ = args_without_page.pop('page', None) %}
-                            <a href="{{ url_for('trades.view_trades_list', page=pagination.prev_num, **args_without_page) }}" class="pagination-arrow-grey" title="Previous Page">
-                                <i class="fas fa-angle-left"></i>
-                            </a>
-                            {% else %}
-                            <span class="pagination-arrow-grey disabled" title="Previous Page">
-                                <i class="fas fa-angle-left"></i>
-                            </span>
-                            {% endif %}
+                    <!-- Instrument -->
+                    <td>{{ trade.instrument or 'N/A' }}</td>
 
-                            {# Page X of Y - Clean Style #}
-                            <span class="pagination-info">
-                                Page {{ pagination.page }} of {{ pagination.pages }}
-                            </span>
-
-                            {# Next Page Arrow #}
-                            {% if pagination.has_next %}
-                            {% set args_without_page = request.args.copy() %}
-                            {% set _ = args_without_page.pop('page', None) %}
-                            <a href="{{ url_for('trades.view_trades_list', page=pagination.next_num, **args_without_page) }}" class="pagination-arrow-grey" title="Next Page">
-                                <i class="fas fa-angle-right"></i>
-                            </a>
-                            {% else %}
-                            <span class="pagination-arrow-grey disabled" title="Next Page">
-                                <i class="fas fa-angle-right"></i>
-                            </span>
-                            {% endif %}
-
-                            {# Last Page Arrow #}
-                            {% if pagination.page < pagination.pages %}
-                            {% set args_without_page = request.args.copy() %}
-                            {% set _ = args_without_page.pop('page', None) %}
-                            <a href="{{ url_for('trades.view_trades_list', page=pagination.pages, **args_without_page) }}" class="pagination-arrow-grey" title="Last Page">
-                                <i class="fas fa-angle-double-right"></i>
-                            </a>
-                            {% else %}
-                            <span class="pagination-arrow-grey disabled" title="Last Page">
-                                <i class="fas fa-angle-double-right"></i>
-                            </span>
-                            {% endif %}
-                        </div>
+                    <!-- Model -->
+                    <td>
+                        {% if trade.trading_model %}
+                            {{ trade.trading_model.name }}
+                        {% else %}
+                            N/A
                         {% endif %}
-                    </div>
-                    {% endif %}
+                    </td>
 
-                    {# Active Filter Indicators #}
-                    {% set active_filters = [] %}
-                    {% if filter_form.start_date.data %}{% set _ = active_filters.append('Start Date') %}{% endif %}
-                    {% if filter_form.end_date.data %}{% set _ = active_filters.append('End Date') %}{% endif %}
-                    {% if filter_form.instrument.data %}{% set _ = active_filters.append('Instrument') %}{% endif %}
-                    {% if filter_form.direction.data %}{% set _ = active_filters.append('Direction') %}{% endif %}
-                    {% if filter_form.trading_model_id.data and filter_form.trading_model_id.data != 0 %}{% set _ = active_filters.append('Trading Model') %}{% endif %}
-                    {% if filter_form.tags.data %}{% set _ = active_filters.append('Tags') %}{% endif %}
+                    <!-- Direction -->
+                    <td>
+                        {% if trade.direction == 'Long' %}
+                            <span class="badge-transparent" style="color: #198754 !important; font-weight: bold;">{{ trade.direction }}</span>
+                        {% elif trade.direction == 'Short' %}
+                            <span class="badge-transparent" style="color: #dc3545 !important; font-weight: bold;">{{ trade.direction }}</span>
+                        {% else %}
+                            <span class="badge-transparent" style="color: #6c757d !important; font-weight: bold;">{{ trade.direction or 'N/A' }}</span>
+                        {% endif %}
+                    </td>
 
-                    {% if active_filters %}
-                        <div class="action-btn btn-outline-info active-filters-indicator">
-                            <i class="fas fa-filter me-1"></i>
-                            {{ active_filters|length }} filter(s) active
+                    <!-- Contracts -->
+                    <td>{{ trade.total_contracts_entered or 0 }}</td>
+
+                    <!-- Entry Time -->
+                    <td>
+                        {% if trade.entries.first() and trade.entries.first().entry_time %}
+                            {{ trade.entries.first().entry_time.strftime('%H:%M') }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+
+                    <!-- Entry Price (no $) -->
+                    <td>
+                        {% if trade.average_entry_price %}
+                            {{ "{:.2f}".format(trade.average_entry_price) }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+
+                    <!-- Exit Price (no $) -->
+                    <td>
+                        {% if trade.average_exit_price %}
+                            {{ "{:.2f}".format(trade.average_exit_price) }}
+                        {% else %}
+                            {% if trade.how_closed in ['Still Open', None, ''] %}
+                                <span class="text-muted">Open</span>
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        {% endif %}
+                    </td>
+
+                    <!-- Time in Trade -->
+                    <td>
+                        {% if trade.entries.first() and trade.exits.first() and trade.entries.first().entry_time and trade.exits.first().exit_time %}
+                            {% set time_diff = (trade.exits.first().exit_time.hour * 60 + trade.exits.first().exit_time.minute) - (trade.entries.first().entry_time.hour * 60 + trade.entries.first().entry_time.minute) %}
+                            {% if time_diff >= 0 %}
+                                {{ "%d:%02d"|format(time_diff // 60, time_diff % 60) }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        {% else %}
+                            {% if trade.how_closed in ['Still Open', None, ''] %}
+                                <span class="text-muted">Open</span>
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        {% endif %}
+                    </td>
+
+                    <!-- How Closed (no colored background) -->
+                    <td>
+                        {% if trade.how_closed %}
+                            <span class="how-closed-text">{{ trade.how_closed }}</span>
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+
+                    <!-- Trade Rating (text color only, no background) -->
+                    <td>
+                        {% set ratings = [trade.preparation_rating, trade.rules_rating, trade.management_rating, trade.target_rating, trade.entry_rating] %}
+                        {% set valid_ratings = ratings|select('ne', none)|list %}
+                        {% if valid_ratings %}
+                            {% set avg_rating = (valid_ratings|sum / valid_ratings|length) %}
+                            {% if avg_rating >= 4.0 %}
+                                <span style="color: #198754; font-weight: bold;">{{ "%.1f"|format(avg_rating) }}</span>
+                            {% elif avg_rating >= 2.5 %}
+                                <span style="color: #ffc107; font-weight: bold;">{{ "%.1f"|format(avg_rating) }}</span>
+                            {% else %}
+                                <span style="color: #dc3545; font-weight: bold;">{{ "%.1f"|format(avg_rating) }}</span>
+                            {% endif %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+
+                    <!-- P&L (text color only, no background) -->
+                    <td>
+                        {% if trade.gross_pnl is not none %}
+                            {% if trade.gross_pnl > 0 %}
+                                <span style="color: #198754; font-weight: bold;">${{ "{:+,.2f}".format(trade.gross_pnl) }}</span>
+                            {% elif trade.gross_pnl < 0 %}
+                                <span style="color: #dc3545; font-weight: bold;">${{ "{:+,.2f}".format(trade.gross_pnl) }}</span>
+                            {% else %}
+                                <span style="color: #6c757d; font-weight: bold;">${{ "{:+,.2f}".format(trade.gross_pnl) }}</span>
+                            {% endif %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+
+                    <!-- Actions (Daily Journal button first, then view, edit, delete) -->
+                    <td class="text-end" onclick="event.stopPropagation();">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('journal.manage_daily_journal', date_str=trade.trade_date.strftime('%Y-%m-%d')) }}"
+                               class="btn btn-outline-info btn-sm" title="Daily Journal">
+                                <i class="fas fa-journal-whills"></i>
+                            </a>
+                            <a href="{{ url_for('trades.view_trade_detail', trade_id=trade.id) }}"
+                               class="btn btn-outline-primary btn-sm" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ url_for('trades.edit_trade', trade_id=trade.id) }}"
+                               class="btn btn-outline-warning btn-sm" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-outline-danger btn-sm"
+                                    title="Delete"
+                                    onclick="confirmSingleDelete({{ trade.id }}, '{{ trade.trade_date.strftime('%m/%d/%Y') }}', '{{ trade.instrument }}', '{{ trade.direction }}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
                         </div>
-                        <a href="{{ url_for('trades.view_trades_list') }}" class="action-btn btn-outline-secondary">
-                            <i class="fas fa-times me-1"></i> Clear All
-                        </a>
-                    {% endif %}
-                </div>
+                    </td>
+                </tr>
 
-                {# Action Buttons - Moved to Right Side #}
-                <div class="d-flex align-items-center gap-2">
-                    <a href="{{ url_for('trades.add_trade') }}" class="action-btn btn-outline-success">
-                        <i class="fas fa-plus me-1"></i> Log New Trade
-                    </a>
-                    <a href="{{ url_for('trades.import_trades') }}" class="action-btn btn-outline-info">
-                        <i class="fas fa-upload me-1"></i> Import
-                    </a>
-                    {% set current_args = request.args.to_dict() %}
-                    {% set _ = current_args.pop('sort', None) %}
-                    <a href="{{ url_for('trades.export_trades_csv', **current_args) }}" class="action-btn btn-outline-secondary">
-                        <i class="fas fa-download me-1"></i> Export
-                    </a>
-
-                    <button class="action-btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
-                        <i class="fas fa-filter me-1"></i>
-                        <span id="filterToggleText">Show Filters</span>
-                        <i class="fas fa-chevron-down ms-1" id="filterToggleIcon"></i>
-                    </button>
-                </div>
-            </div>
-
-            {# Trades Table with proper container #}
-            <div>
-                <div class="table-container">
-                    <table class="table table-hover mb-0 table-fixed">
-                        <thead class="sticky-header">
-                            <tr>
-                                {# REORGANIZED: New header order with chevron first #}
-                                <th width="30" class="text-center table-header-clean"></th>
-                                <th width="80" class="sortable" data-sort="date">
-                                    Date <i class="fas fa-sort sort-icon"></i>
-                                </th>
-                                <th width="80" class="sortable" data-sort="instrument">
-                                    Instrument <i class="fas fa-sort sort-icon"></i>
-                                </th>
-                                <th width="120" class="sortable" data-sort="model">
-                                    Model <i class="fas fa-sort sort-icon"></i>
-                                </th>
-                                <th width="70" class="sortable" data-sort="direction">
-                                    Direction <i class="fas fa-sort sort-icon"></i>
-                                </th>
-                                <th width="60" class="sortable" data-sort="contracts">
-                                    Contracts <i class="fas fa-sort sort-icon"></i>
-                                </th>
-                                <th width="70" class="sortable" data-sort="entry_time">
-                                    Entry Time <i class="fas fa-sort sort-icon"></i>
-                                </th>
-                                <th width="80" class="sortable" data-sort="entry">
-                                    Entry Price <i class="fas fa-sort sort-icon"></i>
-                                </th>
-                                <th width="80" class="sortable" data-sort="exit">
-                                    Exit Price <i class="fas fa-sort sort-icon"></i>
-                                </th>
-                                <th width="90" class="sortable" data-sort="time_in_trade">
-                                    Time in Trade <i class="fas fa-sort sort-icon"></i>
-                                </th>
-                                <th width="90" class="sortable" data-sort="how_closed">
-                                    How Closed <i class="fas fa-sort sort-icon"></i>
-                                </th>
-                                <th width="80" class="sortable" data-sort="avg_rating">
-                                    Avg Rating <i class="fas fa-sort sort-icon"></i>
-                                </th>
-                                <th width="90" class="sortable" data-sort="pnl">
-                                    P&L <i class="fas fa-sort sort-icon"></i>
-                                </th>
-                                <th width="160"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        {% for trade in trades %}
-                        <!-- Main trade row - REORGANIZED ORDER -->
-                        <tr class="trade-row {% if trade.gross_pnl > 0 %}table-success-subtle{% elif trade.gross_pnl < 0 %}table-danger-subtle{% endif %}"
-                            data-trade-id="{{ trade.id }}" onclick="toggleTradeDetails({{ trade.id }})">
-
-                            <!-- Dropdown arrow -->
-                            <td class="text-center">
-                                <i class="fas fa-chevron-right chevron-icon" id="chevron-{{ trade.id }}"></i>
-                            </td>
-
-                            <!-- Date -->
-                            <td>{{ trade.trade_date.strftime('%d %b %y') }}</td>
-
-                            <!-- Instrument -->
-                            <td>{{ trade.instrument }}</td>
-
-                            <!-- Model -->
-                            <td>
-                                {% if trade.trading_model %}
-                                    {{ trade.trading_model.name }}
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </td>
-
-                            <!-- Direction - Transparent with PROPERLY colored text -->
-                            <td>
-                                {% if trade.direction == 'Long' %}
-                                    <span class="badge-transparent" style="color: #198754 !important; font-weight: bold;">{{ trade.direction }}</span>
-                                {% elif trade.direction == 'Short' %}
-                                    <span class="badge-transparent" style="color: #dc3545 !important; font-weight: bold;">{{ trade.direction }}</span>
-                                {% else %}
-                                    <span class="badge-transparent" style="color: #6c757d !important; font-weight: bold;">{{ trade.direction }}</span>
-                                {% endif %}
-                            </td>
-
-                            <!-- Contracts -->
-                            <td>{{ trade.total_contracts_entered }}</td>
-
-                            <!-- Entry Time -->
-                            <td>
-                                {% if trade.entries.first() and trade.entries.first().entry_time %}
-                                    {{ trade.entries.first().entry_time.strftime('%H:%M') }}
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </td>
-
-                            <!-- Entry Price -->
-                            <td>
-                                {% if trade.average_entry_price is not none %}
-                                    {{ "%.2f"|format(trade.average_entry_price) }}
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </td>
-
-                            <!-- Exit Price -->
-                            <td>
-                                {% if trade.average_exit_price is not none %}
-                                    {{ "%.2f"|format(trade.average_exit_price) }}
-                                {% else %}
-                                    Open
-                                {% endif %}
-                            </td>
-
-                            <!-- Time in Trade -->
-                            <td>
-                                {% if trade.time_in_trade %}
-                                    {{ trade.time_in_trade }}
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </td>
-
-                            <!-- How Closed -->
-                            <td>
-                                {% if trade.how_closed %}
-                                    {{ trade.how_closed }}
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-
-                            <!-- Average Rating - WITH PROPER COLORING -->
-                            <td>
-                                {% if trade.entry_rating or trade.management_rating or trade.rules_rating or trade.target_rating or trade.preparation_rating %}
-                                    {% set ratings = [] %}
-                                    {% if trade.preparation_rating %}{% set _ = ratings.append(trade.preparation_rating) %}{% endif %}
-                                    {% if trade.rules_rating %}{% set _ = ratings.append(trade.rules_rating) %}{% endif %}
-                                    {% if trade.management_rating %}{% set _ = ratings.append(trade.management_rating) %}{% endif %}
-                                    {% if trade.target_rating %}{% set _ = ratings.append(trade.target_rating) %}{% endif %}
-                                    {% if trade.entry_rating %}{% set _ = ratings.append(trade.entry_rating) %}{% endif %}
-                                    {% set avg_rating = (ratings|sum / ratings|length)|round(1) %}
-                                    {% if avg_rating >= 4 %}
-                                        <span style="color: #198754 !important; font-weight: bold;">{{ avg_rating }}</span>
-                                    {% elif avg_rating >= 3 %}
-                                        <span style="color: #ffc107 !important; font-weight: bold;">{{ avg_rating }}</span>
-                                    {% else %}
-                                        <span style="color: #dc3545 !important; font-weight: bold;">{{ avg_rating }}</span>
-                                    {% endif %}
-                                {% else %}
-                                    <span style="color: #6c757d !important;">Not Rated</span>
-                                {% endif %}
-                            </td>
-
-                            <!-- P&L - Transparent with PROPERLY colored text -->
-                            <td>
-                                {% if trade.gross_pnl > 0 %}
-                                    <span class="badge-transparent" style="color: #198754 !important; font-weight: bold;">
-                                        ${{ "%.2f"|format(trade.gross_pnl) }}
-                                    </span>
-                                {% elif trade.gross_pnl < 0 %}
-                                    <span class="badge-transparent" style="color: #dc3545 !important; font-weight: bold;">
-                                        ${{ "%.2f"|format(trade.gross_pnl) }}
-                                    </span>
-                                {% else %}
-                                    <span class="badge-transparent" style="color: #6c757d !important; font-weight: bold;">
-                                        ${{ "%.2f"|format(trade.gross_pnl) }}
-                                    </span>
-                                {% endif %}
-                            </td>
-
-                            <!-- Actions - Right aligned -->
-                            <td onclick="event.stopPropagation()" style="text-align: right;">
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ url_for('journal.manage_daily_journal', date_str=trade.trade_date.strftime('%Y-%m-%d')) }}"
-                                       class="btn btn-outline-secondary btn-sm"
-                                       title="View Daily Journal for {{ trade.trade_date.strftime('%d %b %Y') }}">
-                                        <i class="fas fa-book"></i>
-                                    </a>
-                                    <a href="{{ url_for('trades.view_trade_detail', trade_id=trade.id) }}"
-                                       class="btn btn-outline-primary btn-sm" title="View Trade">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ url_for('trades.edit_trade', trade_id=trade.id) }}"
-                                       class="btn btn-outline-warning btn-sm" title="Edit Trade">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-outline-danger btn-sm"
-                                            onclick="confirmSingleDelete({{ trade.id }}, '{{ trade.trade_date.strftime('%m/%d/%Y') }}', '{{ trade.instrument }}', '{{ trade.direction }}')"
-                                            title="Delete Trade">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Enhanced Trade Details Row -->
-                        <tr class="trade-details-row" id="details-{{ trade.id }}" style="display: none;">
-                            <td colspan="12" class="p-0">
-                                <div class="trade-details-content">
-                                    <div class="row g-3">
-                                        <!-- Left Column: Entry/Exit and Performance -->
-                                        <div class="col-lg-8">
-                                            <div class="row g-3">
-                                                <!-- Entry & Exit Details Section -->
-                                                <div class="col-md-6">
-                                                    <div class="detail-section">
-                                                        <div class="section-header">
-                                                            <i class="fas fa-exchange-alt"></i>
-                                                            Entry & Exit Details
-                                                        </div>
-
-                                                        <!-- Entry Points - Simplified -->
-                                                        <h6 class="mb-2"><i class="fas fa-sign-in-alt me-2 text-success"></i>Entry Points</h6>
-                                                        {% if trade.entries.count() > 0 %}
-                                                            <div class="entry-exit-simple">
-                                                                {% for entry in trade.entries %}
-                                                                <div class="entry-exit-item">
-                                                                    #{{ loop.index }}: {{ entry.contracts }} contracts @ {{ "%.2f"|format(entry.entry_price) if entry.entry_price else 'N/A' }} (Time: {{ entry.entry_time.strftime('%H:%M') if entry.entry_time else 'N/A' }})
-                                                                </div>
-                                                                {% endfor %}
-                                                            </div>
-                                                        {% else %}
-                                                            <div class="text-muted small">No entry data</div>
-                                                        {% endif %}
-
-                                                        <!-- Exit Points - Simplified -->
-                                                        <h6 class="mb-2 mt-3"><i class="fas fa-sign-out-alt me-2 text-danger"></i>Exit Points</h6>
-                                                        {% if trade.exits.count() > 0 %}
-                                                            <div class="entry-exit-simple">
-                                                                {% for exit in trade.exits %}
-                                                                <div class="entry-exit-item">
-                                                                    #{{ loop.index }}: {{ exit.contracts }} contracts @ {{ "%.2f"|format(exit.exit_price) if exit.exit_price else 'N/A' }} (Time: {{ exit.exit_time.strftime('%H:%M') if exit.exit_time else 'N/A' }})
-                                                                </div>
-                                                                {% endfor %}
-                                                            </div>
-                                                        {% else %}
-                                                            <div class="text-muted small">No exit data or trade still open</div>
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-
-                                                <!-- Performance Metrics Section -->
-                                                <div class="col-md-6">
-                                                    <div class="detail-section">
-                                                        <div class="section-header">
-                                                            <i class="fas fa-chart-line"></i>
-                                                            Performance Metrics
-                                                        </div>
-
-                                                        <div class="metric-item">
-                                                            <span class="metric-label">Risk ($)</span>
-                                                            <span class="metric-value">
-                                                                {% if trade.initial_stop_loss %}
-                                                                    <span class="text-muted">Available</span>
-                                                                {% else %}
-                                                                    <span class="text-muted">No Stop Loss Set</span>
-                                                                {% endif %}
-                                                            </span>
-                                                        </div>
-
-                                                        <div class="metric-item">
-                                                            <span class="metric-label">R-Multiple</span>
-                                                            <span class="metric-value {% if trade.pnl_in_r and trade.pnl_in_r > 0 %}profit-value{% elif trade.pnl_in_r and trade.pnl_in_r < 0 %}loss-value{% else %}neutral-value{% endif %}">
-                                                                {% if trade.pnl_in_r is not none %}{{ "%.2f"|format(trade.pnl_in_r) }}R{% else %}N/A{% endif %}
-                                                            </span>
-                                                        </div>
-
-                                                        <div class="metric-item">
-                                                            <span class="metric-label">MAE (Max Adverse)</span>
-                                                            <span class="metric-value">
-                                                                {% if trade.mae %}
-                                                                    {{ trade.mae }} pts
-                                                                    {% if trade.average_entry_price %}
-                                                                        ({{ "%.2f"|format((trade.mae / trade.average_entry_price) * 100) }}%)
-                                                                    {% endif %}
-                                                                {% else %}N/A{% endif %}
-                                                            </span>
-                                                        </div>
-
-                                                        <div class="metric-item">
-                                                            <span class="metric-label">MFE (Max Favorable)</span>
-                                                            <span class="metric-value">
-                                                                {% if trade.mfe %}
-                                                                    {{ trade.mfe }} pts
-                                                                    {% if trade.average_entry_price %}
-                                                                        ({{ "%.2f"|format((trade.mfe / trade.average_entry_price) * 100) }}%)
-                                                                    {% endif %}
-                                                                {% else %}N/A{% endif %}
-                                                            </span>
-                                                        </div>
-
-                                                        <div class="metric-item">
-                                                            <span class="metric-label">Initial Stop Loss</span>
-                                                            <span class="metric-value">{{ trade.initial_stop_loss if trade.initial_stop_loss else 'N/A' }}</span>
-                                                        </div>
-
-                                                        <div class="metric-item">
-                                                            <span class="metric-label">Terminus Target</span>
-                                                            <span class="metric-value">{{ trade.terminus_target if trade.terminus_target else 'N/A' }}</span>
-                                                        </div>
-
-                                                        <div class="metric-item">
-                                                            <span class="metric-label">Total Contracts</span>
-                                                            <span class="metric-value">{{ trade.total_contracts_entered if trade.total_contracts_entered else 'N/A' }}</span>
-                                                        </div>
-
-                                                        {% if trade.news_event %}
-                                                        <div class="metric-item">
-                                                            <span class="metric-label">News Event</span>
-                                                            <span class="metric-value">{{ trade.news_event }}</span>
-                                                        </div>
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-                                            </div>
+                <!-- Enhanced Trade Details Row (only fix dollar_risk display) -->
+                <tr id="details-{{ trade.id }}" class="trade-details-row" style="display: none;">
+                    <td colspan="14" class="p-0">
+                        <div class="trade-details-container">
+                            <!-- Performance Metrics Section -->
+                            <div class="row g-3">
+                                <div class="col-lg-6">
+                                    <div class="detail-section">
+                                        <div class="section-header">
+                                            <i class="fas fa-chart-area"></i>
+                                            Performance Metrics
                                         </div>
 
-                                        <!-- Right Column: Ratings -->
-                                        <div class="col-lg-4">
-                                            <div class="detail-section">
-                                                <div class="section-header">
-                                                    <i class="fas fa-star"></i>
-                                                    Ratings & Assessment
-                                                </div>
-
-                                                <div class="metric-item">
-                                                    <span class="metric-label">Preparation</span>
-                                                    <div class="rating-dots">
-                                                        {% set rating = trade.preparation_rating %}
-                                                        {% if rating %}
-                                                            {% for i in range(1, 6) %}
-                                                                <div class="rating-dot {% if i <= rating %}filled-{{ rating }}{% endif %}"></div>
-                                                            {% endfor %}
-                                                        {% else %}
-                                                            {% for i in range(1, 6) %}
-                                                                <div class="rating-dot"></div>
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-
-                                                <div class="metric-item">
-                                                    <span class="metric-label">Rules</span>
-                                                    <div class="rating-dots">
-                                                        {% set rating = trade.rules_rating %}
-                                                        {% if rating %}
-                                                            {% for i in range(1, 6) %}
-                                                                <div class="rating-dot {% if i <= rating %}filled-{{ rating }}{% endif %}"></div>
-                                                            {% endfor %}
-                                                        {% else %}
-                                                            {% for i in range(1, 6) %}
-                                                                <div class="rating-dot"></div>
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-
-                                                <div class="metric-item">
-                                                    <span class="metric-label">Management</span>
-                                                    <div class="rating-dots">
-                                                        {% set rating = trade.management_rating %}
-                                                        {% if rating %}
-                                                            {% for i in range(1, 6) %}
-                                                                <div class="rating-dot {% if i <= rating %}filled-{{ rating }}{% endif %}"></div>
-                                                            {% endfor %}
-                                                        {% else %}
-                                                            {% for i in range(1, 6) %}
-                                                                <div class="rating-dot"></div>
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-
-                                                <div class="metric-item">
-                                                    <span class="metric-label">Target</span>
-                                                    <div class="rating-dots">
-                                                        {% set rating = trade.target_rating %}
-                                                        {% if rating %}
-                                                            {% for i in range(1, 6) %}
-                                                                <div class="rating-dot {% if i <= rating %}filled-{{ rating }}{% endif %}"></div>
-                                                            {% endfor %}
-                                                        {% else %}
-                                                            {% for i in range(1, 6) %}
-                                                                <div class="rating-dot"></div>
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-
-                                                <div class="metric-item">
-                                                    <span class="metric-label">Entry</span>
-                                                    <div class="rating-dots">
-                                                        {% set rating = trade.entry_rating %}
-                                                        {% if rating %}
-                                                            {% for i in range(1, 6) %}
-                                                                <div class="rating-dot {% if i <= rating %}filled-{{ rating }}{% endif %}"></div>
-                                                            {% endfor %}
-                                                        {% else %}
-                                                            {% for i in range(1, 6) %}
-                                                                <div class="rating-dot"></div>
-                                                            {% endfor %}
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-
-                                                <div class="metric-item">
-                                                    <span class="metric-label">Trade Rating</span>
-                                                    <span class="metric-value">
-                                                        {% set avg_rating = trade.average_rating %}
-                                                        {% if avg_rating %}
-                                                            {{ "%.1f"|format(avg_rating) }}/5
-                                                        {% else %}
-                                                            {% set ratings = [trade.preparation_rating, trade.rules_rating, trade.management_rating, trade.target_rating, trade.entry_rating] %}
-                                                            {% set valid_ratings = ratings|select('ne', none)|list %}
-                                                            {% if valid_ratings %}
-                                                                {% set calculated_avg = (valid_ratings|sum / valid_ratings|length) %}
-                                                                {{ "%.1f"|format(calculated_avg) }}/5
-                                                            {% else %}
-                                                                N/A
-                                                            {% endif %}
-                                                        {% endif %}
-                                                    </span>
-                                                </div>
-
-                                                <!-- Radar Chart -->
-                                                <div class="mt-3">
-                                                    <h6 class="mb-2">Performance Radar</h6>
-                                                    <div class="radar-chart-container">
-                                                        <canvas id="radarChart-{{ trade.id }}" width="200" height="200"></canvas>
-                                                    </div>
-                                                </div>
-
-                                                {% if trade.psych_scored_highest or trade.psych_scored_lowest %}
-                                                <div class="mt-3">
-                                                    {% if trade.psych_scored_highest %}
-                                                    <div class="metric-item">
-                                                        <span class="metric-label">Psych Highest</span>
-                                                        <span class="metric-value profit-value">{{ trade.psych_scored_highest }}</span>
-                                                    </div>
+                                        <div class="metrics-grid">
+                                            <div class="metric-item">
+                                                <span class="metric-label">Risk ($)</span>
+                                                <span class="metric-value">
+                                                    {% if trade.dollar_risk is not none %}
+                                                        ${{ "{:,.2f}".format(trade.dollar_risk) }}
+                                                    {% else %}
+                                                        N/A
                                                     {% endif %}
-                                                    {% if trade.psych_scored_lowest %}
-                                                    <div class="metric-item">
-                                                        <span class="metric-label">Psych Lowest</span>
-                                                        <span class="metric-value loss-value">{{ trade.psych_scored_lowest }}</span>
-                                                    </div>
+                                                </span>
+                                            </div>
+
+                                            <div class="metric-item">
+                                                <span class="metric-label">R-Value</span>
+                                                <span class="metric-value">
+                                                    {% if trade.pnl_in_r is not none %}
+                                                        {{ "{:+.2f}".format(trade.pnl_in_r) }}R
+                                                    {% else %}
+                                                        N/A
                                                     {% endif %}
-                                                </div>
-                                                {% endif %}
+                                                </span>
+                                            </div>
+
+                                            <div class="metric-item">
+                                                <span class="metric-label">MAE</span>
+                                                <span class="metric-value loss-value">
+                                                    {% if trade.mae is not none %}
+                                                        ${{ "{:,.2f}".format(trade.mae) }}
+                                                    {% else %}
+                                                        N/A
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+
+                                            <div class="metric-item">
+                                                <span class="metric-label">MFE</span>
+                                                <span class="metric-value profit-value">
+                                                    {% if trade.mfe is not none %}
+                                                        ${{ "{:,.2f}".format(trade.mfe) }}
+                                                    {% else %}
+                                                        N/A
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+
+                                            <div class="metric-item">
+                                                <span class="metric-label">Initial SL</span>
+                                                <span class="metric-value">
+                                                    {% if trade.initial_stop_loss is not none %}
+                                                        ${{ "{:.2f}".format(trade.initial_stop_loss) }}
+                                                    {% else %}
+                                                        N/A
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+
+                                            <div class="metric-item">
+                                                <span class="metric-label">Target</span>
+                                                <span class="metric-value">
+                                                    {% if trade.terminus_target is not none %}
+                                                        ${{ "{:.2f}".format(trade.terminus_target) }}
+                                                    {% else %}
+                                                        N/A
+                                                    {% endif %}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <!-- Second Row: Tags and Notes -->
-                                    <div class="row g-3 mt-2">
-                                        <!-- Tags & Resources Section -->
-                                        <div class="col-lg-6">
-                                            <div class="detail-section">
-                                                <div class="section-header">
-                                                    <i class="fas fa-tags"></i>
-                                                    Tags & Resources
-                                                </div>
+                                <!-- Ratings & Radar Chart Section -->
+                                <div class="col-lg-6">
+                                    <div class="detail-section">
+                                        <div class="section-header">
+                                            <i class="fas fa-star"></i>
+                                            Trade Ratings
+                                        </div>
 
-                                                <div class="d-flex flex-wrap gap-1">
-                                                    {% if trade.tags %}
-                                                        {% for tag in trade.tags %}
-                                                            <span class="badge rounded-pill tag-{{ tag.category or 'neutral' }}">{{ tag.name }}</span>
+                                        <!-- Individual Ratings with Dots -->
+                                        <div class="ratings-container">
+                                            {% for rating_name, rating_value in [
+                                                ('Preparation', trade.preparation_rating),
+                                                ('Rules', trade.rules_rating),
+                                                ('Management', trade.management_rating),
+                                                ('Target', trade.target_rating),
+                                                ('Entry', trade.entry_rating)
+                                            ] %}
+                                            <div class="rating-row">
+                                                <span class="rating-label">{{ rating_name }}</span>
+                                                <div class="rating-dots">
+                                                    {% if rating_value %}
+                                                        {% for i in range(1, 6) %}
+                                                            <div class="rating-dot {% if i <= rating_value %}filled-{{ rating_value }}{% endif %}"></div>
                                                         {% endfor %}
                                                     {% else %}
-                                                        <span class="text-muted">No tags</span>
+                                                        {% for i in range(1, 6) %}
+                                                            <div class="rating-dot"></div>
+                                                        {% endfor %}
                                                     {% endif %}
                                                 </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
 
-                                                {% if trade.screenshot_link or trade.tradingview_link %}
-                                                <div class="mt-3 d-flex gap-2 flex-wrap">
-                                                    {% if trade.screenshot_link %}
-                                                    <a href="{{ trade.screenshot_link }}" target="_blank" class="btn btn-outline-primary btn-sm">
-                                                        <i class="fas fa-camera me-1"></i>
-                                                        Screenshot
-                                                    </a>
-                                                    {% endif %}
-
-                                                    {% if trade.tradingview_link %}
-                                                    <a href="{{ trade.tradingview_link }}" target="_blank" class="btn btn-outline-info btn-sm">
-                                                        <i class="fas fa-chart-line me-1"></i>
-                                                        TradingView
-                                                    </a>
-                                                    {% endif %}
-                                                </div>
-                                                {% endif %}
+                                        <!-- Radar Chart -->
+                                        <div class="mt-3">
+                                            <h6 class="mb-2">Performance Radar</h6>
+                                            <div class="radar-chart-container">
+                                                <canvas id="radarChart-{{ trade.id }}" width="200" height="200"></canvas>
                                             </div>
                                         </div>
 
-                                        <!-- Notes Section -->
-                                        {% if trade.trade_notes or trade.overall_analysis_notes or trade.trade_management_notes or trade.errors_notes or trade.improvements_notes %}
-                                        <div class="col-lg-6">
-                                            <div class="detail-section">
-                                                <div class="section-header">
-                                                    <i class="fas fa-sticky-note"></i>
-                                                    Notes & Analysis
-                                                </div>
-
-                                                {% if trade.trade_notes %}
-                                                <div class="mb-3">
-                                                    <h6 class="text-primary mb-2">Trade Setup & Execution Notes</h6>
-                                                    <div class="notes-section">{{ trade.trade_notes|safe }}</div>
-                                                </div>
-                                                {% endif %}
-
-                                                {% if trade.overall_analysis_notes %}
-                                                <div class="mb-3">
-                                                    <h6 class="text-primary mb-2">Overall Trade Analysis</h6>
-                                                    <div class="notes-section">{{ trade.overall_analysis_notes|safe }}</div>
-                                                </div>
-                                                {% endif %}
-
-                                                {% if trade.trade_management_notes %}
-                                                <div class="mb-3">
-                                                    <h6 class="text-primary mb-2">Trade Management Notes</h6>
-                                                    <div class="notes-section">{{ trade.trade_management_notes|safe }}</div>
-                                                </div>
-                                                {% endif %}
-
-                                                {% if trade.errors_notes %}
-                                                <div class="mb-3">
-                                                    <h6 class="text-danger mb-2">Errors & Mistakes</h6>
-                                                    <div class="notes-section">{{ trade.errors_notes|safe }}</div>
-                                                </div>
-                                                {% endif %}
-
-                                                {% if trade.improvements_notes %}
-                                                <div class="mb-3">
-                                                    <h6 class="text-success mb-2">Improvements & Lessons</h6>
-                                                    <div class="notes-section">{{ trade.improvements_notes|safe }}</div>
-                                                </div>
-                                                {% endif %}
+                                        {% if trade.psych_scored_highest or trade.psych_scored_lowest %}
+                                        <div class="mt-3">
+                                            {% if trade.psych_scored_highest %}
+                                            <div class="metric-item">
+                                                <span class="metric-label">Psych Highest</span>
+                                                <span class="metric-value profit-value">{{ trade.psych_scored_highest }}</span>
                                             </div>
+                                            {% endif %}
+                                            {% if trade.psych_scored_lowest %}
+                                            <div class="metric-item">
+                                                <span class="metric-label">Psych Lowest</span>
+                                                <span class="metric-value loss-value">{{ trade.psych_scored_lowest }}</span>
+                                            </div>
+                                            {% endif %}
                                         </div>
                                         {% endif %}
                                     </div>
                                 </div>
-                            </td>
-                        </tr>
+                            </div>
 
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                            <!-- Second Row: Tags and Notes -->
+                            <div class="row g-3 mt-2">
+                                <!-- Tags & Resources Section -->
+                                <div class="col-lg-6">
+                                    <div class="detail-section">
+                                        <div class="section-header">
+                                            <i class="fas fa-tags"></i>
+                                            Tags & Resources
+                                        </div>
 
-        {% else %}
-            {# No Trades Message with Action Buttons #}
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-3">
-                    {# Active Filter Indicators - Even when no trades #}
-                    {% set active_filters = [] %}
-                    {% if filter_form.start_date.data %}{% set _ = active_filters.append('Start Date') %}{% endif %}
-                    {% if filter_form.end_date.data %}{% set _ = active_filters.append('End Date') %}{% endif %}
-                    {% if filter_form.instrument.data %}{% set _ = active_filters.append('Instrument') %}{% endif %}
-                    {% if filter_form.direction.data %}{% set _ = active_filters.append('Direction') %}{% endif %}
-                    {% if filter_form.trading_model_id.data and filter_form.trading_model_id.data != 0 %}{% set _ = active_filters.append('Trading Model') %}{% endif %}
-                    {% if filter_form.tags.data %}{% set _ = active_filters.append('Tags') %}{% endif %}
+                                        <div class="d-flex flex-wrap gap-1 mb-3">
+                                            {% if trade.tags %}
+                                                {% for tag in trade.tags %}
+                                                    <span class="badge rounded-pill tag-{{ tag.category or 'neutral' }}">{{ tag.name }}</span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <span class="text-muted">No tags</span>
+                                            {% endif %}
+                                        </div>
 
-                    {% if active_filters %}
-                        <div class="action-btn btn-outline-info active-filters-indicator">
-                            <i class="fas fa-filter me-1"></i>
-                            {{ active_filters|length }} filter(s) active
+                                        {% if trade.screenshot_link %}
+                                        <div class="mb-2">
+                                            <a href="{{ trade.screenshot_link }}" target="_blank" class="screenshot-link">
+                                                <i class="fas fa-external-link-alt me-1"></i>
+                                                Screenshot
+                                            </a>
+                                        </div>
+                                        {% endif %}
+
+                                        <!-- Entry/Exit Details Table -->
+                                        {% if trade.entries.count() > 0 or trade.exits.count() > 0 %}
+                                        <div class="mt-3">
+                                            <h6 class="mb-2">Entry/Exit Details</h6>
+                                            <table class="table table-sm entry-exit-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Type</th>
+                                                        <th>Time</th>
+                                                        <th>Contracts</th>
+                                                        <th>Price</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for entry in trade.entries %}
+                                                    <tr>
+                                                        <td><span class="badge bg-success">Entry</span></td>
+                                                        <td>{{ entry.entry_time.strftime('%H:%M') if entry.entry_time else 'N/A' }}</td>
+                                                        <td>{{ entry.contracts or 0 }}</td>
+                                                        <td>{{ "{:.2f}".format(entry.entry_price) if entry.entry_price else 'N/A' }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    {% for exit in trade.exits %}
+                                                    <tr>
+                                                        <td><span class="badge bg-danger">Exit</span></td>
+                                                        <td>{{ exit.exit_time.strftime('%H:%M') if exit.exit_time else 'N/A' }}</td>
+                                                        <td>{{ exit.contracts or 0 }}</td>
+                                                        <td>{{ "{:.2f}".format(exit.exit_price) if exit.exit_price else 'N/A' }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Notes Section -->
+                                <div class="col-lg-6">
+                                    <div class="detail-section">
+                                        <div class="section-header">
+                                            <i class="fas fa-sticky-note"></i>
+                                            Notes & Analysis
+                                        </div>
+
+                                        {% if trade.trade_notes %}
+                                        <div class="notes-section">
+                                            <strong>Trade Notes:</strong><br>
+                                            {{ trade.trade_notes }}
+                                        </div>
+                                        {% endif %}
+
+                                        {% if trade.overall_analysis_notes %}
+                                        <div class="notes-section">
+                                            <strong>Overall Analysis:</strong><br>
+                                            {{ trade.overall_analysis_notes }}
+                                        </div>
+                                        {% endif %}
+
+                                        {% if trade.trade_management_notes %}
+                                        <div class="notes-section">
+                                            <strong>Management Notes:</strong><br>
+                                            {{ trade.trade_management_notes }}
+                                        </div>
+                                        {% endif %}
+
+                                        {% if trade.errors_notes %}
+                                        <div class="notes-section">
+                                            <strong>Errors:</strong><br>
+                                            {{ trade.errors_notes }}
+                                        </div>
+                                        {% endif %}
+
+                                        {% if trade.improvements_notes %}
+                                        <div class="notes-section">
+                                            <strong>Improvements:</strong><br>
+                                            {{ trade.improvements_notes }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <a href="{{ url_for('trades.view_trades_list') }}" class="action-btn btn-outline-secondary">
-                            <i class="fas fa-times me-1"></i> Clear All
-                        </a>
-                    {% endif %}
-                </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-                {# Action Buttons - Always shown on right #}
-                <div class="d-flex align-items-center gap-2">
-                    <a href="{{ url_for('trades.add_trade') }}" class="action-btn btn-outline-success">
-                        <i class="fas fa-plus me-1"></i> Log New Trade
-                    </a>
-                    <a href="{{ url_for('trades.import_trades') }}" class="action-btn btn-outline-info">
-                        <i class="fas fa-upload me-1"></i> Import
-                    </a>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No trades found</h5>
+            <p class="text-muted">Start by logging your first trade or adjust your filters.</p>
+            <a href="{{ url_for('trades.add_trade') }}" class="btn btn-success">
+                <i class="fas fa-plus-circle me-1"></i> Log Your First Trade
+            </a>
+        </div>
+    {% endif %}
+</div>
 
-                    <button class="action-btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse" aria-expanded="false" aria-controls="filterCollapse">
-                        <i class="fas fa-filter me-1"></i>
-                        <span id="filterToggleText">Show Filters</span>
-                        <i class="fas fa-chevron-down ms-1" id="filterToggleIcon"></i>
-                    </button>
-                </div>
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filterModalLabel">
+                    <i class="fas fa-filter me-2"></i>Filter Trades
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-
-            <div class="text-center py-5">
-                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
-                <h4 class="text-muted">No Trades Found</h4>
-                <p class="text-muted">
-                    {% if active_filters %}
-                        No trades match your current filter criteria. Try adjusting your filters or
-                        <a href="{{ url_for('trades.view_trades_list') }}">clear all filters</a>.
-                    {% else %}
-                        You haven't logged any trades yet.
-                    {% endif %}
-                </p>
-                <a href="{{ url_for('trades.add_trade') }}" class="btn btn-success">
-                    <i class="fas fa-plus me-1"></i> Log Your First Trade
+            <div class="modal-body">
+                <form method="GET" action="{{ url_for('trades.view_trades_list') }}" id="filterForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ forms.render_field(filter_form.start_date, input_class="form-control", label_visible=true) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ forms.render_field(filter_form.end_date, input_class="form-control", label_visible=true) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ forms.render_field(filter_form.instrument, input_class="form-select", label_visible=true) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ forms.render_field(filter_form.trading_model_id, input_class="form-select", label_visible=true) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ forms.render_field(filter_form.direction, input_class="form-select", label_visible=true) }}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="how_closed" class="form-label">How Closed</label>
+                            <select name="how_closed" id="how_closed" class="form-select">
+                                <option value="">All</option>
+                                <option value="Take Profit" {{ 'selected' if request.args.get('how_closed') == 'Take Profit' else '' }}>Take Profit</option>
+                                <option value="Stop Loss" {{ 'selected' if request.args.get('how_closed') == 'Stop Loss' else '' }}>Stop Loss</option>
+                                <option value="Scratch" {{ 'selected' if request.args.get('how_closed') == 'Scratch' else '' }}>Scratch</option>
+                                <option value="Still Open" {{ 'selected' if request.args.get('how_closed') == 'Still Open' else '' }}>Still Open</option>
+                                <option value="Manual Close" {{ 'selected' if request.args.get('how_closed') == 'Manual Close' else '' }}>Manual Close</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            {{ forms.render_field(filter_form.tags, input_class="form-select", label_visible=true) }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i> Clear All
                 </a>
+                <button type="submit" form="filterForm" class="btn btn-primary">
+                    <i class="fas fa-search me-1"></i> Apply Filters
+                </button>
             </div>
-        {% endif %}
+        </div>
     </div>
 </div>
 
+<!-- Custom Confirmation Modal -->
+<div class="modal fade" id="customConfirmModal" tabindex="-1" aria-labelledby="customConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customConfirmModalLabel">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="customConfirmModalBody">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="customConfirmButton">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
-
-{% block scripts_extra %}
+{% block extra_js %}
 <script src="{{ url_for('static', filename='js/custom-modals.js') }}"></script>
-<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 <script>
 try {
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM Ready - Setting up event handlers');
+    // Global variables
+    let customConfirmModal = null;
 
-        // --- 1. OVERRIDE CONFIRM DELETE FUNCTION ---
-        window.confirmSingleDelete = function(tradeId, date, instrument, direction) {
-            if (typeof showCustomConfirmation === 'function') {
-                showCustomConfirmation({
-                    title: 'Confirm Delete Trade',
-                    message: `Are you sure you want to permanently delete this trade?<br><br><strong>${date} - ${instrument} (${direction})</strong><br><br>This action cannot be undone.`,
-                    confirmText: 'Delete Trade',
-                    confirmClass: 'btn-danger',
-                    icon: 'exclamation-triangle',
-                    iconClass: 'text-danger',
-                    onConfirm: () => {
-                        const form = document.createElement('form');
-                        form.method = 'POST';
-                        form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
-                        const csrfToken = document.createElement('input');
-                        csrfToken.type = 'hidden';
-                        csrfToken.name = 'csrf_token';
-                        csrfToken.value = '{{ csrf_token }}';
-                        form.appendChild(csrfToken);
-                        document.body.appendChild(form);
-                        form.submit();
-                    }
-                });
-            } else {
-                console.error('showCustomConfirmation is not defined. Falling back to browser confirm.');
-                if (confirm(`Delete ${date} - ${instrument} (${direction})? Cannot be undone.`)) {
+    // Custom confirmation dialog
+    function showCustomConfirmation(options) {
+        if (!customConfirmModal) {
+            console.error('Custom confirm modal not initialized');
+            return;
+        }
+
+        document.getElementById('customConfirmModalLabel').textContent = options.title;
+        document.getElementById('customConfirmModalBody').innerHTML = options.message;
+
+        const confirmButton = document.getElementById('customConfirmButton');
+        confirmButton.textContent = options.confirmText || 'Confirm';
+        confirmButton.className = `btn ${options.confirmClass || 'btn-danger'}`;
+
+        confirmButton.onclick = function() {
+            customConfirmModal.hide();
+            options.onConfirm();
+        };
+
+        customConfirmModal.show();
+    }
+
+    // Override the head function with the full implementation
+    function confirmSingleDelete(tradeId, date, instrument, direction) {
+        console.log('🗑️ Confirming delete for trade:', tradeId);
+
+        if (typeof showCustomConfirmation === 'function') {
+            showCustomConfirmation({
+                title: 'Confirm Delete Trade',
+                message: `Are you sure you want to permanently delete this trade?<br><br><strong>${date} - ${instrument} (${direction})</strong><br><br>This action cannot be undone.`,
+                confirmText: 'Delete Trade',
+                confirmClass: 'btn-danger',
+                onConfirm: () => {
                     const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
@@ -1716,53 +1527,67 @@ try {
                     document.body.appendChild(form);
                     form.submit();
                 }
+            });
+        } else {
+            console.error('showCustomConfirmation is not defined. Falling back to browser confirm.');
+            if (confirm(`Delete ${date} - ${instrument} (${direction})?`)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = 'csrf_token';
+                csrfToken.value = '{{ csrf_token }}';
+                form.appendChild(csrfToken);
+                document.body.appendChild(form);
+                form.submit();
             }
-        };
-
-        // --- 2. SETUP SORTING HEADERS ---
-        const sortableHeaders = document.querySelectorAll('th.sortable');
-        sortableHeaders.forEach(header => {
-            header.addEventListener('click', function(e) {
-                e.stopPropagation();
-                const sortField = this.getAttribute('data-sort');
-                if (!sortField) return;
-                const currentParams = new URLSearchParams(window.location.search);
-                const currentSort = currentParams.get('sort');
-                const currentOrder = currentParams.get('order');
-                let newOrder = 'desc';
-                if (currentSort === sortField && currentOrder === 'desc') {
-                    newOrder = 'asc';
-                }
-                currentParams.set('sort', sortField);
-                currentParams.set('order', newOrder);
-                currentParams.delete('page');
-                const newUrl = '{{ url_for("trades.view_trades_list") }}?' + currentParams.toString();
-                window.location.href = newUrl;
-            });
-        });
-
-        // --- 3. FILTER TOGGLE TEXT/ICON ---
-        const filterCollapse = document.getElementById('filterCollapse');
-        if (filterCollapse) {
-            const filterToggleText = document.getElementById('filterToggleText');
-            const filterToggleIcon = document.getElementById('filterToggleIcon');
-            filterCollapse.addEventListener('show.bs.collapse', function() {
-                if (filterToggleText) filterToggleText.textContent = 'Hide Filters';
-                if (filterToggleIcon) {
-                    filterToggleIcon.classList.remove('fa-chevron-down');
-                    filterToggleIcon.classList.add('fa-chevron-up');
-                }
-            });
-            filterCollapse.addEventListener('hide.bs.collapse', function() {
-                if (filterToggleText) filterToggleText.textContent = 'Show Filters';
-                if (filterToggleIcon) {
-                    filterToggleIcon.classList.remove('fa-chevron-up');
-                    filterToggleIcon.classList.add('fa-chevron-down');
-                }
-            });
         }
-        console.log('✅ All event handlers set up successfully.');
+    }
+
+    // DOM ready initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🎯 DOM Content Loaded - Initializing trade list...');
+
+        try {
+            // Initialize Bootstrap modal
+            const modalElement = document.getElementById('customConfirmModal');
+            if (modalElement && typeof bootstrap !== 'undefined') {
+                customConfirmModal = new bootstrap.Modal(modalElement);
+                console.log('✅ Custom confirm modal initialized');
+            } else {
+                console.warn('⚠️ Bootstrap modal not available or modal element not found');
+            }
+
+            // Add click handlers for sortable headers
+            document.querySelectorAll('.sortable').forEach(header => {
+                header.addEventListener('click', function() {
+                    const sortField = this.getAttribute('data-sort');
+                    if (sortField) {
+                        sortTable(sortField);
+                    }
+                });
+            });
+
+            // Initialize any visible radar charts
+            document.querySelectorAll('[id^="radarChart-"]').forEach(canvas => {
+                const tradeId = canvas.id.split('-')[1];
+                const detailsRow = document.getElementById(`details-${tradeId}`);
+                if (detailsRow && detailsRow.style.display !== 'none') {
+                    const ratings = extractTradeRatings(tradeId);
+                    initializeRadarChart(tradeId, ratings);
+                }
+            });
+
+            console.log('✅ Trade list initialized successfully');
+
+        } catch (error) {
+            console.error('❌ Error initializing trade list:', error);
+        }
     });
+
+    console.log('✅ Trade list script loaded successfully');
+
 } catch (e) {
     console.error("A critical error occurred while setting up the page script. This is likely a syntax error.", e);
 }
