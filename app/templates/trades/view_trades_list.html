@@ -77,42 +77,29 @@ body {
     color: inherit !important;
 }
 
-/* Expandable row cursor */
-.trade-row {
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.trade-row:hover {
-    background-color: var(--bs-secondary-bg-subtle);
-}
-
-/* Chevron icon for expandable rows */
-.chevron-icon {
-    transition: transform 0.3s ease;
-    color: #adb5bd;
-    cursor: pointer;
-}
-
-.chevron-icon.rotated {
-    transform: rotate(90deg);
-}
-
-/* FIXED: Sticky header that stays at top */
 .sticky-header {
     position: sticky;
     top: 0;
     z-index: 10;
-    background-color: var(--bs-dark) !important;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Add shadow for better separation */
+    background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%) !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    border-bottom: 2px solid #6366f1;
+}
+ # Header Atrributes
+.sticky-header th {
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #f8fafc !important;
+    padding: 1rem 0.75rem !important;
+    border-color: #6366f1 !important;
 }
 
-/* REMOVED: Arrow and checkbox icons from headers */
 .table-header-clean {
     /* Clean headers without icons */
 }
 
-/* Remove the main container overflow issues */
 .container-fluid {
     overflow: visible !important;
 }
@@ -140,21 +127,23 @@ body {
 }
 
 .sortable:hover {
-    background-color: rgba(255,255,255,0.1) !important;
+    background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%) !important;
+    transform: translateY(-1px);
 }
 
 .sort-icon {
     position: absolute;
-    right: 4px;
+    right: 6px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 0.7em;
-    opacity: 0.6;
-    transition: opacity 0.2s;
+    font-size: 0.8em;
+    opacity: 0.7;
+    transition: all 0.2s ease;
 }
 
 .sortable:hover .sort-icon {
     opacity: 1;
+    color: #60a5fa !important;
 }
 
 .sortable.sorted-asc .sort-icon {
@@ -194,29 +183,336 @@ body {
     transform: rotate(90deg);
 }
 
+/* Enhanced Trade Details Styling */
+.trade-details-row {
+    background: var(--bs-body-bg);
+    border-left: 4px solid var(--bs-primary);
+    box-shadow: none;
+}
+
+[data-bs-theme="dark"] .trade-details-row {
+    background: var(--bs-body-bg); /* Simplified */
+    border-left: 4px solid var(--bs-primary);
+}
+
 .trade-details-content {
-    border-left: 3px solid var(--bs-primary);
-    background-color: var(--bs-light) !important;
+    padding: 1.5rem !important;
 }
 
-[data-bs-theme="dark"] .trade-details-content {
-    background-color: var(--bs-dark) !important;
+.detail-section {
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    height: 100%;
+    min-height: 200px;
 }
 
-/* Responsive adjustments - FIXED */
+[data-bs-theme="dark"] .detail-section {
+    background: rgba(55, 65, 81, 0.7);
+    border: 1px solid #4b5563;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.detail-section:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .section-header {
+    border-bottom-color: #4b5563;
+    color: #f3f4f6;
+}
+
+.section-header i {
+    color: var(--bs-primary);
+    margin-right: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+[data-bs-theme="dark"] .metric-item {
+    border-bottom-color: #4b5563;
+}
+
+.metric-item:last-child {
+    border-bottom: none;
+}
+
+.metric-label {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+[data-bs-theme="dark"] .metric-label {
+    color: #9ca3af;
+}
+
+.metric-value {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.profit-value {
+    color: #10b981 !important;
+}
+
+.loss-value {
+    color: #ef4444 !important;
+}
+
+.neutral-value {
+    color: #6b7280 !important;
+}
+
+/* Dot Rating System */
+.rating-dots {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.rating-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.rating-dot.filled-1 {
+    background-color: #ef4444;
+    border-color: #ef4444;
+}
+
+.rating-dot.filled-2 {
+    background-color: #f97316;
+    border-color: #f97316;
+}
+
+.rating-dot.filled-3 {
+    background-color: #eab308;
+    border-color: #eab308;
+}
+
+.rating-dot.filled-4 {
+    background-color: #84cc16;
+    border-color: #84cc16;
+}
+
+.rating-dot.filled-5 {
+    background-color: #22c55e;
+    border-color: #22c55e;
+}
+
+.tag-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+/* Tag styling to match project */
+.badge.tag-good {
+    background-color: var(--bs-success) !important;
+    color: white !important;
+}
+
+.badge.tag-bad {
+    background-color: var(--bs-danger) !important;
+    color: white !important;
+}
+
+.badge.tag-neutral {
+    background-color: var(--bs-primary) !important;
+    color: white !important;
+}
+
+/* Radar Chart Container */
+.radar-chart-container {
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+[data-bs-theme="dark"] .tag-good {
+    background-color: #064e3b;
+    color: #6ee7b7;
+}
+
+[data-bs-theme="dark"] .tag-bad {
+    background-color: #7f1d1d;
+    color: #fca5a5;
+}
+
+[data-bs-theme="dark"] .tag-neutral {
+    background-color: #1e3a8a;
+    color: #93c5fd;
+}
+
+.notes-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 0.75rem;
+    font-style: italic;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+[data-bs-theme="dark"] .notes-section {
+    background: #374151;
+    border-color: #4b5563;
+    color: #d1d5db;
+}
+
+.screenshot-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white !important;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.screenshot-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+    color: white !important;
+}
+
+.tradingview-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #2962ff 0%, #1e3a8a 100%);
+    color: white !important;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(41, 98, 255, 0.3);
+}
+
+.tradingview-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(41, 98, 255, 0.4);
+    color: white !important;
+}
+
+.entry-exit-table {
+    width: 100%;
+    margin-top: 0.75rem;
+}
+
+.entry-exit-table th {
+    background: #f3f4f6;
+    color: #374151;
+    font-weight: 600;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    border: 1px solid #d1d5db;
+}
+
+[data-bs-theme="dark"] .entry-exit-table th {
+    background: #4b5563;
+    color: #f3f4f6;
+    border-color: #6b7280;
+}
+
+.entry-exit-table td {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.85rem;
+    border: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+[data-bs-theme="dark"] .entry-exit-table td {
+    border-color: #4b5563;
+}
+
+.time-badge {
+    background: #e0e7ff;
+    color: #3730a3;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+[data-bs-theme="dark"] .time-badge {
+    background: #312e81;
+    color: #c7d2fe;
+}
+
+.price-badge {
+    background: #f0fdf4;
+    color: #166534;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+[data-bs-theme="dark"] .price-badge {
+    background: #14532d;
+    color: #86efac;
+}
+
+.contracts-badge {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+[data-bs-theme="dark"] .contracts-badge {
+    background: #78350f;
+    color: #fde68a;
+}
+
+
 @media (max-width: 1200px) {
     .table-container {
         max-height: calc(100vh - 320px); /* Adjust for smaller screens */
     }
 }
 
-/* Page info styling */
+
 .page-info {
     font-size: 0.9rem;
     color: var(--bs-secondary);
 }
 
-/* FIXED: Pagination arrow styling - remove borders and make them theme appropriate */
+
 .pagination-arrow-grey {
     display: inline-flex;
     align-items: center;
@@ -249,7 +545,7 @@ body {
     padding: 0 0.5rem;
 }
 
-/* REMOVED: Borderless action buttons for more compact rows */
+
 .table-fixed .btn-group .btn {
     border: none !important;
     padding: 0.25rem 0.4rem !important;
@@ -380,6 +676,28 @@ body {
     display: flex;
     flex-direction: column;
 }
+
+.entry-exit-simple {
+    background: var(--bs-tertiary-bg);
+    border-radius: 0.375rem;
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.entry-exit-item {
+    background: var(--bs-body-bg);
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--bs-border-color);
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+}
+
+.entry-exit-item:last-child {
+    margin-bottom: 0;
+}
+
 </style>
 
 <!-- CRITICAL: LOAD JAVASCRIPT FUNCTIONS FIRST IN HEAD -->
@@ -440,6 +758,118 @@ function confirmSingleDelete(tradeId, date, instrument, direction) {
     console.log('🗑️ HEAD confirmSingleDelete called with:', tradeId, date, instrument, direction);
     // This will be overridden by the DOM ready function which has access to showCustomConfirmation
     console.log('⏳ Waiting for DOM ready to override this function...');
+}
+
+// Initialize radar charts for trade details
+function initializeRadarChart(tradeId, ratings) {
+    const canvas = document.getElementById(`radarChart-${tradeId}`);
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = 60;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw radar grid
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+
+    // Draw concentric circles
+    for (let i = 1; i <= 5; i++) {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, (radius * i) / 5, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+
+    // Draw spokes
+    const labels = ['Prep', 'Rules', 'Mgmt', 'Target', 'Entry'];
+    const angleStep = (2 * Math.PI) / 5;
+
+    for (let i = 0; i < 5; i++) {
+        const angle = i * angleStep - Math.PI / 2;
+        const x = centerX + Math.cos(angle) * radius;
+        const y = centerY + Math.sin(angle) * radius;
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        // Draw labels
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        const labelX = centerX + Math.cos(angle) * (radius + 15);
+        const labelY = centerY + Math.sin(angle) * (radius + 15);
+        ctx.fillText(labels[i], labelX, labelY);
+    }
+
+    // Draw data polygon
+    if (ratings.some(r => r !== null)) {
+        ctx.beginPath();
+        ctx.strokeStyle = '#3b82f6';
+        ctx.fillStyle = 'rgba(59, 130, 246, 0.2)';
+        ctx.lineWidth = 2;
+
+        for (let i = 0; i < 5; i++) {
+            const rating = ratings[i] || 0;
+            const angle = i * angleStep - Math.PI / 2;
+            const distance = (rating / 5) * radius;
+            const x = centerX + Math.cos(angle) * distance;
+            const y = centerY + Math.sin(angle) * distance;
+
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw data points
+        ctx.fillStyle = '#3b82f6';
+        for (let i = 0; i < 5; i++) {
+            const rating = ratings[i] || 0;
+            const angle = i * angleStep - Math.PI / 2;
+            const distance = (rating / 5) * radius;
+            const x = centerX + Math.cos(angle) * distance;
+            const y = centerY + Math.sin(angle) * distance;
+
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+    }
+}
+
+// Update the toggleTradeDetails function to initialize radar chart
+function toggleTradeDetails(tradeId) {
+    const detailsRow = document.getElementById(`details-${tradeId}`);
+    const chevron = document.getElementById(`chevron-${tradeId}`);
+
+    if (detailsRow && chevron) {
+        if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
+            detailsRow.style.display = 'table-row';
+            chevron.classList.remove('fa-chevron-right');
+            chevron.classList.add('fa-chevron-down');
+
+            // Initialize radar chart after showing details
+            setTimeout(() => {
+                const tradeData = getTradeRatings(tradeId); // You'll need to implement this
+                initializeRadarChart(tradeId, tradeData);
+            }, 100);
+        } else {
+            detailsRow.style.display = 'none';
+            chevron.classList.remove('fa-chevron-down');
+            chevron.classList.add('fa-chevron-right');
+        }
+    }
 }
 
 console.log('✅ Essential functions loaded in head!');
@@ -632,7 +1062,7 @@ console.log('✅ Essential functions loaded in head!');
             <div>
                 <div class="table-container">
                     <table class="table table-hover mb-0 table-fixed">
-                        <thead class="table-dark sticky-header">
+                        <thead class="sticky-header">
                             <tr>
                                 {# REORGANIZED: New header order with chevron first #}
                                 <th width="30" class="text-center table-header-clean"></th>
@@ -824,93 +1254,354 @@ console.log('✅ Essential functions loaded in head!');
                             </td>
                         </tr>
 
-                        <!-- Expandable details row -->
+                        <!-- Enhanced Trade Details Row -->
                         <tr class="trade-details-row" id="details-{{ trade.id }}" style="display: none;">
-                            <td colspan="14" class="p-0">
-                                <div class="trade-details-content p-3" style="background-color: var(--bs-light);">
-                                    <div class="row">
-                                        <!-- Left Column - Entry/Exit Details -->
-                                        <div class="col-md-4">
-                                            <h6><i class="fas fa-sign-in-alt me-1"></i>Entry Details</h6>
-                                            {% if trade.entries.count() > 0 %}
-                                                {% for entry in trade.entries %}
-                                                <div class="small mb-1">
-                                                    <strong>#{{ loop.index }}:</strong> {{ entry.contracts }} contracts @ {{ "%.2f"|format(entry.entry_price) }}
-                                                    <span class="text-muted">({{ entry.entry_time.strftime('%H:%M') if entry.entry_time else 'N/A' }})</span>
-                                                </div>
-                                                {% endfor %}
-                                                <div class="text-muted small mt-1">
-                                                    <strong>Total:</strong> {{ trade.total_contracts_entered }} contracts @ avg {{ "%.2f"|format(trade.average_entry_price) if trade.average_entry_price else 'N/A' }}
-                                                </div>
-                                            {% else %}
-                                                <div class="text-muted small">No entry data</div>
-                                            {% endif %}
+                            <td colspan="12" class="p-0">
+                                <div class="trade-details-content">
+                                    <div class="row g-3">
+                                        <!-- Left Column: Entry/Exit and Performance -->
+                                        <div class="col-lg-8">
+                                            <div class="row g-3">
+                                                <!-- Entry & Exit Details Section -->
+                                                <div class="col-md-6">
+                                                    <div class="detail-section">
+                                                        <div class="section-header">
+                                                            <i class="fas fa-exchange-alt"></i>
+                                                            Entry & Exit Details
+                                                        </div>
 
-                                            <h6 class="mt-3"><i class="fas fa-sign-out-alt me-1"></i>Exit Details</h6>
-                                            {% if trade.exits.count() > 0 %}
-                                                {% for exit in trade.exits %}
-                                                <div class="small mb-1">
-                                                    <strong>#{{ loop.index }}:</strong> {{ exit.contracts }} contracts @ {{ "%.2f"|format(exit.exit_price) }}
-                                                    <span class="text-muted">({{ exit.exit_time.strftime('%H:%M') if exit.exit_time else 'N/A' }})</span>
+                                                        <!-- Entry Points - Simplified -->
+                                                        <h6 class="mb-2"><i class="fas fa-sign-in-alt me-2 text-success"></i>Entry Points</h6>
+                                                        {% if trade.entries.count() > 0 %}
+                                                            <div class="entry-exit-simple">
+                                                                {% for entry in trade.entries %}
+                                                                <div class="entry-exit-item">
+                                                                    #{{ loop.index }}: {{ entry.contracts }} contracts @ {{ "%.2f"|format(entry.entry_price) if entry.entry_price else 'N/A' }} (Time: {{ entry.entry_time.strftime('%H:%M') if entry.entry_time else 'N/A' }})
+                                                                </div>
+                                                                {% endfor %}
+                                                            </div>
+                                                        {% else %}
+                                                            <div class="text-muted small">No entry data</div>
+                                                        {% endif %}
+
+                                                        <!-- Exit Points - Simplified -->
+                                                        <h6 class="mb-2 mt-3"><i class="fas fa-sign-out-alt me-2 text-danger"></i>Exit Points</h6>
+                                                        {% if trade.exits.count() > 0 %}
+                                                            <div class="entry-exit-simple">
+                                                                {% for exit in trade.exits %}
+                                                                <div class="entry-exit-item">
+                                                                    #{{ loop.index }}: {{ exit.contracts }} contracts @ {{ "%.2f"|format(exit.exit_price) if exit.exit_price else 'N/A' }} (Time: {{ exit.exit_time.strftime('%H:%M') if exit.exit_time else 'N/A' }})
+                                                                </div>
+                                                                {% endfor %}
+                                                            </div>
+                                                        {% else %}
+                                                            <div class="text-muted small">No exit data or trade still open</div>
+                                                        {% endif %}
+                                                    </div>
                                                 </div>
-                                                {% endfor %}
-                                                <div class="text-muted small mt-1">
-                                                    <strong>Total:</strong> {{ trade.total_contracts_exited }} contracts @ avg {{ "%.2f"|format(trade.average_exit_price) if trade.average_exit_price else 'N/A' }}
+
+                                                <!-- Performance Metrics Section -->
+                                                <div class="col-md-6">
+                                                    <div class="detail-section">
+                                                        <div class="section-header">
+                                                            <i class="fas fa-chart-line"></i>
+                                                            Performance Metrics
+                                                        </div>
+
+                                                        <div class="metric-item">
+                                                            <span class="metric-label">Risk ($)</span>
+                                                            <span class="metric-value">
+                                                                {% if trade.initial_stop_loss %}
+                                                                    <span class="text-muted">Available</span>
+                                                                {% else %}
+                                                                    <span class="text-muted">No Stop Loss Set</span>
+                                                                {% endif %}
+                                                            </span>
+                                                        </div>
+
+                                                        <div class="metric-item">
+                                                            <span class="metric-label">R-Multiple</span>
+                                                            <span class="metric-value {% if trade.pnl_in_r and trade.pnl_in_r > 0 %}profit-value{% elif trade.pnl_in_r and trade.pnl_in_r < 0 %}loss-value{% else %}neutral-value{% endif %}">
+                                                                {% if trade.pnl_in_r is not none %}{{ "%.2f"|format(trade.pnl_in_r) }}R{% else %}N/A{% endif %}
+                                                            </span>
+                                                        </div>
+
+                                                        <div class="metric-item">
+                                                            <span class="metric-label">MAE (Max Adverse)</span>
+                                                            <span class="metric-value">
+                                                                {% if trade.mae %}
+                                                                    {{ trade.mae }} pts
+                                                                    {% if trade.average_entry_price %}
+                                                                        ({{ "%.2f"|format((trade.mae / trade.average_entry_price) * 100) }}%)
+                                                                    {% endif %}
+                                                                {% else %}N/A{% endif %}
+                                                            </span>
+                                                        </div>
+
+                                                        <div class="metric-item">
+                                                            <span class="metric-label">MFE (Max Favorable)</span>
+                                                            <span class="metric-value">
+                                                                {% if trade.mfe %}
+                                                                    {{ trade.mfe }} pts
+                                                                    {% if trade.average_entry_price %}
+                                                                        ({{ "%.2f"|format((trade.mfe / trade.average_entry_price) * 100) }}%)
+                                                                    {% endif %}
+                                                                {% else %}N/A{% endif %}
+                                                            </span>
+                                                        </div>
+
+                                                        <div class="metric-item">
+                                                            <span class="metric-label">Initial Stop Loss</span>
+                                                            <span class="metric-value">{{ trade.initial_stop_loss if trade.initial_stop_loss else 'N/A' }}</span>
+                                                        </div>
+
+                                                        <div class="metric-item">
+                                                            <span class="metric-label">Terminus Target</span>
+                                                            <span class="metric-value">{{ trade.terminus_target if trade.terminus_target else 'N/A' }}</span>
+                                                        </div>
+
+                                                        <div class="metric-item">
+                                                            <span class="metric-label">Total Contracts</span>
+                                                            <span class="metric-value">{{ trade.total_contracts_entered if trade.total_contracts_entered else 'N/A' }}</span>
+                                                        </div>
+
+                                                        {% if trade.news_event %}
+                                                        <div class="metric-item">
+                                                            <span class="metric-label">News Event</span>
+                                                            <span class="metric-value">{{ trade.news_event }}</span>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
                                                 </div>
-                                            {% else %}
-                                                <div class="text-muted small">No exit data</div>
-                                            {% endif %}
+                                            </div>
                                         </div>
 
-                                        <!-- Middle Column - Performance Metrics -->
-                                        <div class="col-md-4">
-                                            <h6><i class="fas fa-chart-line me-1"></i>Performance</h6>
-                                            <div class="small mb-1">
-                                                <strong>R-Multiple:</strong>
-                                                {% if trade.pnl_in_r is not none %}
-                                                    <span class="{% if trade.pnl_in_r > 0 %}text-success{% elif trade.pnl_in_r < 0 %}text-danger{% else %}text-muted{% endif %}">
-                                                        {{ "%.2f"|format(trade.pnl_in_r) }}R
+                                        <!-- Right Column: Ratings -->
+                                        <div class="col-lg-4">
+                                            <div class="detail-section">
+                                                <div class="section-header">
+                                                    <i class="fas fa-star"></i>
+                                                    Ratings & Assessment
+                                                </div>
+
+                                                <div class="metric-item">
+                                                    <span class="metric-label">Preparation</span>
+                                                    <div class="rating-dots">
+                                                        {% set rating = trade.preparation_rating %}
+                                                        {% if rating %}
+                                                            {% for i in range(1, 6) %}
+                                                                <div class="rating-dot {% if i <= rating %}filled-{{ rating }}{% endif %}"></div>
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            {% for i in range(1, 6) %}
+                                                                <div class="rating-dot"></div>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+
+                                                <div class="metric-item">
+                                                    <span class="metric-label">Rules</span>
+                                                    <div class="rating-dots">
+                                                        {% set rating = trade.rules_rating %}
+                                                        {% if rating %}
+                                                            {% for i in range(1, 6) %}
+                                                                <div class="rating-dot {% if i <= rating %}filled-{{ rating }}{% endif %}"></div>
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            {% for i in range(1, 6) %}
+                                                                <div class="rating-dot"></div>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+
+                                                <div class="metric-item">
+                                                    <span class="metric-label">Management</span>
+                                                    <div class="rating-dots">
+                                                        {% set rating = trade.management_rating %}
+                                                        {% if rating %}
+                                                            {% for i in range(1, 6) %}
+                                                                <div class="rating-dot {% if i <= rating %}filled-{{ rating }}{% endif %}"></div>
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            {% for i in range(1, 6) %}
+                                                                <div class="rating-dot"></div>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+
+                                                <div class="metric-item">
+                                                    <span class="metric-label">Target</span>
+                                                    <div class="rating-dots">
+                                                        {% set rating = trade.target_rating %}
+                                                        {% if rating %}
+                                                            {% for i in range(1, 6) %}
+                                                                <div class="rating-dot {% if i <= rating %}filled-{{ rating }}{% endif %}"></div>
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            {% for i in range(1, 6) %}
+                                                                <div class="rating-dot"></div>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+
+                                                <div class="metric-item">
+                                                    <span class="metric-label">Entry</span>
+                                                    <div class="rating-dots">
+                                                        {% set rating = trade.entry_rating %}
+                                                        {% if rating %}
+                                                            {% for i in range(1, 6) %}
+                                                                <div class="rating-dot {% if i <= rating %}filled-{{ rating }}{% endif %}"></div>
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            {% for i in range(1, 6) %}
+                                                                <div class="rating-dot"></div>
+                                                            {% endfor %}
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+
+                                                <div class="metric-item">
+                                                    <span class="metric-label">Trade Rating</span>
+                                                    <span class="metric-value">
+                                                        {% set avg_rating = trade.average_rating %}
+                                                        {% if avg_rating %}
+                                                            {{ "%.1f"|format(avg_rating) }}/5
+                                                        {% else %}
+                                                            {% set ratings = [trade.preparation_rating, trade.rules_rating, trade.management_rating, trade.target_rating, trade.entry_rating] %}
+                                                            {% set valid_ratings = ratings|select('ne', none)|list %}
+                                                            {% if valid_ratings %}
+                                                                {% set calculated_avg = (valid_ratings|sum / valid_ratings|length) %}
+                                                                {{ "%.1f"|format(calculated_avg) }}/5
+                                                            {% else %}
+                                                                N/A
+                                                            {% endif %}
+                                                        {% endif %}
                                                     </span>
-                                                {% else %}
-                                                    <span class="text-muted">N/A</span>
+                                                </div>
+
+                                                <!-- Radar Chart -->
+                                                <div class="mt-3">
+                                                    <h6 class="mb-2">Performance Radar</h6>
+                                                    <div class="radar-chart-container">
+                                                        <canvas id="radarChart-{{ trade.id }}" width="200" height="200"></canvas>
+                                                    </div>
+                                                </div>
+
+                                                {% if trade.psych_scored_highest or trade.psych_scored_lowest %}
+                                                <div class="mt-3">
+                                                    {% if trade.psych_scored_highest %}
+                                                    <div class="metric-item">
+                                                        <span class="metric-label">Psych Highest</span>
+                                                        <span class="metric-value profit-value">{{ trade.psych_scored_highest }}</span>
+                                                    </div>
+                                                    {% endif %}
+                                                    {% if trade.psych_scored_lowest %}
+                                                    <div class="metric-item">
+                                                        <span class="metric-label">Psych Lowest</span>
+                                                        <span class="metric-value loss-value">{{ trade.psych_scored_lowest }}</span>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
                                                 {% endif %}
                                             </div>
-                                            <div class="small mb-1"><strong>MAE:</strong> {{ trade.mae if trade.mae else 'N/A' }} points</div>
-                                            <div class="small mb-1"><strong>MFE:</strong> {{ trade.mfe if trade.mfe else 'N/A' }} points</div>
-                                            <div class="small mb-1"><strong>Stop Loss:</strong> {{ trade.initial_stop_loss if trade.initial_stop_loss else 'N/A' }}</div>
-                                            <div class="small mb-1"><strong>Target:</strong> {{ trade.terminus_target if trade.terminus_target else 'N/A' }}</div>
-                                            {% if trade.news_event %}
-                                            <div class="small mb-1"><strong>News:</strong> {{ trade.news_event }}</div>
-                                            {% endif %}
                                         </div>
+                                    </div>
 
-                                        <!-- Right Column - Ratings & Tags -->
-                                        <div class="col-md-4">
-                                            <h6><i class="fas fa-star me-1"></i>Ratings</h6>
-                                            <div class="small mb-1"><strong>Preparation:</strong> {{ trade.preparation_rating if trade.preparation_rating else 'N/A' }}/5</div>
-                                            <div class="small mb-1"><strong>Rules:</strong> {{ trade.rules_rating if trade.rules_rating else 'N/A' }}/5</div>
-                                            <div class="small mb-1"><strong>Management:</strong> {{ trade.management_rating if trade.management_rating else 'N/A' }}/5</div>
-                                            <div class="small mb-1"><strong>Target:</strong> {{ trade.target_rating if trade.target_rating else 'N/A' }}/5</div>
-                                            <div class="small mb-1"><strong>Entry:</strong> {{ trade.entry_rating if trade.entry_rating else 'N/A' }}/5</div>
+                                    <!-- Second Row: Tags and Notes -->
+                                    <div class="row g-3 mt-2">
+                                        <!-- Tags & Resources Section -->
+                                        <div class="col-lg-6">
+                                            <div class="detail-section">
+                                                <div class="section-header">
+                                                    <i class="fas fa-tags"></i>
+                                                    Tags & Resources
+                                                </div>
 
-                                            {% if trade.tags %}
-                                            <h6 class="mt-3"><i class="fas fa-tags me-1"></i>All Tags</h6>
-                                            <div>
-                                                {% for tag in trade.tags %}
-                                                    <span class="badge badge-sm me-1 mb-1 {{ tag|tag_color }}">{{ tag.name }}</span>
-                                                {% endfor %}
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    {% if trade.tags %}
+                                                        {% for tag in trade.tags %}
+                                                            <span class="badge rounded-pill tag-{{ tag.category or 'neutral' }}">{{ tag.name }}</span>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <span class="text-muted">No tags</span>
+                                                    {% endif %}
+                                                </div>
+
+                                                {% if trade.screenshot_link or trade.tradingview_link %}
+                                                <div class="mt-3 d-flex gap-2 flex-wrap">
+                                                    {% if trade.screenshot_link %}
+                                                    <a href="{{ trade.screenshot_link }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-camera me-1"></i>
+                                                        Screenshot
+                                                    </a>
+                                                    {% endif %}
+
+                                                    {% if trade.tradingview_link %}
+                                                    <a href="{{ trade.tradingview_link }}" target="_blank" class="btn btn-outline-info btn-sm">
+                                                        <i class="fas fa-chart-line me-1"></i>
+                                                        TradingView
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                                {% endif %}
                                             </div>
-                                            {% endif %}
-
-                                            {% if trade.trade_notes %}
-                                            <h6 class="mt-3"><i class="fas fa-sticky-note me-1"></i>Notes</h6>
-                                            <div class="small text-muted">{{ trade.trade_notes[:100] }}{% if trade.trade_notes|length > 100 %}...{% endif %}</div>
-                                            {% endif %}
                                         </div>
+
+                                        <!-- Notes Section -->
+                                        {% if trade.trade_notes or trade.overall_analysis_notes or trade.trade_management_notes or trade.errors_notes or trade.improvements_notes %}
+                                        <div class="col-lg-6">
+                                            <div class="detail-section">
+                                                <div class="section-header">
+                                                    <i class="fas fa-sticky-note"></i>
+                                                    Notes & Analysis
+                                                </div>
+
+                                                {% if trade.trade_notes %}
+                                                <div class="mb-3">
+                                                    <h6 class="text-primary mb-2">Trade Setup & Execution Notes</h6>
+                                                    <div class="notes-section">{{ trade.trade_notes|safe }}</div>
+                                                </div>
+                                                {% endif %}
+
+                                                {% if trade.overall_analysis_notes %}
+                                                <div class="mb-3">
+                                                    <h6 class="text-primary mb-2">Overall Trade Analysis</h6>
+                                                    <div class="notes-section">{{ trade.overall_analysis_notes|safe }}</div>
+                                                </div>
+                                                {% endif %}
+
+                                                {% if trade.trade_management_notes %}
+                                                <div class="mb-3">
+                                                    <h6 class="text-primary mb-2">Trade Management Notes</h6>
+                                                    <div class="notes-section">{{ trade.trade_management_notes|safe }}</div>
+                                                </div>
+                                                {% endif %}
+
+                                                {% if trade.errors_notes %}
+                                                <div class="mb-3">
+                                                    <h6 class="text-danger mb-2">Errors & Mistakes</h6>
+                                                    <div class="notes-section">{{ trade.errors_notes|safe }}</div>
+                                                </div>
+                                                {% endif %}
+
+                                                {% if trade.improvements_notes %}
+                                                <div class="mb-3">
+                                                    <h6 class="text-success mb-2">Improvements & Lessons</h6>
+                                                    <div class="notes-section">{{ trade.improvements_notes|safe }}</div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </td>
                         </tr>
+
                         {% endfor %}
                         </tbody>
                     </table>
