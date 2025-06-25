@@ -9,8 +9,7 @@ import uuid
 import csv
 import io
 from datetime import date as py_date, datetime as py_datetime, time as py_time
-
-# App imports - NO DUPLICATES
+from datetime import datetime
 from app.extensions import db
 from app.models import (Trade, EntryPoint, ExitPoint, TradingModel, NewsEventItem,
                        TradeImage, Instrument, Tag, TagCategory, TagUsageStats)
@@ -22,42 +21,32 @@ trades_bp = Blueprint('trades', __name__,
                       template_folder='../templates/trades',
                       url_prefix='/trades')
 
-# --- UPDATED HELPER FUNCTIONS ---
-
 def get_instrument_point_values():
-    """
-    Get current instrument point values from database using the new Instrument model.
-    Falls back to hardcoded values if database fails.
-    """
+
     try:
-        # Use the new Instrument model method
         return Instrument.get_instrument_point_values()
     except Exception as e:
         current_app.logger.warning(f"Failed to get instrument point values from database: {e}")
-        # Fallback to Random's common instruments (FIXED VALUES)
-        return {
-            'NQ': 20.0,    # Random's primary instrument - CORRECTED
-            'ES': 50.0,    # E-mini S&P 500
-            'YM': 5.0,     # E-mini Dow Jones
-            'MNQ': 2.0,    # Micro Nasdaq
-            'MES': 5.0,    # Micro S&P
-            'MYM': 0.5,    # Micro Dow
-            'Other': 1.0   # Default fallback
-        }
 
+        return {
+            'NQ': 20.0,
+            'ES': 50.0,
+            'YM': 5.0,
+            'MNQ': 2.0,
+            'MES': 5.0,
+            'MYM': 0.5,
+            'Other': 1.0
+        }
 
 def _is_allowed_image(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in current_app.config.get('ALLOWED_IMAGE_EXTENSIONS',
                                                                      {'png', 'jpg', 'jpeg', 'gif'})
 
-
 def _populate_tags_choices(form):
-    """Populate dynamic choices for tags dropdown - grouped by category with color information"""
     from app.models import Tag, TagCategory
     from flask_login import current_user
 
-    # Get all available tags for the user
     all_tags = Tag.query.filter(
         db.or_(
             Tag.is_default == True,
@@ -69,7 +58,6 @@ def _populate_tags_choices(form):
         form.tags.choices = []
         return form
 
-    # Use a dictionary to robustly group tags by category
     grouped_tags = {category: [] for category in TagCategory}
 
     for tag in all_tags:
@@ -81,10 +69,9 @@ def _populate_tags_choices(form):
                 tag.color_category or 'neutral'
             ))
 
-    # Build the final choices list in optgroups format
     choices = []
     for category_enum, tags_list in grouped_tags.items():
-        if tags_list:  # Only add categories that actually contain tags
+        if tags_list:
             choices.append((category_enum.value, tags_list))
 
     form.tags.choices = choices
@@ -92,7 +79,6 @@ def _populate_tags_choices(form):
 
 
 def _populate_trade_form_choices(form):
-    """Populate dynamic choices for trading models and news events"""
     form.trading_model_id.choices = [(0, 'Select Model')] + \
                                     [(tm.id, tm.name) for tm in
                                      TradingModel.query.filter_by(user_id=current_user.id, is_active=True).order_by(
@@ -104,17 +90,14 @@ def _populate_trade_form_choices(form):
 
 
 def _populate_filter_form_choices(filter_form):
-    """Populate dynamic choices for filter form"""
     from app.models import Tag
 
-    # Trading models
     filter_form.trading_model_id.choices = [(0, 'All Models')] + \
                                            [(tm.id, tm.name) for tm in
                                             TradingModel.query.filter_by(user_id=current_user.id,
                                                                          is_active=True).order_by(
                                                 TradingModel.name).all()]
 
-    # Tags - get all user's tags and default tags
     all_tags = Tag.query.filter(
         db.or_(
             Tag.is_default == True,
@@ -127,7 +110,6 @@ def _populate_filter_form_choices(filter_form):
     return filter_form
 
 
-# --- VIEW TRADES LIST ---
 @trades_bp.route('/', methods=['GET'])
 @login_required
 def view_trades_list():
@@ -150,38 +132,31 @@ def view_trades_list():
     if filter_form.trading_model_id.data and filter_form.trading_model_id.data != 0:
         query = query.filter(Trade.trading_model_id == filter_form.trading_model_id.data)
     if filter_form.tags.data:
-        # Handle tag filtering for many-to-many relationship
         tag_id = None
 
-        # Parse tag_id from form data or URL parameter
         if isinstance(filter_form.tags.data, str) and filter_form.tags.data.isdigit():
             tag_id = int(filter_form.tags.data)
         elif isinstance(filter_form.tags.data, int):
             tag_id = filter_form.tags.data
         elif hasattr(filter_form.tags.data, '__iter__') and len(filter_form.tags.data) > 0:
-            # Handle list/array of tag IDs (take the first one)
             first_tag = filter_form.tags.data[0]
             if isinstance(first_tag, str) and first_tag.isdigit():
                 tag_id = int(first_tag)
             elif isinstance(first_tag, int):
                 tag_id = first_tag
 
-        # Also check URL parameters directly as fallback
         if not tag_id:
             tag_param = request.args.get('tags')
             if tag_param and tag_param.isdigit():
                 tag_id = int(tag_param)
 
-        # Apply the filter using the correct many-to-many syntax
         if tag_id:
             query = query.filter(Trade.tags.any(Tag.id == tag_id))
 
-    # Handle sorting
     sort_field = request.args.get('sort', 'date')
     sort_order = request.args.get('order', 'desc')
     sort_reverse = sort_order == 'desc'
 
-    # We join TradingModel here to allow sorting by its 'name' field.
     query = query.join(TradingModel, Trade.trading_model_id == TradingModel.id, isouter=True)
 
     if sort_field == 'date':
@@ -189,8 +164,9 @@ def view_trades_list():
                                                                                          Trade.id.asc())
         query = query.order_by(*order_clauses)
     elif sort_field == 'instrument':
-        order_clauses = (Trade.instrument_legacy.desc(), Trade.trade_date.desc()) if sort_reverse else (
-            Trade.instrument_legacy.asc(), Trade.trade_date.desc())
+        query = query.join(Instrument, Trade.instrument_id == Instrument.id, isouter=True)
+        order_clauses = (Instrument.symbol.desc(), Trade.trade_date.desc()) if sort_reverse else (
+            Instrument.symbol.asc(), Trade.trade_date.desc())
         query = query.order_by(*order_clauses)
     elif sort_field == 'model':
         order_clauses = (TradingModel.name.desc(), Trade.trade_date.desc()) if sort_reverse else (
@@ -217,7 +193,7 @@ def view_trades_list():
     trades_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
     # In-memory sorting for calculated properties (P&L, Ratings, etc.)
-    property_sort_fields = ['pnl', 'contracts', 'entry_time', 'entry', 'exit', 'avg_rating']
+    property_sort_fields = ['pnl', 'contracts', 'entry_time', 'entry', 'exit', 'avg_rating', 'time_in_trade']
     if sort_field in property_sort_fields:
 
         def _calculate_avg_rating(trade):
@@ -240,7 +216,22 @@ def view_trades_list():
             key_func = lambda t: t.average_exit_price if t.average_exit_price is not None else -float('inf')
         elif sort_field == 'avg_rating':
             key_func = lambda t: _calculate_avg_rating(t) if _calculate_avg_rating(t) is not None else -1
+        elif sort_field == 'time_in_trade':
+            def _calculate_time_in_trade(trade):
+                if trade.exits.count() > 0 and trade.entries.count() > 0:
+                    # Get first entry (earliest time)
+                    first_entry = trade.entries.order_by(EntryPoint.entry_time.asc()).first()
+                    # Get last exit (latest time) - FIXED: Use proper SQLAlchemy syntax
+                    last_exit = trade.exits.order_by(ExitPoint.exit_time.desc()).first()
 
+                    if first_entry and last_exit and first_entry.entry_time and last_exit.exit_time:
+                        # Combine date with times to create full datetime objects
+                        entry_datetime = datetime.combine(trade.trade_date, first_entry.entry_time)
+                        exit_datetime = datetime.combine(trade.trade_date, last_exit.exit_time)
+                        return (exit_datetime - entry_datetime).total_seconds()
+                return 0
+
+            key_func = _calculate_time_in_trade
         if key_func:
             trades_pagination.items = sorted(trades_pagination.items, key=key_func, reverse=sort_reverse)
 
