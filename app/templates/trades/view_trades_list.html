@@ -977,37 +977,45 @@ console.log('✅ Essential functions loaded in head!');
 
 {% endblock %}
 
-{% block scripts %}
+
+{% block scripts_extra %}
 <script src="{{ url_for('static', filename='js/custom-modals.js') }}"></script>
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
 <script>
-// DOM READY FUNCTIONS - These run after the page loads
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM Ready - Setting up event handlers');
+try {
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM Ready - Setting up event handlers');
 
-    // Test function availability
-    console.log('toggleTradeDetails available:', typeof toggleTradeDetails);
-    console.log('confirmSingleDelete available:', typeof confirmSingleDelete);
-    console.log('showCustomConfirmation available:', typeof showCustomConfirmation);
-
-    // OVERRIDE the confirmSingleDelete function to ensure it uses custom modals
-    window.confirmSingleDelete = function(tradeId, date, instrument, direction) {
-        console.log('🗑️ DOM confirmSingleDelete called with:', tradeId, date, instrument, direction);
-
-        if (typeof showCustomConfirmation === 'function') {
-            console.log('✅ Using custom modal');
-            showCustomConfirmation({
-                title: 'Confirm Delete Trade',
-                message: `Are you sure you want to permanently delete this trade?<br><br><strong>${date} - ${instrument} (${direction})</strong><br><br>This action cannot be undone.`,
-                confirmText: 'Delete Trade',
-                confirmClass: 'btn-danger',
-                icon: 'exclamation-triangle',
-                iconClass: 'text-danger',
-                onConfirm: () => {
-                    console.log('🔥 Deleting trade:', tradeId);
-                    var form = document.createElement('form');
+        // --- 1. OVERRIDE CONFIRM DELETE FUNCTION ---
+        window.confirmSingleDelete = function(tradeId, date, instrument, direction) {
+            if (typeof showCustomConfirmation === 'function') {
+                showCustomConfirmation({
+                    title: 'Confirm Delete Trade',
+                    message: `Are you sure you want to permanently delete this trade?<br><br><strong>${date} - ${instrument} (${direction})</strong><br><br>This action cannot be undone.`,
+                    confirmText: 'Delete Trade',
+                    confirmClass: 'btn-danger',
+                    icon: 'exclamation-triangle',
+                    iconClass: 'text-danger',
+                    onConfirm: () => {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
+                        const csrfToken = document.createElement('input');
+                        csrfToken.type = 'hidden';
+                        csrfToken.name = 'csrf_token';
+                        csrfToken.value = '{{ csrf_token }}';
+                        form.appendChild(csrfToken);
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            } else {
+                console.error('showCustomConfirmation is not defined. Falling back to browser confirm.');
+                if (confirm(`Delete ${date} - ${instrument} (${direction})? Cannot be undone.`)) {
+                    const form = document.createElement('form');
                     form.method = 'POST';
                     form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
-                    var csrfToken = document.createElement('input');
+                    const csrfToken = document.createElement('input');
                     csrfToken.type = 'hidden';
                     csrfToken.name = 'csrf_token';
                     csrfToken.value = '{{ csrf_token }}';
@@ -1015,115 +1023,55 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.body.appendChild(form);
                     form.submit();
                 }
+            }
+        };
+
+        // --- 2. SETUP SORTING HEADERS ---
+        const sortableHeaders = document.querySelectorAll('th.sortable');
+        sortableHeaders.forEach(header => {
+            header.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const sortField = this.getAttribute('data-sort');
+                if (!sortField) return;
+                const currentParams = new URLSearchParams(window.location.search);
+                const currentSort = currentParams.get('sort');
+                const currentOrder = currentParams.get('order');
+                let newOrder = 'desc';
+                if (currentSort === sortField && currentOrder === 'desc') {
+                    newOrder = 'asc';
+                }
+                currentParams.set('sort', sortField);
+                currentParams.set('order', newOrder);
+                currentParams.delete('page');
+                const newUrl = '{{ url_for("trades.view_trades_list") }}?' + currentParams.toString();
+                window.location.href = newUrl;
             });
-        } else {
-            console.log('❌ Custom modal not available, using browser confirm');
-            if (confirm(`Delete ${date} - ${instrument} (${direction})? Cannot be undone.`)) {
-                var form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
-                var csrfToken = document.createElement('input');
-                csrfToken.type = 'hidden';
-                csrfToken.name = 'csrf_token';
-                csrfToken.value = '{{ csrf_token }}';
-                form.appendChild(csrfToken);
-                document.body.appendChild(form);
-                form.submit();
-            }
+        });
+
+        // --- 3. FILTER TOGGLE TEXT/ICON ---
+        const filterCollapse = document.getElementById('filterCollapse');
+        if (filterCollapse) {
+            const filterToggleText = document.getElementById('filterToggleText');
+            const filterToggleIcon = document.getElementById('filterToggleIcon');
+            filterCollapse.addEventListener('show.bs.collapse', function() {
+                if (filterToggleText) filterToggleText.textContent = 'Hide Filters';
+                if (filterToggleIcon) {
+                    filterToggleIcon.classList.remove('fa-chevron-down');
+                    filterToggleIcon.classList.add('fa-chevron-up');
+                }
+            });
+            filterCollapse.addEventListener('hide.bs.collapse', function() {
+                if (filterToggleText) filterToggleText.textContent = 'Show Filters';
+                if (filterToggleIcon) {
+                    filterToggleIcon.classList.remove('fa-chevron-up');
+                    filterToggleIcon.classList.add('fa-chevron-down');
+                }
+            });
         }
-    };
-
-    // 1. FILTER TOGGLE FUNCTIONALITY
-    const filterToggle = document.querySelector('[data-bs-target="#filterCollapse"]');
-    const filterToggleText = document.getElementById('filterToggleText');
-    const filterToggleIcon = document.getElementById('filterToggleIcon');
-    const filterCollapse = document.getElementById('filterCollapse');
-
-    if (filterToggle && filterCollapse) {
-        filterCollapse.addEventListener('show.bs.collapse', function() {
-            if (filterToggleText) filterToggleText.textContent = 'Hide Filters';
-            if (filterToggleIcon) {
-                filterToggleIcon.classList.remove('fa-chevron-down');
-                filterToggleIcon.classList.add('fa-chevron-up');
-            }
-        });
-
-        filterCollapse.addEventListener('hide.bs.collapse', function() {
-            if (filterToggleText) filterToggleText.textContent = 'Show Filters';
-            if (filterToggleIcon) {
-                filterToggleIcon.classList.remove('fa-chevron-up');
-                filterToggleIcon.classList.add('fa-chevron-down');
-            }
-        });
-    }
-
-    // 2. SORTING HEADERS - COMPLETELY REWRITTEN TO WORK PROPERLY
-    const sortableHeaders = document.querySelectorAll('th.sortable');
-    console.log('Found', sortableHeaders.length, 'sortable headers');
-
-    // Remove any existing onclick handlers first
-    sortableHeaders.forEach(header => {
-        // Clear any existing handlers
-        header.onclick = null;
-
-        header.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-
-            const sortField = this.getAttribute('data-sort');
-            console.log('🔄 Clicking sort header:', sortField);
-
-            if (!sortField) {
-                console.error('❌ No data-sort attribute found');
-                return;
-            }
-
-            // Get current URL parameters
-            const currentParams = new URLSearchParams(window.location.search);
-            const currentSort = currentParams.get('sort');
-            const currentOrder = currentParams.get('order');
-
-            // Determine new order (toggle between asc/desc)
-            let newOrder = 'desc';
-            if (currentSort === sortField && currentOrder === 'desc') {
-                newOrder = 'asc';
-            }
-
-            console.log(`Current sort: ${currentSort}, order: ${currentOrder}`);
-            console.log(`New sort: ${sortField}, order: ${newOrder}`);
-
-            // Set new parameters
-            currentParams.set('sort', sortField);
-            currentParams.set('order', newOrder);
-            currentParams.delete('page'); // Reset to first page
-
-            const newUrl = '{{ url_for("trades.view_trades_list") }}?' + currentParams.toString();
-            console.log('🎯 Navigating to:', newUrl);
-
-            // Navigate to new URL
-            window.location.href = newUrl;
-        });
-
-        console.log(`✅ Set up sort handler for: ${header.getAttribute('data-sort')}`);
+        console.log('✅ All event handlers set up successfully.');
     });
-
-    // 3. PREVENT EVENT CONFLICTS - Make sure header clicks don't trigger row expansion
-    document.querySelectorAll('thead th').forEach(header => {
-        header.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
-    });
-
-    // 4. DEBUG: Check if elements exist
-    const tradeRows = document.querySelectorAll('.trade-row[data-trade-id]');
-    console.log('Found trade rows:', tradeRows.length);
-
-    const deleteButtons = document.querySelectorAll('button[onclick*="confirmSingleDelete"]');
-    console.log('Found delete buttons:', deleteButtons.length);
-
-    console.log('✅ All event handlers set up successfully');
-});
-});
+} catch (e) {
+    console.error("A critical error occurred while setting up the page script. This is likely a syntax error.", e);
+}
 </script>
 {% endblock %}

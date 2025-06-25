@@ -74,6 +74,7 @@ function showCustomConfirmation(options) {
     };
 
     // Handle cancel (modal close)
+    //... (rest of the function)
     document.getElementById('customConfirmModal').addEventListener('hidden.bs.modal', function() {
         if (onCancel) onCancel();
         this.remove();

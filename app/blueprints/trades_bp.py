@@ -159,7 +159,7 @@ def view_trades_list():
         elif isinstance(filter_form.tags.data, int):
             tag_id = filter_form.tags.data
         elif hasattr(filter_form.tags.data, '__iter__') and len(filter_form.tags.data) > 0:
-            # Handle list/array of tag IDs (take the first one for now)
+            # Handle list/array of tag IDs (take the first one)
             first_tag = filter_form.tags.data[0]
             if isinstance(first_tag, str) and first_tag.isdigit():
                 tag_id = int(first_tag)
@@ -179,52 +179,70 @@ def view_trades_list():
     # Handle sorting
     sort_field = request.args.get('sort', 'date')
     sort_order = request.args.get('order', 'desc')
+    sort_reverse = sort_order == 'desc'
 
-    # Define sorting logic
+    # We join TradingModel here to allow sorting by its 'name' field.
+    query = query.join(TradingModel, Trade.trading_model_id == TradingModel.id, isouter=True)
+
     if sort_field == 'date':
-        if sort_order == 'asc':
-            query = query.order_by(Trade.trade_date.asc(), Trade.id.asc())
-        else:
-            query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
+        order_clauses = (Trade.trade_date.desc(), Trade.id.desc()) if sort_reverse else (Trade.trade_date.asc(),
+                                                                                         Trade.id.asc())
+        query = query.order_by(*order_clauses)
     elif sort_field == 'instrument':
-        if sort_order == 'asc':
-            query = query.order_by(Trade.instrument_legacy.asc(), Trade.trade_date.desc())
-        else:
-            query = query.order_by(Trade.instrument_legacy.desc(), Trade.trade_date.desc())
+        order_clauses = (Trade.instrument_legacy.desc(), Trade.trade_date.desc()) if sort_reverse else (
+            Trade.instrument_legacy.asc(), Trade.trade_date.desc())
+        query = query.order_by(*order_clauses)
+    elif sort_field == 'model':
+        order_clauses = (TradingModel.name.desc(), Trade.trade_date.desc()) if sort_reverse else (
+            TradingModel.name.asc(), Trade.trade_date.desc())
+        query = query.order_by(*order_clauses)
     elif sort_field == 'direction':
-        if sort_order == 'asc':
-            query = query.order_by(Trade.direction.asc(), Trade.trade_date.desc())
-        else:
-            query = query.order_by(Trade.direction.desc(), Trade.trade_date.desc())
+        order_clauses = (Trade.direction.desc(), Trade.trade_date.desc()) if sort_reverse else (Trade.direction.asc(),
+                                                                                                Trade.trade_date.desc())
+        query = query.order_by(*order_clauses)
     elif sort_field == 'how_closed':
-        if sort_order == 'asc':
-            query = query.order_by(Trade.how_closed.asc(), Trade.trade_date.desc())
-        else:
-            query = query.order_by(Trade.how_closed.desc(), Trade.trade_date.desc())
+        # Handle potential None values in 'how_closed' by sorting them last
+        order_clauses = (Trade.how_closed.desc().nullslast(), Trade.trade_date.desc()) if sort_reverse else (
+            Trade.how_closed.asc().nullsfirst(), Trade.trade_date.desc())
+        query = query.order_by(*order_clauses)
     else:
-        # Default sorting
+        # Default sorting by date desc for any other field before pagination
         query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
 
     # Pagination with dynamic page size
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
-
-    # Limit per_page to reasonable values
+    per_page = request.args.get('per_page', 25, type=int)
     if per_page not in [25, 50, 100, 250]:
         per_page = 25
-
     trades_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
-    # Handle P&L sorting (needs to be done after pagination due to calculated properties)
-    if sort_field == 'pnl':
-        if sort_order == 'desc':
-            trades_pagination.items = sorted(trades_pagination.items,
-                                             key=lambda t: t.gross_pnl if t.gross_pnl is not None else 0,
-                                             reverse=True)
-        else:
-            trades_pagination.items = sorted(trades_pagination.items,
-                                             key=lambda t: t.gross_pnl if t.gross_pnl is not None else 0,
-                                             reverse=False)
+    # In-memory sorting for calculated properties (P&L, Ratings, etc.)
+    property_sort_fields = ['pnl', 'contracts', 'entry_time', 'entry', 'exit', 'avg_rating']
+    if sort_field in property_sort_fields:
+
+        def _calculate_avg_rating(trade):
+            ratings = [r for r in
+                       [trade.preparation_rating, trade.rules_rating, trade.management_rating, trade.target_rating,
+                        trade.entry_rating] if r is not None]
+            return sum(ratings) / len(ratings) if ratings else None
+
+        key_func = None
+        if sort_field == 'pnl':
+            key_func = lambda t: t.gross_pnl if t.gross_pnl is not None else -float('inf')
+        elif sort_field == 'contracts':
+            key_func = lambda t: t.total_contracts_entered if t.total_contracts_entered is not None else -1
+        elif sort_field == 'entry_time':
+            key_func = lambda \
+                t: t.entries.first().entry_time if t.entries.first() and t.entries.first().entry_time else py_time.min
+        elif sort_field == 'entry':
+            key_func = lambda t: t.average_entry_price if t.average_entry_price is not None else -float('inf')
+        elif sort_field == 'exit':
+            key_func = lambda t: t.average_exit_price if t.average_exit_price is not None else -float('inf')
+        elif sort_field == 'avg_rating':
+            key_func = lambda t: _calculate_avg_rating(t) if _calculate_avg_rating(t) is not None else -1
+
+        if key_func:
+            trades_pagination.items = sorted(trades_pagination.items, key=key_func, reverse=sort_reverse)
 
     return render_template("trades/view_trades_list.html",
                            title="Trades List",
@@ -623,7 +641,11 @@ def delete_trade(trade_id):
         db.session.delete(trade_to_delete)  # Cascades should handle entries, exits, images in DB
         db.session.commit()
         TagUsageStats.cleanup_unused_stats(current_user.id)
-        flash('Trade deleted successfully.', 'success')
+        # Check if this was a custom modal delete
+        if request.form.get('custom_modal_delete') == 'true':
+            flash('Trade deleted successfully using custom modal!', 'success')
+        else:
+            flash('Trade deleted successfully.', 'success')
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting trade {trade_id}: {e}", exc_info=True)
