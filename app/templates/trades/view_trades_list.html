@@ -1857,13 +1857,14 @@ console.log('✅ Enhanced trade list functions loaded');
                                     <div class="card-content">
                                         <div class="details-list">
                                             <div class="detail-item">
-                                                <span class="label">Instrument:</span>
-                                                <span class="value">{{ trade.instrument or 'N/A' }}</span>
-                                            </div>
-                                            <div class="detail-item">
                                                 <span class="label">Date:</span>
                                                 <span class="value">{{ trade.trade_date.strftime('%d-%b-%Y') }}</span>
                                             </div>
+                                            <div class="detail-item">
+                                                <span class="label">Instrument:</span>
+                                                <span class="value">{{ trade.instrument or 'N/A' }}</span>
+                                            </div>
+
                                             <div class="detail-item">
                                                 <span class="label">Direction:</span>
                                                 <span class="value">
