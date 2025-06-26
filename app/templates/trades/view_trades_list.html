@@ -1475,7 +1475,6 @@ console.log('✅ Enhanced trade list functions loaded');
     <div class="col-12">
         <h1 class="display-6" style="margin-bottom: .1rem;">
             <i class="fas fa-chart-line me-2"></i>{{ title }}
-            <small class="text-muted fs-6 ms-2">Random's Trading Methodology</small>
         </h1>
 
         <!-- Pagination and Action Buttons Row -->
@@ -1877,6 +1876,10 @@ console.log('✅ Enhanced trade list functions loaded');
                                                 <span class="label">Trading Model:</span>
                                                 <span class="value">{{ trade.trading_model.name if trade.trading_model else 'N/A' }}</span>
                                             </div>
+                                            <div class="detail-item">
+                                                <span class="label">How Closed:</span>
+                                                <span class="value">{{ trade.how_closed or 'N/A' }}</span>
+                                            </div>
                                             <div class="detail-item tags-item">
                                                 <span class="label">Tags:</span>
                                                 <div class="value tags-container">
@@ -1890,10 +1893,7 @@ console.log('✅ Enhanced trade list functions loaded');
                                                 </div>
                                             </div>
 
-                                            <div class="detail-item">
-                                                <span class="label">How Closed:</span>
-                                                <span class="value">{{ trade.how_closed or 'N/A' }}</span>
-                                            </div>
+
                                             <div class="detail-item">
                                                 <span class="label">Screenshot:</span>
                                                 <span class="value">
