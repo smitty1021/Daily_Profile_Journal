@@ -815,79 +815,47 @@ const TradeListApp = {
     },
 
     // Enhanced delete confirmation
-    confirmSingleDelete(tradeId, date, instrument, direction) {
-        console.log('🗑️ Confirming delete for trade:', tradeId);
-
+        confirmSingleDelete(tradeId, date, instrument, direction) {
         if (this.customConfirmModal) {
-            this.showCustomConfirmation({
-                title: 'Confirm Delete Trade',
-                message: `Are you sure you want to permanently delete this trade?<br><br><strong>${date} - ${instrument} (${direction})</strong><br><br>This action cannot be undone.`,
-                confirmText: 'Delete Trade',
-                confirmClass: 'btn-danger',
-                onConfirm: () => this.submitDeleteForm(tradeId)
-            });
+            document.getElementById('customConfirmModalLabel').textContent = 'Confirm Delete Trade';
+            document.getElementById('customConfirmModalBody').innerHTML = `Are you sure you want to permanently delete this trade?<br><br><strong>${date} - ${instrument} (${direction})</strong><br><br>This action cannot be undone.`;
+
+            const confirmButton = document.getElementById('customConfirmButton');
+            confirmButton.textContent = 'Delete Trade';
+            confirmButton.className = 'btn btn-danger';
+            confirmButton.onclick = () => {
+                this.customConfirmModal.hide();
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = 'csrf_token';
+                csrfToken.value = '{{ csrf_token }}';
+                form.appendChild(csrfToken);
+                document.body.appendChild(form);
+                form.submit();
+            };
+
+            this.customConfirmModal.show();
         } else {
             // Fallback to browser confirm
-            if (confirm(`Delete ${date} - ${instrument} (${direction})?`)) {
-                this.submitDeleteForm(tradeId);
+            if (confirm(`Delete ${date} - ${instrument} (${direction})? Cannot be undone.`)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = 'csrf_token';
+                csrfToken.value = '{{ csrf_token }}';
+                form.appendChild(csrfToken);
+                document.body.appendChild(form);
+                form.submit();
             }
         }
     },
 
-    // Enhanced form submission with multiple CSRF token methods
-    submitDeleteForm(tradeId) {
-        try {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/trades/${tradeId}/delete`;
 
-            // Try multiple methods to get CSRF token
-            let csrfToken = null;
-
-            // Method 1: Meta tag
-            const metaToken = document.querySelector('meta[name="csrf-token"]');
-            if (metaToken) {
-                csrfToken = metaToken.getAttribute('content');
-            }
-
-            // Method 2: Check if there's a CSRF token in any existing form
-            if (!csrfToken || csrfToken === '') {
-                const existingToken = document.querySelector('input[name="csrf_token"]');
-                if (existingToken) {
-                    csrfToken = existingToken.value;
-                }
-            }
-
-            // Method 3: Try to get from filter form
-            if (!csrfToken || csrfToken === '') {
-                const filterForm = document.getElementById('filterForm');
-                if (filterForm) {
-                    const filterToken = filterForm.querySelector('input[name="csrf_token"]');
-                    if (filterToken) {
-                        csrfToken = filterToken.value;
-                    }
-                }
-            }
-
-            // Add CSRF token if we found one
-            if (csrfToken && csrfToken !== '') {
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = 'csrf_token';
-                csrfInput.value = csrfToken;
-                form.appendChild(csrfInput);
-            } else {
-                console.warn('⚠️ No CSRF token found - form submission may fail');
-            }
-
-            document.body.appendChild(form);
-            form.submit();
-
-        } catch (error) {
-            console.error('❌ Delete form submission error:', error);
-            this.showError('Failed to delete trade');
-        }
-    },
 
     // Custom confirmation modal
     showCustomConfirmation(options) {
