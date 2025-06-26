@@ -7,88 +7,97 @@
 {% endblock %}
 
 {% block head_extra %}
+<!-- CSRF Token for JavaScript - Multiple fallback methods -->
+{% if csrf_token %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% elif request.form.get('csrf_token') %}
+<meta name="csrf-token" content="{{ request.form.get('csrf_token') }}">
+{% else %}
+<!-- CSRF token will be handled by forms -->
+<meta name="csrf-token" content="">
+{% endif %}
+
 <style>
-/* FIXED: Remove double scrollbar and ensure footer visibility */
+/* Enhanced base styles with better performance */
 .table-container {
     position: relative;
-    max-height: 715px !important; /* Fixed absolute height - won't grow */
+    max-height: 715px !important;
     overflow-y: auto;
     overflow-x: hidden;
     border: 1px solid var(--bs-border-color);
     border-radius: 0.375rem;
+    /* Add smooth scrolling for better UX */
+    scroll-behavior: smooth;
 }
 
-/* Ensure page can scroll to see footer */
-body {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-}
-
-.container-fluid {
-    overflow: visible !important;
-}
-
+/* Enhanced table performance with GPU acceleration */
 .table-fixed {
     table-layout: fixed;
     width: 100%;
-    margin-bottom: 0; /* Remove margin to prevent scroll issues */
+    margin-bottom: 0;
+    /* Optimize rendering performance */
+    transform: translateZ(0);
+    will-change: scroll-position;
 }
 
-/* FIXED: Consistent font sizes, centered text, and reduced row height */
+/* Consistent font sizes and centering with better contrast */
 .table-fixed th,
 .table-fixed td {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding: 6px 4px !important; /* Reduced from 8px to 6px */
-    font-size: 0.875rem !important; /* Increased from 0.8rem to 0.875rem for better readability */
-    font-weight: normal !important; /* Remove any bold weights */
-    line-height: 1.2 !important; /* Tighter line height */
-    vertical-align: middle !important; /* Center text vertically */
-    text-align: center !important; /* Center text horizontally */
-    color: #adb5bd !important; /* Toned down text color for dark theme */
-}
-
-/* Ensure all text elements have consistent sizing and centering */
-.table-fixed td strong,
-.table-fixed td small,
-.table-fixed td span {
-    font-size: 0.875rem !important; /* Increased from 0.8rem */
+    padding: 6px 4px !important;
+    font-size: 0.875rem !important;
     font-weight: normal !important;
-    color: inherit !important;
+    line-height: 1.2 !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+    /* Enhanced contrast for dark theme */
+    color: var(--bs-body-color) !important;
 }
 
-/* Badges should be centered and consistent */
-.table-fixed .badge {
-    font-size: 0.8rem !important; /* Increased from 0.75rem */
-    font-weight: normal !important;
-    padding: 0.25rem 0.5rem !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-width: 60px !important; /* Consistent badge width */
+/* Loading states for better UX */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-/* Small text should actually be smaller */
-.table-fixed .small,
-.table-fixed small {
-    font-size: 0.8rem !important; /* Increased from 0.75rem */
-    font-weight: normal !important;
-    color: inherit !important;
+.loading-overlay.show {
+    opacity: 1;
 }
 
+.loading-spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 0.25em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border 0.75s linear infinite;
+}
+
+/* Enhanced sticky header with Random's branding colors */
 .sticky-header {
     position: sticky;
     top: 0;
     z-index: 10;
+    /* Random's methodology blue gradient */
     background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%) !important;
     box-shadow: 0 4px 6px rgba(0,0,0,0.15);
     border-bottom: 2px solid #6366f1;
 }
 
-/* Header Attributes */
 .sticky-header th {
-    font-size: 0.875rem !important; /* Same as table text */
+    font-size: 0.875rem !important;
     font-weight: 700 !important;
     letter-spacing: 0.5px;
     text-transform: uppercase;
@@ -97,35 +106,22 @@ body {
     border-color: #6366f1 !important;
 }
 
-.table-header-clean {
-    /* Clean headers without icons */
-}
-
-.main-content {
-    overflow: visible !important;
-}
-
-.sticky-pagination {
-    position: sticky;
-    bottom: 0;
-    background-color: var(--bs-body-bg);
-    border-top: 1px solid var(--bs-border-color);
-    padding: 1rem;
-    z-index: 5;
-    margin-top: 0;
-}
-
-/* Sortable Column Styles */
+/* Enhanced sortable columns with better feedback */
 .sortable {
     cursor: pointer;
     user-select: none;
     position: relative;
-    transition: background-color 0.2s;
+    transition: all 0.2s ease;
 }
 
 .sortable:hover {
     background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%) !important;
     transform: translateY(-1px);
+}
+
+.sortable.sorting {
+    opacity: 0.6;
+    pointer-events: none;
 }
 
 .sort-icon {
@@ -138,39 +134,29 @@ body {
     transition: all 0.2s ease;
 }
 
-.sortable:hover .sort-icon {
-    opacity: 1;
-    color: #60a5fa !important;
-}
+/* Model-specific color coding for Random's 4 trading models */
+.model-0930 { border-left: 3px solid #e74c3c; } /* Red for 0930 Open */
+.model-hodlod { border-left: 3px solid #3498db; } /* Blue for HOD/LOD */
+.model-p12 { border-left: 3px solid #2ecc71; } /* Green for P12 */
+.model-backtest { border-left: 3px solid #f39c12; } /* Orange for Captain Backtest */
 
-.sortable.sorted-asc .sort-icon {
-    opacity: 1;
-    color: #0d6efd;
-}
-
-.sortable.sorted-desc .sort-icon {
-    opacity: 1;
-    color: #0d6efd;
-}
-
-.sortable.sorted-asc .sort-icon:before {
-    content: "\f0de"; /* fa-sort-up */
-}
-
-.sortable.sorted-desc .sort-icon:before {
-    content: "\f0dd"; /* fa-sort-down */
-}
-
-/* Trade Row Styles */
+/* Enhanced trade row styles with model indicators */
 .trade-row {
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
+    position: relative;
 }
 
 .trade-row:hover {
     background-color: var(--bs-secondary-bg-subtle);
+    transform: translateX(2px);
 }
 
+.trade-row.expanded {
+    background-color: var(--bs-primary-bg-subtle);
+}
+
+/* Enhanced chevron with smooth rotation */
 .chevron-icon {
     transition: transform 0.3s ease;
     color: var(--bs-secondary);
@@ -180,30 +166,42 @@ body {
     transform: rotate(90deg);
 }
 
-/* Enhanced Trade Details Styling */
+/* Improved trade details with better spacing */
 .trade-details-row {
     background: var(--bs-body-bg);
     border-left: 4px solid var(--bs-primary);
-    box-shadow: none;
-}
-
-[data-bs-theme="dark"] .trade-details-row {
-    background: var(--bs-body-bg);
-    border-left: 4px solid var(--bs-primary);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .trade-details-container {
     padding: 1.5rem;
     border-top: 1px solid var(--bs-border-color);
+    animation: slideIn 0.3s ease;
 }
 
-/* Enhanced Detail Sections */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced detail sections with better visual hierarchy */
 .detail-section {
     background: white;
     border: 1px solid #e9ecef;
     border-radius: 0.5rem;
     padding: 1.25rem;
     height: 100%;
+    transition: box-shadow 0.2s ease;
+}
+
+.detail-section:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 [data-bs-theme="dark"] .detail-section {
@@ -211,89 +209,31 @@ body {
     border-color: #495057;
 }
 
-.section-header {
+/* Enhanced radar chart with better performance */
+.radar-chart-container {
+    height: 200px;
     display: flex;
     align-items: center;
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e9ecef;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+    position: relative;
+    overflow: hidden;
 }
 
-[data-bs-theme="dark"] .section-header {
-    color: #adb5bd;
-    border-bottom-color: #495057;
+.radar-chart-container canvas {
+    /* Optimize canvas rendering */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
 }
 
-.section-header i {
-    margin-right: 0.5rem;
-    color: #007bff;
+[data-bs-theme="dark"] .radar-chart-container {
+    background: #495057;
+    border-color: #6c757d;
 }
 
-.metrics-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-}
-
-.metric-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #f1f3f4;
-}
-
-[data-bs-theme="dark"] .metric-item {
-    border-bottom-color: #495057;
-}
-
-.metric-label {
-    font-weight: 500;
-    color: #6c757d;
-    font-size: 0.9rem;
-}
-
-[data-bs-theme="dark"] .metric-label {
-    color: #adb5bd;
-}
-
-.metric-value {
-    font-weight: 600;
-    font-size: 0.95rem;
-}
-
-/* Rating Dots System */
-.ratings-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.rating-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-}
-
-.rating-label {
-    font-weight: 500;
-    color: #6c757d;
-    font-size: 0.9rem;
-    min-width: 100px;
-}
-
-[data-bs-theme="dark"] .rating-label {
-    color: #adb5bd;
-}
-
-.rating-dots {
-    display: flex;
-    gap: 0.25rem;
-}
-
+/* Enhanced rating dots with better accessibility */
 .rating-dot {
     width: 12px;
     height: 12px;
@@ -301,14 +241,14 @@ body {
     background-color: #e9ecef;
     border: 1px solid #dee2e6;
     transition: all 0.2s ease;
+    cursor: help;
 }
 
-[data-bs-theme="dark"] .rating-dot {
-    background-color: #495057;
-    border-color: #6c757d;
+.rating-dot:hover {
+    transform: scale(1.1);
 }
 
-/* Color-coded rating dots with gradient from red to green */
+/* Improved color coding with better contrast */
 .rating-dot.filled-1 {
     background: #dc3545;
     border-color: #dc3545;
@@ -339,129 +279,7 @@ body {
     box-shadow: 0 0 4px rgba(25, 135, 84, 0.4);
 }
 
-/* Radar Chart Container */
-.radar-chart-container {
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f8f9fa;
-    border-radius: 0.5rem;
-    border: 1px solid #e9ecef;
-}
-
-[data-bs-theme="dark"] .radar-chart-container {
-    background: #495057;
-    border-color: #6c757d;
-}
-
-/* Tag styling */
-.badge.tag-good {
-    background-color: var(--bs-success) !important;
-    color: white !important;
-}
-
-.badge.tag-bad {
-    background-color: var(--bs-danger) !important;
-    color: white !important;
-}
-
-.badge.tag-neutral {
-    background-color: var(--bs-primary) !important;
-    color: white !important;
-}
-
-[data-bs-theme="dark"] .tag-good {
-    background-color: #064e3b;
-    color: #6ee7b7;
-}
-
-[data-bs-theme="dark"] .tag-bad {
-    background-color: #7f1d1d;
-    color: #fca5a5;
-}
-
-[data-bs-theme="dark"] .tag-neutral {
-    background-color: #1e3a8a;
-    color: #93c5fd;
-}
-
-/* Notes sections */
-.notes-section {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 0.75rem;
-    font-style: italic;
-    color: #4b5563;
-    line-height: 1.6;
-}
-
-[data-bs-theme="dark"] .notes-section {
-    background: #374151;
-    border-color: #4b5563;
-    color: #d1d5db;
-}
-
-/* Links */
-.screenshot-link {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.5rem 1rem;
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    color: white !important;
-    text-decoration: none;
-    border-radius: 0.5rem;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
-}
-
-.screenshot-link:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
-    color: white !important;
-}
-
-/* Entry/Exit Table */
-.entry-exit-table {
-    width: 100%;
-    margin-top: 0.75rem;
-}
-
-.entry-exit-table th {
-    background: #f3f4f6;
-    color: #374151;
-    font-weight: 600;
-    padding: 0.5rem;
-    font-size: 0.85rem;
-    border: 1px solid #d1d5db;
-}
-
-[data-bs-theme="dark"] .entry-exit-table th {
-    background: #4b5563;
-    color: #f9fafb;
-    border-color: #6b7280;
-}
-
-.entry-exit-table td {
-    padding: 0.5rem;
-    font-size: 0.85rem;
-    border: 1px solid #e5e7eb;
-}
-
-[data-bs-theme="dark"] .entry-exit-table td {
-    border-color: #6b7280;
-}
-
-/* Pagination styling */
-.pagination-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
+/* Enhanced pagination with better touch support */
 .pagination-arrow-grey {
     display: inline-flex;
     align-items: center;
@@ -474,379 +292,782 @@ body {
     color: var(--bs-body-color);
     text-decoration: none;
     transition: all 0.2s ease;
+    /* Better touch target */
+    min-width: 44px;
+    min-height: 44px;
 }
 
 .pagination-arrow-grey:hover {
     background: var(--bs-primary);
     color: white;
     border-color: var(--bs-primary);
+    transform: translateY(-1px);
 }
 
-.pagination-arrow-grey.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-.pagination-info {
-    font-size: 0.9rem;
-    color: var(--bs-body-color);
-    font-weight: 500;
-}
-
-/* Color coding for avg rating and P&L */
-.profit-value {
-    color: #198754 !important;
-    font-weight: bold !important;
-}
-
-.loss-value {
-    color: #dc3545 !important;
-    font-weight: bold !important;
-}
-
-.neutral-value {
-    color: #6c757d !important;
-}
-
-/* Rating color coding */
-.rating-1 { color: #dc3545 !important; font-weight: bold !important; }
-.rating-2 { color: #fd7e14 !important; font-weight: bold !important; }
-.rating-3 { color: #ffc107 !important; font-weight: bold !important; }
-.rating-4 { color: #20c997 !important; font-weight: bold !important; }
-.rating-5 { color: #198754 !important; font-weight: bold !important; }
-
-/* Remove borders from action buttons INCLUDING daily journal */
+/* Enhanced button styles */
 .btn-outline-primary,
 .btn-outline-warning,
 .btn-outline-danger,
 .btn-outline-info {
     border: none !important;
+    transition: all 0.2s ease;
 }
 
-/* Transparent background for Log and Filter buttons */
-.btn-success,
-.btn-primary {
-    background: transparent !important;
-    border: 1px solid !important;
-    color: var(--bs-success) !important;
+.btn-outline-primary:hover,
+.btn-outline-warning:hover,
+.btn-outline-danger:hover,
+.btn-outline-info:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.btn-primary {
-    color: var(--bs-primary) !important;
-    border-color: var(--bs-primary) !important;
+/* Improved filter modal */
+#filterModal .modal-content {
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
-.btn-success {
-    border-color: var(--bs-success) !important;
-}
-
-.btn-success:hover,
-.btn-primary:hover {
-    background: var(--bs-primary) !important;
-    color: white !important;
-}
-
-/* Remove colored background from how_closed */
-.how-closed-text {
-    background: none !important;
-    color: var(--bs-body-color) !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    font-weight: normal !important;
-}
-
-/* Responsive adjustments */
+/* Responsive enhancements */
 @media (max-width: 768px) {
+    .table-container {
+        max-height: 600px !important;
+    }
+
     .trade-details-container {
         padding: 1rem;
     }
 
-    .metrics-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .rating-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
     }
 
     .radar-chart-container {
         height: 150px;
     }
 }
-</style>
 
-<!-- Essential JavaScript functions loaded in head -->
-<script>
-// Essential functions that need to be available immediately
-console.log('🚀 Loading essential trade list functions in head...');
-
-// URL manipulation for sorting and pagination
-function updateUrlAndRedirect(params) {
-    const currentUrl = new URL(window.location);
-    Object.keys(params).forEach(key => {
-        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
-            currentUrl.searchParams.set(key, params[key]);
-        } else {
-            currentUrl.searchParams.delete(key);
-        }
-    });
-    const newUrl = currentUrl.pathname + (currentUrl.search ? '?' + currentUrl.searchParams.toString() : '');
-    console.log('🔄 Redirecting to:', newUrl);
-    window.location.href = newUrl;
+/* Keyboard navigation indicators */
+.trade-row:focus {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: -2px;
 }
 
-function changePageSize(newSize) {
-    console.log('📄 Changing page size to:', newSize);
-    updateUrlAndRedirect({
-        per_page: newSize,
-        page: 1  // Reset to first page when changing page size
-    });
-}
-
-function sortTable(field) {
-    console.log('🔄 Sorting by:', field);
-    const params = new URLSearchParams(window.location.search);
-    const currentSort = params.get('sort');
-    const currentOrder = params.get('order');
-
-    let newOrder = 'asc';
-    if (currentSort === field && currentOrder === 'asc') {
-        newOrder = 'desc';
+/* Print styles */
+@media print {
+    .trade-details-row {
+        page-break-inside: avoid;
     }
 
-    updateUrlAndRedirect({
-        sort: field,
-        order: newOrder,
-        page: 1  // Reset to first page when sorting
-    });
+    .btn-group {
+        display: none !important;
+    }
 }
+</style>
 
-function confirmSingleDelete(tradeId, date, instrument, direction) {
-    console.log('🗑️ HEAD confirmSingleDelete called with:', tradeId, date, instrument, direction);
-    // This will be overridden by the DOM ready function which has access to showCustomConfirmation
-    console.log('⏳ Waiting for DOM ready to override this function...');
-}
+<!-- Enhanced JavaScript with better error handling and performance -->
+<script>
+// Enhanced trade list functionality with comprehensive error handling
+console.log('🚀 Loading enhanced trade list functions...');
 
-// Toggle trade details with enhanced radar chart
-function toggleTradeDetails(tradeId) {
-    const detailsRow = document.getElementById(`details-${tradeId}`);
-    const chevron = document.getElementById(`chevron-${tradeId}`);
+// Global state management
+const TradeListApp = {
+    isLoading: false,
+    customConfirmModal: null,
+    visibleCharts: new Set(),
+    sortCache: new Map(),
 
-    if (detailsRow && chevron) {
-        if (detailsRow.style.display === 'none' || detailsRow.style.display === '') {
-            detailsRow.style.display = 'table-row';
-            chevron.classList.remove('fa-chevron-right');
-            chevron.classList.add('fa-chevron-down');
+    // Initialize the application
+    init() {
+        console.log('🎯 Initializing enhanced trade list...');
 
-            // Initialize radar chart after showing details
-            setTimeout(() => {
-                const ratings = extractTradeRatings(tradeId);
-                initializeRadarChart(tradeId, ratings);
-            }, 100);
+        try {
+            this.setupModals();
+            this.setupEventListeners();
+            this.setupKeyboardNavigation();
+            this.initializeVisibleCharts();
+            this.setupPerformanceMonitoring();
+
+            console.log('✅ Trade list initialization complete');
+        } catch (error) {
+            console.error('❌ Initialization error:', error);
+            this.showError('Failed to initialize trade list');
+        }
+    },
+
+    // Setup Bootstrap modals with error handling
+    setupModals() {
+        const modalElement = document.getElementById('customConfirmModal');
+        if (modalElement && typeof bootstrap !== 'undefined') {
+            this.customConfirmModal = new bootstrap.Modal(modalElement);
+            console.log('✅ Custom confirm modal initialized');
         } else {
+            console.warn('⚠️ Bootstrap modal not available');
+        }
+    },
+
+    // Setup event listeners with delegation for better performance
+    setupEventListeners() {
+        // Sortable headers with debouncing
+        document.addEventListener('click', (e) => {
+            const sortable = e.target.closest('.sortable');
+            if (sortable && !sortable.classList.contains('sorting')) {
+                const field = sortable.getAttribute('data-sort');
+                if (field) {
+                    this.debounce(() => this.sortTable(field), 200)();
+                }
+            }
+        });
+
+        // Trade row clicks with event delegation
+        document.addEventListener('click', (e) => {
+            const tradeRow = e.target.closest('.trade-row');
+            if (tradeRow && !e.target.closest('.btn-group')) {
+                const tradeId = tradeRow.getAttribute('data-trade-id');
+                if (tradeId) {
+                    this.toggleTradeDetails(tradeId);
+                }
+            }
+        });
+
+        // Window resize handler for responsive charts
+        window.addEventListener('resize', this.debounce(() => {
+            this.refreshVisibleCharts();
+        }, 250));
+    },
+
+    // Enhanced keyboard navigation
+    setupKeyboardNavigation() {
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName.toLowerCase() === 'input' ||
+                e.target.tagName.toLowerCase() === 'textarea') {
+                return; // Don't interfere with form inputs
+            }
+
+            switch(e.key) {
+                case 'j':
+                case 'ArrowDown':
+                    e.preventDefault();
+                    this.navigateToNextTrade();
+                    break;
+                case 'k':
+                case 'ArrowUp':
+                    e.preventDefault();
+                    this.navigateToPrevTrade();
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    this.toggleCurrentTradeDetails();
+                    break;
+                case 'f':
+                    if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        this.openFilterModal();
+                    }
+                    break;
+            }
+        });
+    },
+
+    // Enhanced URL handling with loading states
+    updateUrlAndRedirect(params) {
+        if (this.isLoading) return;
+
+        try {
+            this.showLoading();
+
+            const currentUrl = new URL(window.location);
+            Object.keys(params).forEach(key => {
+                const value = params[key];
+                if (value !== null && value !== undefined && value !== '') {
+                    currentUrl.searchParams.set(key, value);
+                } else {
+                    currentUrl.searchParams.delete(key);
+                }
+            });
+
+            const newUrl = currentUrl.pathname + (currentUrl.search || '');
+            console.log('🔄 Redirecting to:', newUrl);
+
+            // Add a small delay to show loading state
+            setTimeout(() => {
+                window.location.href = newUrl;
+            }, 100);
+
+        } catch (error) {
+            console.error('❌ URL update error:', error);
+            this.hideLoading();
+            this.showError('Navigation failed');
+        }
+    },
+
+    // Enhanced sorting with visual feedback
+    sortTable(field) {
+        if (this.isLoading) return;
+
+        try {
+            console.log('🔄 Sorting by:', field);
+
+            // Add visual feedback
+            const sortButton = document.querySelector(`[data-sort="${field}"]`);
+            if (sortButton) {
+                sortButton.classList.add('sorting');
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            const currentSort = params.get('sort');
+            const currentOrder = params.get('order');
+
+            let newOrder = 'asc';
+            if (currentSort === field && currentOrder === 'asc') {
+                newOrder = 'desc';
+            }
+
+            this.updateUrlAndRedirect({
+                sort: field,
+                order: newOrder,
+                page: 1
+            });
+
+        } catch (error) {
+            console.error('❌ Sort error:', error);
+            this.showError('Sorting failed');
+
+            // Remove loading state from button
+            document.querySelectorAll('.sorting').forEach(btn => {
+                btn.classList.remove('sorting');
+            });
+        }
+    },
+
+    // Enhanced page size change with validation
+    changePageSize(newSize) {
+        const validSizes = [25, 50, 100, 250];
+        const size = parseInt(newSize);
+
+        if (!validSizes.includes(size)) {
+            console.warn('⚠️ Invalid page size:', newSize);
+            return;
+        }
+
+        console.log('📄 Changing page size to:', size);
+        this.updateUrlAndRedirect({
+            per_page: size,
+            page: 1
+        });
+    },
+
+    // Enhanced trade details toggle with improved animations
+    toggleTradeDetails(tradeId) {
+        const detailsRow = document.getElementById(`details-${tradeId}`);
+        const chevron = document.getElementById(`chevron-${tradeId}`);
+        const tradeRow = document.querySelector(`[data-trade-id="${tradeId}"]`);
+
+        if (!detailsRow || !chevron) {
+            console.error(`Missing elements for trade ${tradeId}`);
+            return;
+        }
+
+        const isCurrentlyVisible = detailsRow.style.display === 'table-row';
+
+        if (isCurrentlyVisible) {
+            // Hide details with animation
             detailsRow.style.display = 'none';
             chevron.classList.remove('fa-chevron-down');
             chevron.classList.add('fa-chevron-right');
+            tradeRow?.classList.remove('expanded');
+            this.visibleCharts.delete(tradeId);
+        } else {
+            // Show details with animation
+            detailsRow.style.display = 'table-row';
+            chevron.classList.remove('fa-chevron-right');
+            chevron.classList.add('fa-chevron-down');
+            tradeRow?.classList.add('expanded');
+
+            // Initialize radar chart with improved timing
+            setTimeout(() => {
+                this.initializeRadarChart(tradeId);
+            }, 50);
         }
-    }
-}
+    },
 
-// Extract trade ratings from the DOM
-function extractTradeRatings(tradeId) {
-    const detailsRow = document.getElementById(`details-${tradeId}`);
-    if (!detailsRow) return [0, 0, 0, 0, 0];
+    // Enhanced radar chart with better error handling
+    initializeRadarChart(tradeId) {
+        try {
+            const canvas = document.getElementById(`radarChart-${tradeId}`);
+            if (!canvas) {
+                console.warn(`Radar chart canvas not found for trade ${tradeId}`);
+                return;
+            }
 
-    const ratings = [0, 0, 0, 0, 0];
-    const ratingRows = detailsRow.querySelectorAll('.rating-row');
+            const ratings = this.extractTradeRatings(tradeId);
+            this.renderRadarChart(canvas, ratings);
+            this.visibleCharts.add(tradeId);
 
-    ratingRows.forEach((row, index) => {
-        if (index < 5) {
-            const filledDots = row.querySelectorAll('.rating-dot[class*="filled-"]');
-            if (filledDots.length > 0) {
-                const lastDot = filledDots[filledDots.length - 1];
-                const classList = Array.from(lastDot.classList);
-                const filledClass = classList.find(cls => cls.startsWith('filled-'));
-                if (filledClass) {
-                    const rating = parseInt(filledClass.split('-')[1]);
-                    if (!isNaN(rating)) {
-                        ratings[index] = rating;
+        } catch (error) {
+            console.error(`❌ Radar chart error for trade ${tradeId}:`, error);
+        }
+    },
+
+    // Enhanced rating extraction with multiple fallback methods
+    extractTradeRatings(tradeId) {
+        const detailsRow = document.getElementById(`details-${tradeId}`);
+        if (!detailsRow) {
+            console.warn(`Details row not found for trade ${tradeId}`);
+            return [0, 0, 0, 0, 0];
+        }
+
+        const ratings = [0, 0, 0, 0, 0];
+        const ratingCategories = ['preparation', 'rules', 'management', 'target', 'entry'];
+
+        ratingCategories.forEach((category, index) => {
+            // Method 1: Data attributes
+            const ratingElement = detailsRow.querySelector(`[data-rating-category="${category}"]`);
+            if (ratingElement?.dataset.ratingValue) {
+                const rating = parseInt(ratingElement.dataset.ratingValue);
+                if (this.isValidRating(rating)) {
+                    ratings[index] = rating;
+                    return;
+                }
+            }
+
+            // Method 2: Rating dots
+            const ratingRow = detailsRow.querySelector(`.rating-row:nth-child(${index + 1})`);
+            if (ratingRow) {
+                const filledDots = ratingRow.querySelectorAll('.rating-dot[class*="filled-"]');
+                if (filledDots.length > 0) {
+                    const lastDot = filledDots[filledDots.length - 1];
+                    const filledClass = Array.from(lastDot.classList)
+                        .find(cls => cls.startsWith('filled-'));
+
+                    if (filledClass) {
+                        const rating = parseInt(filledClass.split('-')[1]);
+                        if (this.isValidRating(rating)) {
+                            ratings[index] = rating;
+                        }
                     }
                 }
             }
+        });
+
+        return ratings;
+    },
+
+    // Enhanced radar chart rendering with better performance
+    renderRadarChart(canvas, ratings) {
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = 80;
+
+        // Clear and setup
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Theme-aware colors
+        const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        const colors = {
+            grid: isDark ? '#6b7280' : '#e5e7eb',
+            text: isDark ? '#d1d5db' : '#374151',
+            data: '#3b82f6',
+            fill: 'rgba(59, 130, 246, 0.15)'
+        };
+
+        // Draw grid
+        this.drawRadarGrid(ctx, centerX, centerY, radius, colors.grid);
+
+        // Draw labels
+        this.drawRadarLabels(ctx, centerX, centerY, radius, colors.text);
+
+        // Draw data
+        if (ratings.some(r => r > 0)) {
+            this.drawRadarData(ctx, centerX, centerY, radius, ratings, colors);
+        } else {
+            this.drawNoDataMessage(ctx, centerX, centerY, colors.text);
         }
-    });
+    },
 
-    return ratings;
-}
+    // Helper methods for radar chart
+    drawRadarGrid(ctx, centerX, centerY, radius, color) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
 
-// Enhanced radar chart initialization
-function initializeRadarChart(tradeId, ratings) {
-    const canvas = document.getElementById(`radarChart-${tradeId}`);
-    if (!canvas) {
-        console.warn(`Radar chart canvas not found for trade ${tradeId}`);
-        return;
-    }
+        // Concentric circles
+        for (let i = 1; i <= 5; i++) {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, (radius * i) / 5, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
 
-    const ctx = canvas.getContext('2d');
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = 80;
+        // Spokes
+        const angleStep = (2 * Math.PI) / 5;
+        for (let i = 0; i < 5; i++) {
+            const angle = i * angleStep - Math.PI / 2;
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY + Math.sin(angle) * radius;
 
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+    },
 
-    // Chart styling
-    const gridColor = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? '#6b7280' : '#e5e7eb';
-    const textColor = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? '#d1d5db' : '#374151';
-    const dataColor = '#3b82f6';
-    const dataFillColor = 'rgba(59, 130, 246, 0.15)';
+    drawRadarLabels(ctx, centerX, centerY, radius, color) {
+        const labels = ['Prep', 'Rules', 'Mgmt', 'Target', 'Entry'];
+        const angleStep = (2 * Math.PI) / 5;
 
-    // Draw radar grid (concentric circles)
-    ctx.strokeStyle = gridColor;
-    ctx.lineWidth = 1;
-
-    for (let i = 1; i <= 5; i++) {
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, (radius * i) / 5, 0, 2 * Math.PI);
-        ctx.stroke();
-    }
-
-    // Draw spokes and labels
-    const labels = ['Prep', 'Rules', 'Mgmt', 'Target', 'Entry'];
-    const angleStep = (2 * Math.PI) / 5;
-
-    ctx.strokeStyle = gridColor;
-    for (let i = 0; i < 5; i++) {
-        const angle = i * angleStep - Math.PI / 2;
-        const x = centerX + Math.cos(angle) * radius;
-        const y = centerY + Math.sin(angle) * radius;
-
-        // Draw spoke
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-
-        // Draw label
-        ctx.fillStyle = textColor;
+        ctx.fillStyle = color;
         ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        const labelDistance = radius + 20;
-        const labelX = centerX + Math.cos(angle) * labelDistance;
-        const labelY = centerY + Math.sin(angle) * labelDistance;
-
-        ctx.fillText(labels[i], labelX, labelY);
-    }
-
-    // Draw rating scale numbers
-    ctx.fillStyle = textColor;
-    ctx.font = '9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = 'center';
-    for (let i = 1; i <= 5; i++) {
-        const r = (radius * i) / 5;
-        ctx.fillText(i.toString(), centerX + r + 5, centerY - 5);
-    }
-
-    // Draw data polygon if we have valid ratings
-    if (ratings && ratings.some(r => r !== null && r !== undefined && r > 0)) {
-        ctx.beginPath();
-        ctx.strokeStyle = dataColor;
-        ctx.fillStyle = dataFillColor;
-        ctx.lineWidth = 2;
-
-        let hasValidPoint = false;
-        for (let i = 0; i < 5; i++) {
-            const rating = ratings[i] || 0;
+        labels.forEach((label, i) => {
             const angle = i * angleStep - Math.PI / 2;
-            const distance = (rating / 5) * radius;
-            const x = centerX + Math.cos(angle) * distance;
-            const y = centerY + Math.sin(angle) * distance;
+            const labelX = centerX + Math.cos(angle) * (radius + 20);
+            const labelY = centerY + Math.sin(angle) * (radius + 20);
+            ctx.fillText(label, labelX, labelY);
+        });
+    },
 
-            if (i === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
+    drawRadarData(ctx, centerX, centerY, radius, ratings, colors) {
+        const angleStep = (2 * Math.PI) / 5;
+        const points = [];
 
-            if (rating > 0) hasValidPoint = true;
-        }
+        // Calculate points
+        ratings.forEach((rating, i) => {
+            const angle = i * angleStep - Math.PI / 2;
+            const distance = (Math.max(0, rating) / 5) * radius;
+            points.push({
+                x: centerX + Math.cos(angle) * distance,
+                y: centerY + Math.sin(angle) * distance
+            });
+        });
 
-        if (hasValidPoint) {
-            ctx.closePath();
+        // Fill area
+        ctx.fillStyle = colors.fill;
+        ctx.beginPath();
+        points.forEach((point, i) => {
+            if (i === 0) ctx.moveTo(point.x, point.y);
+            else ctx.lineTo(point.x, point.y);
+        });
+        ctx.closePath();
+        ctx.fill();
+
+        // Draw outline
+        ctx.strokeStyle = colors.data;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw points
+        ctx.fillStyle = colors.data;
+        points.forEach(point => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 4, 0, 2 * Math.PI);
             ctx.fill();
-            ctx.stroke();
+        });
+    },
 
-            // Draw data points
-            ctx.fillStyle = dataColor;
-            for (let i = 0; i < 5; i++) {
-                const rating = ratings[i] || 0;
-                if (rating > 0) {
-                    const angle = i * angleStep - Math.PI / 2;
-                    const distance = (rating / 5) * radius;
-                    const x = centerX + Math.cos(angle) * distance;
-                    const y = centerY + Math.sin(angle) * distance;
-
-                    ctx.beginPath();
-                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
-                    ctx.fill();
-                }
-            }
-        }
-    } else {
-        // Show "No Data" message
-        ctx.fillStyle = textColor;
+    drawNoDataMessage(ctx, centerX, centerY, color) {
+        ctx.fillStyle = color;
         ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('No Ratings', centerX, centerY);
+    },
+
+    // Enhanced delete confirmation
+    confirmSingleDelete(tradeId, date, instrument, direction) {
+        console.log('🗑️ Confirming delete for trade:', tradeId);
+
+        if (this.customConfirmModal) {
+            this.showCustomConfirmation({
+                title: 'Confirm Delete Trade',
+                message: `Are you sure you want to permanently delete this trade?<br><br><strong>${date} - ${instrument} (${direction})</strong><br><br>This action cannot be undone.`,
+                confirmText: 'Delete Trade',
+                confirmClass: 'btn-danger',
+                onConfirm: () => this.submitDeleteForm(tradeId)
+            });
+        } else {
+            // Fallback to browser confirm
+            if (confirm(`Delete ${date} - ${instrument} (${direction})?`)) {
+                this.submitDeleteForm(tradeId);
+            }
+        }
+    },
+
+    // Enhanced form submission with multiple CSRF token methods
+    submitDeleteForm(tradeId) {
+        try {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/trades/${tradeId}/delete`;
+
+            // Try multiple methods to get CSRF token
+            let csrfToken = null;
+
+            // Method 1: Meta tag
+            const metaToken = document.querySelector('meta[name="csrf-token"]');
+            if (metaToken) {
+                csrfToken = metaToken.getAttribute('content');
+            }
+
+            // Method 2: Check if there's a CSRF token in any existing form
+            if (!csrfToken || csrfToken === '') {
+                const existingToken = document.querySelector('input[name="csrf_token"]');
+                if (existingToken) {
+                    csrfToken = existingToken.value;
+                }
+            }
+
+            // Method 3: Try to get from filter form
+            if (!csrfToken || csrfToken === '') {
+                const filterForm = document.getElementById('filterForm');
+                if (filterForm) {
+                    const filterToken = filterForm.querySelector('input[name="csrf_token"]');
+                    if (filterToken) {
+                        csrfToken = filterToken.value;
+                    }
+                }
+            }
+
+            // Add CSRF token if we found one
+            if (csrfToken && csrfToken !== '') {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrf_token';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+            } else {
+                console.warn('⚠️ No CSRF token found - form submission may fail');
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+
+        } catch (error) {
+            console.error('❌ Delete form submission error:', error);
+            this.showError('Failed to delete trade');
+        }
+    },
+
+    // Custom confirmation modal
+    showCustomConfirmation(options) {
+        if (!this.customConfirmModal) return;
+
+        document.getElementById('customConfirmModalLabel').textContent = options.title;
+        document.getElementById('customConfirmModalBody').innerHTML = options.message;
+
+        const confirmButton = document.getElementById('customConfirmButton');
+        confirmButton.textContent = options.confirmText || 'Confirm';
+        confirmButton.className = `btn ${options.confirmClass || 'btn-danger'}`;
+        confirmButton.onclick = () => {
+            this.customConfirmModal.hide();
+            options.onConfirm();
+        };
+
+        this.customConfirmModal.show();
+    },
+
+    // Utility methods
+    isValidRating(rating) {
+        return !isNaN(rating) && rating >= 0 && rating <= 5;
+    },
+
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    },
+
+    showLoading() {
+        this.isLoading = true;
+        let overlay = document.querySelector('.loading-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'loading-overlay';
+            overlay.innerHTML = '<div class="loading-spinner"></div>';
+            document.body.appendChild(overlay);
+        }
+        overlay.classList.add('show');
+    },
+
+    hideLoading() {
+        this.isLoading = false;
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) {
+            overlay.classList.remove('show');
+        }
+    },
+
+    showError(message) {
+        console.error('Error:', message);
+        // You could integrate with a toast notification system here
+    },
+
+    initializeVisibleCharts() {
+        document.querySelectorAll('[id^="radarChart-"]').forEach(canvas => {
+            const tradeId = canvas.id.split('-')[1];
+            const detailsRow = document.getElementById(`details-${tradeId}`);
+            if (detailsRow && detailsRow.style.display !== 'none') {
+                this.initializeRadarChart(tradeId);
+            }
+        });
+    },
+
+    refreshVisibleCharts() {
+        this.visibleCharts.forEach(tradeId => {
+            this.initializeRadarChart(tradeId);
+        });
+    },
+
+    setupPerformanceMonitoring() {
+        // Monitor page load performance
+        if (typeof performance !== 'undefined' && performance.mark) {
+            performance.mark('trade-list-init-start');
+            setTimeout(() => {
+                performance.mark('trade-list-init-end');
+                try {
+                    performance.measure('trade-list-init', 'trade-list-init-start', 'trade-list-init-end');
+                    const measure = performance.getEntriesByName('trade-list-init')[0];
+                    console.log(`⏱️ Trade list initialized in ${measure.duration.toFixed(2)}ms`);
+                } catch (e) {
+                    console.log('⏱️ Performance monitoring not available');
+                }
+            }, 100);
+        }
+    },
+
+    // Keyboard navigation helpers
+    navigateToNextTrade() {
+        const rows = document.querySelectorAll('.trade-row');
+        const current = document.querySelector('.trade-row:focus') || rows[0];
+        const currentIndex = Array.from(rows).indexOf(current);
+        const next = rows[currentIndex + 1];
+        if (next) {
+            next.focus();
+            next.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    },
+
+    navigateToPrevTrade() {
+        const rows = document.querySelectorAll('.trade-row');
+        const current = document.querySelector('.trade-row:focus') || rows[0];
+        const currentIndex = Array.from(rows).indexOf(current);
+        const prev = rows[currentIndex - 1];
+        if (prev) {
+            prev.focus();
+            prev.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    },
+
+    toggleCurrentTradeDetails() {
+        const focusedRow = document.querySelector('.trade-row:focus');
+        if (focusedRow) {
+            const tradeId = focusedRow.getAttribute('data-trade-id');
+            if (tradeId) {
+                this.toggleTradeDetails(tradeId);
+            }
+        }
+    },
+
+    openFilterModal() {
+        const filterModal = document.getElementById('filterModal');
+        if (filterModal && typeof bootstrap !== 'undefined') {
+            const modal = new bootstrap.Modal(filterModal);
+            modal.show();
+        }
+    }
+};
+
+// Global functions for backward compatibility
+function updateUrlAndRedirect(params) {
+    TradeListApp.updateUrlAndRedirect(params);
+}
+
+function changePageSize(newSize) {
+    TradeListApp.changePageSize(newSize);
+}
+
+function sortTable(field) {
+    TradeListApp.sortTable(field);
+}
+
+function toggleTradeDetails(tradeId) {
+    TradeListApp.toggleTradeDetails(tradeId);
+}
+
+function confirmSingleDelete(tradeId, date, instrument, direction) {
+    TradeListApp.confirmSingleDelete(tradeId, date, instrument, direction);
+}
+
+function extractTradeRatings(tradeId) {
+    return TradeListApp.extractTradeRatings(tradeId);
+}
+
+function initializeRadarChart(tradeId, ratings = null) {
+    if (ratings) {
+        const canvas = document.getElementById(`radarChart-${tradeId}`);
+        if (canvas) {
+            TradeListApp.renderRadarChart(canvas, ratings);
+        }
+    } else {
+        TradeListApp.initializeRadarChart(tradeId);
     }
 }
 
-console.log('✅ Essential functions loaded in head!');
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    TradeListApp.init();
+});
+
+console.log('✅ Enhanced trade list functions loaded');
 </script>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4 mb-5">
-    <!-- Page Header with Action Buttons and Pagination on Same Line -->
+    <!-- Enhanced Page Header with better responsive design -->
     <div class="row align-items-center" style="margin-bottom: 0.25rem;">
         <div class="col">
             <h1 class="display-6" style="margin-bottom: 0.25rem;">
                 <i class="fas fa-chart-line me-2"></i>{{ title }}
+                <small class="text-muted fs-6 ms-2">Random's Trading Methodology</small>
             </h1>
         </div>
         <div class="col-auto d-flex align-items-center gap-4">
-
-
-            <!-- Pagination Controls -->
+            <!-- Enhanced Pagination Controls -->
             {% if trades and (pagination.pages > 1 or pagination.total > 10) %}
             <div class="d-flex align-items-center gap-2">
-                <!-- Results Summary -->
+                <!-- Results Summary with better formatting -->
                 <div class="text-muted small">
-                    {{ pagination.per_page * (pagination.page - 1) + 1 }}-{{ pagination.per_page * (pagination.page - 1) + trades|length }} of {{ pagination.total }}
+                    <strong>{{ pagination.per_page * (pagination.page - 1) + 1 }}-{{ pagination.per_page * (pagination.page - 1) + trades|length }}</strong>
+                    of <strong>{{ pagination.total }}</strong>
                 </div>
 
-                <!-- Page Size Dropdown -->
-                <select id="pageSizeDropdown" class="form-select form-select-sm" style="width: 70px;" onchange="changePageSize(this.value)">
+                <!-- Enhanced Page Size Dropdown -->
+                <select id="pageSizeDropdown" class="form-select form-select-sm" style="width: 70px;"
+                        onchange="changePageSize(this.value)" title="Items per page">
                     <option value="25" {{ 'selected' if request.args.get('per_page', '25')|string == '25' else '' }}>25</option>
                     <option value="50" {{ 'selected' if request.args.get('per_page', '25')|string == '50' else '' }}>50</option>
                     <option value="100" {{ 'selected' if request.args.get('per_page', '25')|string == '100' else '' }}>100</option>
                     <option value="250" {{ 'selected' if request.args.get('per_page', '25')|string == '250' else '' }}>250</option>
                 </select>
 
-                <!-- Navigation Arrows -->
+                <!-- Enhanced Navigation Arrows -->
                 {% if pagination.pages > 1 %}
                 <div class="d-flex align-items-center gap-1">
                     <!-- First Page Arrow -->
                     {% if pagination.page > 1 %}
                     {% set args_without_page = request.args.copy() %}
                     {% set _ = args_without_page.pop('page', None) %}
-                    <a href="{{ url_for('trades.view_trades_list', page=1, **args_without_page) }}" class="pagination-arrow-grey" title="First Page">
+                    <a href="{{ url_for('trades.view_trades_list', page=1, **args_without_page) }}"
+                       class="pagination-arrow-grey" title="First Page (Ctrl+Home)">
                         <i class="fas fa-angle-double-left"></i>
                     </a>
                     {% else %}
@@ -859,7 +1080,8 @@ console.log('✅ Essential functions loaded in head!');
                     {% if pagination.has_prev %}
                     {% set args_without_page = request.args.copy() %}
                     {% set _ = args_without_page.pop('page', None) %}
-                    <a href="{{ url_for('trades.view_trades_list', page=pagination.prev_num, **args_without_page) }}" class="pagination-arrow-grey" title="Previous Page">
+                    <a href="{{ url_for('trades.view_trades_list', page=pagination.prev_num, **args_without_page) }}"
+                       class="pagination-arrow-grey" title="Previous Page (Ctrl+Left)">
                         <i class="fas fa-angle-left"></i>
                     </a>
                     {% else %}
@@ -868,16 +1090,17 @@ console.log('✅ Essential functions loaded in head!');
                     </span>
                     {% endif %}
 
-                    <!-- Page Info -->
+                    <!-- Enhanced Page Info -->
                     <span class="pagination-info small">
-                        {{ pagination.page }}/{{ pagination.pages }}
+                        <strong>{{ pagination.page }}</strong>/{{ pagination.pages }}
                     </span>
 
                     <!-- Next Page Arrow -->
                     {% if pagination.has_next %}
                     {% set args_without_page = request.args.copy() %}
                     {% set _ = args_without_page.pop('page', None) %}
-                    <a href="{{ url_for('trades.view_trades_list', page=pagination.next_num, **args_without_page) }}" class="pagination-arrow-grey" title="Next Page">
+                    <a href="{{ url_for('trades.view_trades_list', page=pagination.next_num, **args_without_page) }}"
+                       class="pagination-arrow-grey" title="Next Page (Ctrl+Right)">
                         <i class="fas fa-angle-right"></i>
                     </a>
                     {% else %}
@@ -890,7 +1113,8 @@ console.log('✅ Essential functions loaded in head!');
                     {% if pagination.page < pagination.pages %}
                     {% set args_without_page = request.args.copy() %}
                     {% set _ = args_without_page.pop('page', None) %}
-                    <a href="{{ url_for('trades.view_trades_list', page=pagination.pages, **args_without_page) }}" class="pagination-arrow-grey" title="Last Page">
+                    <a href="{{ url_for('trades.view_trades_list', page=pagination.pages, **args_without_page) }}"
+                       class="pagination-arrow-grey" title="Last Page (Ctrl+End)">
                         <i class="fas fa-angle-double-right"></i>
                     </a>
                     {% else %}
@@ -903,89 +1127,114 @@ console.log('✅ Essential functions loaded in head!');
             </div>
             {% endif %}
 
-            <!-- Action Buttons -->
+            <!-- Enhanced Action Buttons -->
             <div class="btn-group btn-group-sm">
-                <a href="{{ url_for('trades.add_trade') }}" class="btn btn-success btn-sm">
+                <a href="{{ url_for('trades.add_trade') }}" class="btn btn-success btn-sm" title="Log New Trade (Ctrl+N)">
                     <i class="fas fa-plus me-1"></i> Log New Trade
                 </a>
-                <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#filterModal">
+                <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal"
+                        data-bs-target="#filterModal" title="Filter Trades (Ctrl+F)">
                     <i class="fas fa-filter me-1"></i> Filter Trades
                 </button>
-                <a href="{{ url_for('trades.import_trades') }}" class="btn btn-outline-secondary btn-sm">
+                <a href="{{ url_for('trades.import_trades') }}" class="btn btn-outline-secondary btn-sm" title="Import Trades">
                     <i class="fas fa-upload me-1"></i> Import
                 </a>
-                <a href="{{ url_for('trades.export_trades_csv') }}" class="btn btn-outline-secondary btn-sm">
+                <a href="{{ url_for('trades.export_trades_csv') }}" class="btn btn-outline-secondary btn-sm" title="Export Trades">
                     <i class="fas fa-download me-1"></i> Export
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Trades Table -->
+    <!-- Enhanced Trades Table -->
     {% if trades %}
-        <div class="table-container">
-            <table class="table table-hover table-striped mb-0 table-fixed">
+        <div class="table-container" role="region" aria-label="Trades List">
+            <table class="table table-hover table-striped mb-0 table-fixed" role="table">
                 <thead class="sticky-header">
-                    <tr>
-                        <th width="30" class="text-center table-header-clean"></th>
-                        <th width="80" class="sortable" data-sort="date">
+                    <tr role="row">
+                        <th width="30" class="text-center table-header-clean" role="columnheader"></th>
+                        <th width="80" class="sortable" data-sort="date" role="columnheader" tabindex="0"
+                            aria-label="Sort by Date">
                             Date <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="80" class="sortable" data-sort="instrument">
+                        <th width="80" class="sortable" data-sort="instrument" role="columnheader" tabindex="0"
+                            aria-label="Sort by Instrument">
                             Instrument <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="120" class="sortable" data-sort="model">
+                        <th width="120" class="sortable" data-sort="model" role="columnheader" tabindex="0"
+                            aria-label="Sort by Trading Model">
                             Model <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="70" class="sortable" data-sort="direction">
+                        <th width="70" class="sortable" data-sort="direction" role="columnheader" tabindex="0"
+                            aria-label="Sort by Direction">
                             Direction <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="60" class="sortable" data-sort="contracts">
+                        <th width="60" class="sortable" data-sort="contracts" role="columnheader" tabindex="0"
+                            aria-label="Sort by Contracts">
                             Contracts <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="70" class="sortable" data-sort="entry_time">
+                        <th width="70" class="sortable" data-sort="entry_time" role="columnheader" tabindex="0"
+                            aria-label="Sort by Entry Time">
                             Entry Time <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="80" class="sortable" data-sort="entry">
+                        <th width="80" class="sortable" data-sort="entry" role="columnheader" tabindex="0"
+                            aria-label="Sort by Entry Price">
                             Entry Price <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="80" class="sortable" data-sort="exit">
+                        <th width="80" class="sortable" data-sort="exit" role="columnheader" tabindex="0"
+                            aria-label="Sort by Exit Price">
                             Exit Price <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="90" class="sortable" data-sort="time_in_trade">
+                        <th width="90" class="sortable" data-sort="time_in_trade" role="columnheader" tabindex="0"
+                            aria-label="Sort by Time in Trade">
                             Time in Trade <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="90" class="sortable" data-sort="how_closed">
+                        <th width="90" class="sortable" data-sort="how_closed" role="columnheader" tabindex="0"
+                            aria-label="Sort by How Closed">
                             How Closed <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="80" class="sortable" data-sort="avg_rating">
+                        <th width="80" class="sortable" data-sort="avg_rating" role="columnheader" tabindex="0"
+                            aria-label="Sort by Trade Rating">
                             Trade Rating <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="90" class="sortable" data-sort="pnl">
+                        <th width="90" class="sortable" data-sort="pnl" role="columnheader" tabindex="0"
+                            aria-label="Sort by P&L">
                             P&L <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="160"></th>
+                        <th width="160" role="columnheader">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                 {% for trade in trades %}
-                <!-- Main trade row -->
-                <tr class="trade-row {% if trade.gross_pnl and trade.gross_pnl > 0 %}table-success-subtle{% elif trade.gross_pnl and trade.gross_pnl < 0 %}table-danger-subtle{% endif %}"
-                    data-trade-id="{{ trade.id }}" onclick="toggleTradeDetails({{ trade.id }})">
+                <!-- Enhanced Trade Row with model-specific styling -->
+                <tr class="trade-row
+                    {% if trade.trading_model %}
+                        {% if 'open' in trade.trading_model.name.lower() or '0930' in trade.trading_model.name %}model-0930
+                        {% elif 'hod' in trade.trading_model.name.lower() or 'lod' in trade.trading_model.name.lower() %}model-hodlod
+                        {% elif 'p12' in trade.trading_model.name.lower() %}model-p12
+                        {% elif 'backtest' in trade.trading_model.name.lower() or 'captain' in trade.trading_model.name.lower() %}model-backtest
+                        {% endif %}
+                    {% endif %}
+                    {% if trade.gross_pnl and trade.gross_pnl > 0 %}table-success-subtle
+                    {% elif trade.gross_pnl and trade.gross_pnl < 0 %}table-danger-subtle
+                    {% endif %}"
+                    data-trade-id="{{ trade.id }}" role="row" tabindex="0"
+                    aria-label="Trade {{ trade.trade_date.strftime('%m/%d/%Y') }} {{ trade.instrument }} {{ trade.direction }}">
 
-                    <!-- Dropdown arrow -->
-                    <td class="text-center">
-                        <i class="fas fa-chevron-right chevron-icon" id="chevron-{{ trade.id }}"></i>
+                    <!-- Enhanced Dropdown Arrow -->
+                    <td class="text-center" role="gridcell">
+                        <i class="fas fa-chevron-right chevron-icon" id="chevron-{{ trade.id }}"
+                           aria-hidden="true"></i>
                     </td>
 
                     <!-- Date -->
-                    <td>{{ trade.trade_date.strftime('%d %b %y') }}</td>
+                    <td role="gridcell">{{ trade.trade_date.strftime('%d %b %y') }}</td>
 
                     <!-- Instrument -->
-                    <td>{{ trade.instrument or 'N/A' }}</td>
+                    <td role="gridcell">{{ trade.instrument or 'N/A' }}</td>
 
-                    <!-- Model -->
-                    <td>
+                    <!-- Enhanced Model with tooltip -->
+                    <td role="gridcell" title="{% if trade.trading_model %}{{ trade.trading_model.name }}{% else %}No model specified{% endif %}">
                         {% if trade.trading_model %}
                             {{ trade.trading_model.name }}
                         {% else %}
@@ -993,22 +1242,24 @@ console.log('✅ Essential functions loaded in head!');
                         {% endif %}
                     </td>
 
-                    <!-- Direction -->
-                    <td>
+                    <!-- Enhanced Direction -->
+                    <td role="gridcell">
                         {% if trade.direction == 'Long' %}
-                            <span class="badge-transparent" style="color: #198754 !important; font-weight: bold;">{{ trade.direction }}</span>
+                            <span class="badge-transparent" style="color: #198754 !important; font-weight: bold;"
+                                  aria-label="Long position">{{ trade.direction }}</span>
                         {% elif trade.direction == 'Short' %}
-                            <span class="badge-transparent" style="color: #dc3545 !important; font-weight: bold;">{{ trade.direction }}</span>
+                            <span class="badge-transparent" style="color: #dc3545 !important; font-weight: bold;"
+                                  aria-label="Short position">{{ trade.direction }}</span>
                         {% else %}
                             <span class="badge-transparent" style="color: #6c757d !important; font-weight: bold;">{{ trade.direction or 'N/A' }}</span>
                         {% endif %}
                     </td>
 
                     <!-- Contracts -->
-                    <td>{{ trade.total_contracts_entered or 0 }}</td>
+                    <td role="gridcell">{{ trade.total_contracts_entered or 0 }}</td>
 
                     <!-- Entry Time -->
-                    <td>
+                    <td role="gridcell">
                         {% if trade.entries.first() and trade.entries.first().entry_time %}
                             {{ trade.entries.first().entry_time.strftime('%H:%M') }}
                         {% else %}
@@ -1016,8 +1267,8 @@ console.log('✅ Essential functions loaded in head!');
                         {% endif %}
                     </td>
 
-                    <!-- Entry Price (no $) -->
-                    <td>
+                    <!-- Entry Price -->
+                    <td role="gridcell">
                         {% if trade.average_entry_price %}
                             {{ "{:.2f}".format(trade.average_entry_price) }}
                         {% else %}
@@ -1025,21 +1276,21 @@ console.log('✅ Essential functions loaded in head!');
                         {% endif %}
                     </td>
 
-                    <!-- Exit Price (no $) -->
-                    <td>
+                    <!-- Exit Price -->
+                    <td role="gridcell">
                         {% if trade.average_exit_price %}
                             {{ "{:.2f}".format(trade.average_exit_price) }}
                         {% else %}
                             {% if trade.how_closed in ['Still Open', None, ''] %}
-                                <span class="text-muted">Open</span>
+                                <span class="text-muted" aria-label="Position still open">Open</span>
                             {% else %}
                                 N/A
                             {% endif %}
                         {% endif %}
                     </td>
 
-                    <!-- Time in Trade -->
-                    <td>
+                    <!-- Enhanced Time in Trade -->
+                    <td role="gridcell">
                         {% if trade.entries.first() and trade.exits.first() and trade.entries.first().entry_time and trade.exits.first().exit_time %}
                             {% set time_diff = (trade.exits.first().exit_time.hour * 60 + trade.exits.first().exit_time.minute) - (trade.entries.first().entry_time.hour * 60 + trade.entries.first().entry_time.minute) %}
                             {% if time_diff >= 0 %}
@@ -1056,8 +1307,8 @@ console.log('✅ Essential functions loaded in head!');
                         {% endif %}
                     </td>
 
-                    <!-- How Closed (no colored background) -->
-                    <td>
+                    <!-- How Closed -->
+                    <td role="gridcell">
                         {% if trade.how_closed %}
                             <span class="how-closed-text">{{ trade.how_closed }}</span>
                         {% else %}
@@ -1065,73 +1316,77 @@ console.log('✅ Essential functions loaded in head!');
                         {% endif %}
                     </td>
 
-                    <!-- Trade Rating (text color only, no background) -->
-                    <td>
+                    <!-- Enhanced Trade Rating with accessibility -->
+                    <td role="gridcell">
                         {% set ratings = [trade.preparation_rating, trade.rules_rating, trade.management_rating, trade.target_rating, trade.entry_rating] %}
                         {% set valid_ratings = ratings|select('ne', none)|list %}
                         {% if valid_ratings %}
                             {% set avg_rating = (valid_ratings|sum / valid_ratings|length) %}
                             {% if avg_rating >= 4.0 %}
-                                <span style="color: #198754; font-weight: bold;">{{ "%.1f"|format(avg_rating) }}</span>
+                                <span style="color: #198754; font-weight: bold;" aria-label="High rating: {{ '%.1f'|format(avg_rating) }} out of 5">{{ "%.1f"|format(avg_rating) }}</span>
                             {% elif avg_rating >= 2.5 %}
-                                <span style="color: #ffc107; font-weight: bold;">{{ "%.1f"|format(avg_rating) }}</span>
+                                <span style="color: #ffc107; font-weight: bold;" aria-label="Medium rating: {{ '%.1f'|format(avg_rating) }} out of 5">{{ "%.1f"|format(avg_rating) }}</span>
                             {% else %}
-                                <span style="color: #dc3545; font-weight: bold;">{{ "%.1f"|format(avg_rating) }}</span>
+                                <span style="color: #dc3545; font-weight: bold;" aria-label="Low rating: {{ '%.1f'|format(avg_rating) }} out of 5">{{ "%.1f"|format(avg_rating) }}</span>
                             {% endif %}
                         {% else %}
-                            N/A
+                            <span aria-label="No rating available">N/A</span>
                         {% endif %}
                     </td>
 
-                    <!-- P&L (text color only, no background) -->
-                    <td>
+                    <!-- Enhanced P&L with accessibility -->
+                    <td role="gridcell">
                         {% if trade.gross_pnl is not none %}
                             {% if trade.gross_pnl > 0 %}
-                                <span style="color: #198754; font-weight: bold;">${{ "{:+,.2f}".format(trade.gross_pnl) }}</span>
+                                <span style="color: #198754; font-weight: bold;" aria-label="Profit: ${{ '{:+,.2f}'.format(trade.gross_pnl) }}">${{ "{:+,.2f}".format(trade.gross_pnl) }}</span>
                             {% elif trade.gross_pnl < 0 %}
-                                <span style="color: #dc3545; font-weight: bold;">${{ "{:+,.2f}".format(trade.gross_pnl) }}</span>
+                                <span style="color: #dc3545; font-weight: bold;" aria-label="Loss: ${{ '{:+,.2f}'.format(trade.gross_pnl) }}">${{ "{:+,.2f}".format(trade.gross_pnl) }}</span>
                             {% else %}
-                                <span style="color: #6c757d; font-weight: bold;">${{ "{:+,.2f}".format(trade.gross_pnl) }}</span>
+                                <span style="color: #6c757d; font-weight: bold;" aria-label="Break even: ${{ '{:+,.2f}'.format(trade.gross_pnl) }}">${{ "{:+,.2f}".format(trade.gross_pnl) }}</span>
                             {% endif %}
                         {% else %}
-                            N/A
+                            <span aria-label="P&L not available">N/A</span>
                         {% endif %}
                     </td>
 
-                    <!-- Actions (Daily Journal button first, then view, edit, delete) -->
-                    <td class="text-end" onclick="event.stopPropagation();">
-                        <div class="btn-group btn-group-sm">
+                    <!-- Enhanced Actions with better accessibility -->
+                    <td class="text-end" onclick="event.stopPropagation();" role="gridcell">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Trade actions">
                             <a href="{{ url_for('journal.manage_daily_journal', date_str=trade.trade_date.strftime('%Y-%m-%d')) }}"
-                               class="btn btn-outline-info btn-sm" title="Daily Journal">
-                                <i class="fas fa-journal-whills"></i>
+                               class="btn btn-outline-info btn-sm" title="Daily Journal for {{ trade.trade_date.strftime('%m/%d/%Y') }}"
+                               aria-label="View daily journal">
+                                <i class="fas fa-journal-whills" aria-hidden="true"></i>
                             </a>
                             <a href="{{ url_for('trades.view_trade_detail', trade_id=trade.id) }}"
-                               class="btn btn-outline-primary btn-sm" title="View Details">
-                                <i class="fas fa-eye"></i>
+                               class="btn btn-outline-primary btn-sm" title="View trade details"
+                               aria-label="View details">
+                                <i class="fas fa-eye" aria-hidden="true"></i>
                             </a>
                             <a href="{{ url_for('trades.edit_trade', trade_id=trade.id) }}"
-                               class="btn btn-outline-warning btn-sm" title="Edit">
-                                <i class="fas fa-edit"></i>
+                               class="btn btn-outline-warning btn-sm" title="Edit trade"
+                               aria-label="Edit trade">
+                                <i class="fas fa-edit" aria-hidden="true"></i>
                             </a>
                             <button type="button" class="btn btn-outline-danger btn-sm"
-                                    title="Delete"
+                                    title="Delete trade"
+                                    aria-label="Delete trade"
                                     onclick="confirmSingleDelete({{ trade.id }}, '{{ trade.trade_date.strftime('%m/%d/%Y') }}', '{{ trade.instrument }}', '{{ trade.direction }}')">
-                                <i class="fas fa-trash-alt"></i>
+                                <i class="fas fa-trash-alt" aria-hidden="true"></i>
                             </button>
                         </div>
                     </td>
                 </tr>
 
-                <!-- Enhanced Trade Details Row (only fix dollar_risk display) -->
-                <tr id="details-{{ trade.id }}" class="trade-details-row" style="display: none;">
-                    <td colspan="14" class="p-0">
+                <!-- Enhanced Trade Details Row with improved structure -->
+                <tr id="details-{{ trade.id }}" class="trade-details-row" style="display: none;" role="row">
+                    <td colspan="14" class="p-0" role="gridcell">
                         <div class="trade-details-container">
                             <!-- Performance Metrics Section -->
                             <div class="row g-3">
                                 <div class="col-lg-6">
-                                    <div class="detail-section">
-                                        <div class="section-header">
-                                            <i class="fas fa-chart-area"></i>
+                                    <div class="detail-section" role="region" aria-labelledby="metrics-header-{{ trade.id }}">
+                                        <div class="section-header" id="metrics-header-{{ trade.id }}">
+                                            <i class="fas fa-chart-area" aria-hidden="true"></i>
                                             Performance Metrics
                                         </div>
 
@@ -1205,15 +1460,15 @@ console.log('✅ Essential functions loaded in head!');
                                     </div>
                                 </div>
 
-                                <!-- Ratings & Radar Chart Section -->
+                                <!-- Enhanced Ratings & Radar Chart Section -->
                                 <div class="col-lg-6">
-                                    <div class="detail-section">
-                                        <div class="section-header">
-                                            <i class="fas fa-star"></i>
-                                            Trade Ratings
+                                    <div class="detail-section" role="region" aria-labelledby="ratings-header-{{ trade.id }}">
+                                        <div class="section-header" id="ratings-header-{{ trade.id }}">
+                                            <i class="fas fa-star" aria-hidden="true"></i>
+                                            Trade Ratings (Random's Methodology)
                                         </div>
 
-                                        <!-- Individual Ratings with Dots -->
+                                        <!-- Individual Ratings with Enhanced Dots -->
                                         <div class="ratings-container">
                                             {% for rating_name, rating_value in [
                                                 ('Preparation', trade.preparation_rating),
@@ -1222,16 +1477,18 @@ console.log('✅ Essential functions loaded in head!');
                                                 ('Target', trade.target_rating),
                                                 ('Entry', trade.entry_rating)
                                             ] %}
-                                            <div class="rating-row">
+                                            <div class="rating-row" data-rating-category="{{ rating_name.lower() }}" data-rating-value="{{ rating_value or 0 }}">
                                                 <span class="rating-label">{{ rating_name }}</span>
-                                                <div class="rating-dots">
+                                                <div class="rating-dots" role="group" aria-label="{{ rating_name }} rating: {{ rating_value or 0 }} out of 5">
                                                     {% if rating_value %}
                                                         {% for i in range(1, 6) %}
-                                                            <div class="rating-dot {% if i <= rating_value %}filled-{{ rating_value }}{% endif %}"></div>
+                                                            <div class="rating-dot {% if i <= rating_value %}filled-{{ rating_value }}{% endif %}"
+                                                                 role="img" aria-label="{% if i <= rating_value %}Filled{% else %}Empty{% endif %}"
+                                                                 title="{{ rating_name }}: {{ i }}/5"></div>
                                                         {% endfor %}
                                                     {% else %}
                                                         {% for i in range(1, 6) %}
-                                                            <div class="rating-dot"></div>
+                                                            <div class="rating-dot" role="img" aria-label="Empty" title="{{ rating_name }}: Not rated"></div>
                                                         {% endfor %}
                                                     {% endif %}
                                                 </div>
@@ -1239,22 +1496,17 @@ console.log('✅ Essential functions loaded in head!');
                                             {% endfor %}
                                         </div>
 
-                                        <!-- Radar Chart -->
+                                        <!-- Enhanced Radar Chart -->
                                         <div class="mt-3">
                                             <h6 class="mb-2">Performance Radar</h6>
-                                            <div class="radar-chart-container">
-                                                <canvas id="radarChart-{{ trade.id }}" width="200" height="200"></canvas>
+                                            <div class="radar-chart-container" role="img" aria-label="Performance radar chart">
+                                                <canvas id="radarChart-{{ trade.id }}" width="200" height="200"
+                                                        aria-label="Radar chart showing trade performance across 5 categories"></canvas>
                                             </div>
                                         </div>
 
                                         {% if trade.psych_scored_highest or trade.psych_scored_lowest %}
                                         <div class="mt-3">
-                                            {% if trade.psych_scored_highest %}
-                                            <div class="metric-item">
-                                                <span class="metric-label">Psych Highest</span>
-                                                <span class="metric-value profit-value">{{ trade.psych_scored_highest }}</span>
-                                            </div>
-                                            {% endif %}
                                             {% if trade.psych_scored_lowest %}
                                             <div class="metric-item">
                                                 <span class="metric-label">Psych Lowest</span>
@@ -1267,20 +1519,21 @@ console.log('✅ Essential functions loaded in head!');
                                 </div>
                             </div>
 
-                            <!-- Second Row: Tags and Notes -->
+                            <!-- Enhanced Second Row: Tags and Notes -->
                             <div class="row g-3 mt-2">
-                                <!-- Tags & Resources Section -->
+                                <!-- Enhanced Tags & Resources Section -->
                                 <div class="col-lg-6">
-                                    <div class="detail-section">
-                                        <div class="section-header">
-                                            <i class="fas fa-tags"></i>
+                                    <div class="detail-section" role="region" aria-labelledby="tags-header-{{ trade.id }}">
+                                        <div class="section-header" id="tags-header-{{ trade.id }}">
+                                            <i class="fas fa-tags" aria-hidden="true"></i>
                                             Tags & Resources
                                         </div>
 
-                                        <div class="d-flex flex-wrap gap-1 mb-3">
+                                        <div class="d-flex flex-wrap gap-1 mb-3" role="group" aria-label="Trade tags">
                                             {% if trade.tags %}
                                                 {% for tag in trade.tags %}
-                                                    <span class="badge rounded-pill tag-{{ tag.category or 'neutral' }}">{{ tag.name }}</span>
+                                                    <span class="badge rounded-pill tag-{{ tag.category or 'neutral' }}"
+                                                          role="badge" aria-label="Tag: {{ tag.name }}">{{ tag.name }}</span>
                                                 {% endfor %}
                                             {% else %}
                                                 <span class="text-muted">No tags</span>
@@ -1289,90 +1542,101 @@ console.log('✅ Essential functions loaded in head!');
 
                                         {% if trade.screenshot_link %}
                                         <div class="mb-2">
-                                            <a href="{{ trade.screenshot_link }}" target="_blank" class="screenshot-link">
-                                                <i class="fas fa-external-link-alt me-1"></i>
+                                            <a href="{{ trade.screenshot_link }}" target="_blank" rel="noopener noreferrer"
+                                               class="screenshot-link" aria-label="View trade screenshot in new tab">
+                                                <i class="fas fa-external-link-alt me-1" aria-hidden="true"></i>
                                                 Screenshot
                                             </a>
                                         </div>
                                         {% endif %}
 
-                                        <!-- Entry/Exit Details Table -->
+                                        <!-- Enhanced Entry/Exit Details Table -->
                                         {% if trade.entries.count() > 0 or trade.exits.count() > 0 %}
                                         <div class="mt-3">
                                             <h6 class="mb-2">Entry/Exit Details</h6>
-                                            <table class="table table-sm entry-exit-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Type</th>
-                                                        <th>Time</th>
-                                                        <th>Contracts</th>
-                                                        <th>Price</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {% for entry in trade.entries %}
-                                                    <tr>
-                                                        <td><span class="badge bg-success">Entry</span></td>
-                                                        <td>{{ entry.entry_time.strftime('%H:%M') if entry.entry_time else 'N/A' }}</td>
-                                                        <td>{{ entry.contracts or 0 }}</td>
-                                                        <td>{{ "{:.2f}".format(entry.entry_price) if entry.entry_price else 'N/A' }}</td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                    {% for exit in trade.exits %}
-                                                    <tr>
-                                                        <td><span class="badge bg-danger">Exit</span></td>
-                                                        <td>{{ exit.exit_time.strftime('%H:%M') if exit.exit_time else 'N/A' }}</td>
-                                                        <td>{{ exit.contracts or 0 }}</td>
-                                                        <td>{{ "{:.2f}".format(exit.exit_price) if exit.exit_price else 'N/A' }}</td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm entry-exit-table" role="table"
+                                                       aria-label="Entry and exit transaction details">
+                                                    <thead>
+                                                        <tr role="row">
+                                                            <th role="columnheader">Type</th>
+                                                            <th role="columnheader">Time</th>
+                                                            <th role="columnheader">Contracts</th>
+                                                            <th role="columnheader">Price</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for entry in trade.entries %}
+                                                        <tr role="row">
+                                                            <td role="gridcell"><span class="badge bg-success" role="badge">Entry</span></td>
+                                                            <td role="gridcell">{{ entry.entry_time.strftime('%H:%M') if entry.entry_time else 'N/A' }}</td>
+                                                            <td role="gridcell">{{ entry.contracts or 0 }}</td>
+                                                            <td role="gridcell">{{ "{:.2f}".format(entry.entry_price) if entry.entry_price else 'N/A' }}</td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                        {% for exit in trade.exits %}
+                                                        <tr role="row">
+                                                            <td role="gridcell"><span class="badge bg-danger" role="badge">Exit</span></td>
+                                                            <td role="gridcell">{{ exit.exit_time.strftime('%H:%M') if exit.exit_time else 'N/A' }}</td>
+                                                            <td role="gridcell">{{ exit.contracts or 0 }}</td>
+                                                            <td role="gridcell">{{ "{:.2f}".format(exit.exit_price) if exit.exit_price else 'N/A' }}</td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                         {% endif %}
                                     </div>
                                 </div>
 
-                                <!-- Notes Section -->
+                                <!-- Enhanced Notes Section -->
                                 <div class="col-lg-6">
-                                    <div class="detail-section">
-                                        <div class="section-header">
-                                            <i class="fas fa-sticky-note"></i>
+                                    <div class="detail-section" role="region" aria-labelledby="notes-header-{{ trade.id }}">
+                                        <div class="section-header" id="notes-header-{{ trade.id }}">
+                                            <i class="fas fa-sticky-note" aria-hidden="true"></i>
                                             Notes & Analysis
                                         </div>
 
                                         {% if trade.trade_notes %}
-                                        <div class="notes-section">
-                                            <strong>Trade Notes:</strong><br>
-                                            {{ trade.trade_notes }}
+                                        <div class="notes-section" role="region" aria-labelledby="trade-notes-{{ trade.id }}">
+                                            <strong id="trade-notes-{{ trade.id }}">Trade Notes:</strong><br>
+                                            <div>{{ trade.trade_notes|safe }}</div>
                                         </div>
                                         {% endif %}
 
                                         {% if trade.overall_analysis_notes %}
-                                        <div class="notes-section">
-                                            <strong>Overall Analysis:</strong><br>
-                                            {{ trade.overall_analysis_notes }}
+                                        <div class="notes-section" role="region" aria-labelledby="analysis-notes-{{ trade.id }}">
+                                            <strong id="analysis-notes-{{ trade.id }}">Overall Analysis:</strong><br>
+                                            <div>{{ trade.overall_analysis_notes|safe }}</div>
                                         </div>
                                         {% endif %}
 
                                         {% if trade.trade_management_notes %}
-                                        <div class="notes-section">
-                                            <strong>Management Notes:</strong><br>
-                                            {{ trade.trade_management_notes }}
+                                        <div class="notes-section" role="region" aria-labelledby="management-notes-{{ trade.id }}">
+                                            <strong id="management-notes-{{ trade.id }}">Management Notes:</strong><br>
+                                            <div>{{ trade.trade_management_notes|safe }}</div>
                                         </div>
                                         {% endif %}
 
                                         {% if trade.errors_notes %}
-                                        <div class="notes-section">
-                                            <strong>Errors:</strong><br>
-                                            {{ trade.errors_notes }}
+                                        <div class="notes-section" role="region" aria-labelledby="errors-notes-{{ trade.id }}">
+                                            <strong id="errors-notes-{{ trade.id }}">Errors:</strong><br>
+                                            <div>{{ trade.errors_notes|safe }}</div>
                                         </div>
                                         {% endif %}
 
                                         {% if trade.improvements_notes %}
-                                        <div class="notes-section">
-                                            <strong>Improvements:</strong><br>
-                                            {{ trade.improvements_notes }}
+                                        <div class="notes-section" role="region" aria-labelledby="improvements-notes-{{ trade.id }}">
+                                            <strong id="improvements-notes-{{ trade.id }}">Improvements:</strong><br>
+                                            <div>{{ trade.improvements_notes|safe }}</div>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if not (trade.trade_notes or trade.overall_analysis_notes or trade.trade_management_notes or trade.errors_notes or trade.improvements_notes) %}
+                                        <div class="text-muted text-center py-3">
+                                            <i class="fas fa-comment-slash fa-2x mb-2" aria-hidden="true"></i><br>
+                                            No notes available for this trade
                                         </div>
                                         {% endif %}
                                     </div>
@@ -1387,29 +1651,79 @@ console.log('✅ Essential functions loaded in head!');
         </div>
 
     {% else %}
-        <div class="text-center py-5">
-            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+        <!-- Enhanced Empty State -->
+        <div class="text-center py-5" role="region" aria-label="No trades found">
+            <i class="fas fa-chart-line fa-3x text-muted mb-3" aria-hidden="true"></i>
             <h5 class="text-muted">No trades found</h5>
-            <p class="text-muted">Start by logging your first trade or adjust your filters.</p>
-            <a href="{{ url_for('trades.add_trade') }}" class="btn btn-success">
-                <i class="fas fa-plus-circle me-1"></i> Log Your First Trade
-            </a>
+            <p class="text-muted">Start by logging your first trade using Random's methodology or adjust your filters.</p>
+            <div class="mt-4">
+                <a href="{{ url_for('trades.add_trade') }}" class="btn btn-success btn-lg">
+                    <i class="fas fa-plus-circle me-2" aria-hidden="true"></i> Log Your First Trade
+                </a>
+            </div>
+            <div class="mt-3">
+                <small class="text-muted">
+                    Supports: 0930 Open • HOD/LOD • P12 • Captain Backtest models
+                </small>
+            </div>
         </div>
     {% endif %}
 </div>
 
-<!-- Filter Modal -->
+<!-- Enhanced Filter Modal -->
 <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="filterModalLabel">
-                    <i class="fas fa-filter me-2"></i>Filter Trades
+                    <i class="fas fa-filter me-2" aria-hidden="true"></i>Filter Trades - Random's Methodology
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="GET" action="{{ url_for('trades.view_trades_list') }}" id="filterForm">
+                <form method="GET" action="{{ url_for('trades.view_trades_list') }}" id="filterForm" role="form">
+                    <!-- Quick Filter Buttons for Random's Models -->
+                    <div class="mb-4">
+                        <h6 class="mb-2">Quick Filters - Trading Models</h6>
+                        <div class="btn-group btn-group-sm mb-3" role="group" aria-label="Quick model filters">
+                            <button type="button" class="btn btn-outline-primary quick-filter"
+                                    data-filter="model" data-value="0930" title="Filter by 0930 Open model">
+                                0930 Open
+                            </button>
+                            <button type="button" class="btn btn-outline-info quick-filter"
+                                    data-filter="model" data-value="HOD/LOD" title="Filter by HOD/LOD model">
+                                HOD/LOD
+                            </button>
+                            <button type="button" class="btn btn-outline-success quick-filter"
+                                    data-filter="model" data-value="P12" title="Filter by P12 model">
+                                P12
+                            </button>
+                            <button type="button" class="btn btn-outline-warning quick-filter"
+                                    data-filter="model" data-value="Backtest" title="Filter by Captain Backtest model">
+                                Captain Backtest
+                            </button>
+                        </div>
+
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Quick performance filters">
+                            <button type="button" class="btn btn-outline-success quick-filter"
+                                    data-filter="performance" data-value="winners" title="Show only winning trades">
+                                Winners Only
+                            </button>
+                            <button type="button" class="btn btn-outline-danger quick-filter"
+                                    data-filter="performance" data-value="losers" title="Show only losing trades">
+                                Losers Only
+                            </button>
+                            <button type="button" class="btn btn-outline-primary quick-filter"
+                                    data-filter="time" data-value="today" title="Show today's trades">
+                                Today
+                            </button>
+                            <button type="button" class="btn btn-outline-info quick-filter"
+                                    data-filter="time" data-value="week" title="Show this week's trades">
+                                This Week
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="row g-3">
                         <div class="col-md-6">
                             {{ forms.render_field(filter_form.start_date, input_class="form-control", label_visible=true) }}
@@ -1428,7 +1742,7 @@ console.log('✅ Essential functions loaded in head!');
                         </div>
                         <div class="col-md-6">
                             <label for="how_closed" class="form-label">How Closed</label>
-                            <select name="how_closed" id="how_closed" class="form-select">
+                            <select name="how_closed" id="how_closed" class="form-select" aria-label="Filter by how trade was closed">
                                 <option value="">All</option>
                                 <option value="Take Profit" {{ 'selected' if request.args.get('how_closed') == 'Take Profit' else '' }}>Take Profit</option>
                                 <option value="Stop Loss" {{ 'selected' if request.args.get('how_closed') == 'Stop Loss' else '' }}>Stop Loss</option>
@@ -1446,17 +1760,17 @@ console.log('✅ Essential functions loaded in head!');
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-times me-1"></i> Clear All
+                    <i class="fas fa-times me-1" aria-hidden="true"></i> Clear All
                 </a>
                 <button type="submit" form="filterForm" class="btn btn-primary">
-                    <i class="fas fa-search me-1"></i> Apply Filters
+                    <i class="fas fa-search me-1" aria-hidden="true"></i> Apply Filters
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Custom Confirmation Modal -->
+<!-- Enhanced Custom Confirmation Modal -->
 <div class="modal fade" id="customConfirmModal" tabindex="-1" aria-labelledby="customConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1464,7 +1778,7 @@ console.log('✅ Essential functions loaded in head!');
                 <h5 class="modal-title" id="customConfirmModalLabel">Confirm Action</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="customConfirmModalBody">
+            <div class="modal-body" id="customConfirmModalBody" role="alert">
                 <!-- Dynamic content will be inserted here -->
             </div>
             <div class="modal-footer">
@@ -1474,122 +1788,147 @@ console.log('✅ Essential functions loaded in head!');
         </div>
     </div>
 </div>
+
+<!-- Keyboard Navigation Help Modal (Optional) -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="fas fa-keyboard me-2" aria-hidden="true"></i>Keyboard Shortcuts
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12">
+                        <h6>Navigation</h6>
+                        <ul class="list-unstyled">
+                            <li><kbd>J</kbd> or <kbd>↓</kbd> - Next trade</li>
+                            <li><kbd>K</kbd> or <kbd>↑</kbd> - Previous trade</li>
+                            <li><kbd>Space</kbd> - Toggle trade details</li>
+                        </ul>
+
+                        <h6>Actions</h6>
+                        <ul class="list-unstyled">
+                            <li><kbd>Ctrl+F</kbd> - Open filter modal</li>
+                            <li><kbd>Ctrl+N</kbd> - Log new trade</li>
+                            <li><kbd>?</kbd> - Show this help</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/custom-modals.js') }}"></script>
 <script>
-try {
-    // Global variables
-    let customConfirmModal = null;
+// Enhanced filter modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Quick filter buttons functionality
+    document.querySelectorAll('.quick-filter').forEach(button => {
+        button.addEventListener('click', function() {
+            const filterType = this.getAttribute('data-filter');
+            const filterValue = this.getAttribute('data-value');
 
-    // Custom confirmation dialog
-    function showCustomConfirmation(options) {
-        if (!customConfirmModal) {
-            console.error('Custom confirm modal not initialized');
-            return;
-        }
-
-        document.getElementById('customConfirmModalLabel').textContent = options.title;
-        document.getElementById('customConfirmModalBody').innerHTML = options.message;
-
-        const confirmButton = document.getElementById('customConfirmButton');
-        confirmButton.textContent = options.confirmText || 'Confirm';
-        confirmButton.className = `btn ${options.confirmClass || 'btn-danger'}`;
-
-        confirmButton.onclick = function() {
-            customConfirmModal.hide();
-            options.onConfirm();
-        };
-
-        customConfirmModal.show();
-    }
-
-    // Override the head function with the full implementation
-    function confirmSingleDelete(tradeId, date, instrument, direction) {
-        console.log('🗑️ Confirming delete for trade:', tradeId);
-
-        if (typeof showCustomConfirmation === 'function') {
-            showCustomConfirmation({
-                title: 'Confirm Delete Trade',
-                message: `Are you sure you want to permanently delete this trade?<br><br><strong>${date} - ${instrument} (${direction})</strong><br><br>This action cannot be undone.`,
-                confirmText: 'Delete Trade',
-                confirmClass: 'btn-danger',
-                onConfirm: () => {
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
-                    const csrfToken = document.createElement('input');
-                    csrfToken.type = 'hidden';
-                    csrfToken.name = 'csrf_token';
-                    csrfToken.value = '{{ csrf_token }}';
-                    form.appendChild(csrfToken);
-                    document.body.appendChild(form);
-                    form.submit();
-                }
-            });
-        } else {
-            console.error('showCustomConfirmation is not defined. Falling back to browser confirm.');
-            if (confirm(`Delete ${date} - ${instrument} (${direction})?`)) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '{{ url_for("trades.delete_trade", trade_id=0) }}'.replace('0', tradeId);
-                const csrfToken = document.createElement('input');
-                csrfToken.type = 'hidden';
-                csrfToken.name = 'csrf_token';
-                csrfToken.value = '{{ csrf_token }}';
-                form.appendChild(csrfToken);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
-    }
-
-    // DOM ready initialization
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('🎯 DOM Content Loaded - Initializing trade list...');
-
-        try {
-            // Initialize Bootstrap modal
-            const modalElement = document.getElementById('customConfirmModal');
-            if (modalElement && typeof bootstrap !== 'undefined') {
-                customConfirmModal = new bootstrap.Modal(modalElement);
-                console.log('✅ Custom confirm modal initialized');
-            } else {
-                console.warn('⚠️ Bootstrap modal not available or modal element not found');
-            }
-
-            // Add click handlers for sortable headers
-            document.querySelectorAll('.sortable').forEach(header => {
-                header.addEventListener('click', function() {
-                    const sortField = this.getAttribute('data-sort');
-                    if (sortField) {
-                        sortTable(sortField);
+            // Apply quick filter logic based on type
+            switch(filterType) {
+                case 'model':
+                    // Find and update the trading model dropdown
+                    const modelSelect = document.querySelector('#trading_model_id');
+                    if (modelSelect) {
+                        const options = modelSelect.querySelectorAll('option');
+                        options.forEach(option => {
+                            if (option.textContent.toLowerCase().includes(filterValue.toLowerCase())) {
+                                option.selected = true;
+                            }
+                        });
                     }
-                });
-            });
+                    break;
 
-            // Initialize any visible radar charts
-            document.querySelectorAll('[id^="radarChart-"]').forEach(canvas => {
-                const tradeId = canvas.id.split('-')[1];
-                const detailsRow = document.getElementById(`details-${tradeId}`);
-                if (detailsRow && detailsRow.style.display !== 'none') {
-                    const ratings = extractTradeRatings(tradeId);
-                    initializeRadarChart(tradeId, ratings);
-                }
-            });
+                case 'performance':
+                    // Set up custom performance filters (would need backend support)
+                    console.log(`Performance filter: ${filterValue}`);
+                    break;
 
-            console.log('✅ Trade list initialized successfully');
+                case 'time':
+                    // Set date ranges for time-based filters
+                    const today = new Date();
+                    const startDateInput = document.querySelector('#start_date');
 
-        } catch (error) {
-            console.error('❌ Error initializing trade list:', error);
+                    if (filterValue === 'today') {
+                        startDateInput.value = today.toISOString().split('T')[0];
+                    } else if (filterValue === 'week') {
+                        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        startDateInput.value = weekAgo.toISOString().split('T')[0];
+                    }
+                    break;
+            }
+
+            // Visual feedback
+            this.classList.add('active');
+            setTimeout(() => this.classList.remove('active'), 200);
+        });
+    });
+
+    // Help modal trigger
+    document.addEventListener('keydown', function(e) {
+        if (e.key === '?' && !e.target.matches('input, textarea')) {
+            e.preventDefault();
+            const helpModal = document.getElementById('helpModal');
+            if (helpModal && typeof bootstrap !== 'undefined') {
+                const modal = new bootstrap.Modal(helpModal);
+                modal.show();
+            }
         }
     });
 
-    console.log('✅ Trade list script loaded successfully');
+    // Enhanced accessibility: announce page changes
+    const announcePageChange = (message) => {
+        const announcement = document.createElement('div');
+        announcement.setAttribute('aria-live', 'polite');
+        announcement.setAttribute('aria-atomic', 'true');
+        announcement.className = 'sr-only';
+        announcement.textContent = message;
+        document.body.appendChild(announcement);
 
-} catch (e) {
-    console.error("A critical error occurred while setting up the page script. This is likely a syntax error.", e);
-}
+        setTimeout(() => {
+            document.body.removeChild(announcement);
+        }, 1000);
+    };
+
+    // Monitor for trade detail expansions
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                const target = mutation.target;
+                if (target.classList.contains('trade-details-row')) {
+                    const isVisible = target.style.display !== 'none';
+                    if (isVisible) {
+                        announcePageChange('Trade details expanded');
+                    }
+                }
+            }
+        });
+    });
+
+    // Start observing
+    document.querySelectorAll('.trade-details-row').forEach(row => {
+        observer.observe(row, { attributes: true, attributeFilter: ['style'] });
+    });
+});
+
+// Cleanup function for memory management
+window.addEventListener('beforeunload', function() {
+    // Clean up any event listeners or intervals
+    if (typeof TradeListApp !== 'undefined' && TradeListApp.cleanup) {
+        TradeListApp.cleanup();
+    }
+});
+
+console.log('✅ Enhanced trade list template loaded with accessibility and performance improvements');
 </script>
 {% endblock %}
