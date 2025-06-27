@@ -90,7 +90,7 @@ def _populate_trade_form_choices(form):
 
 
 def _populate_filter_form_choices(filter_form):
-    from app.models import Tag
+    from app.models import Tag, TagCategory
 
     filter_form.trading_model_id.choices = [(0, 'All Models')] + \
                                            [(tm.id, tm.name) for tm in
@@ -98,16 +98,31 @@ def _populate_filter_form_choices(filter_form):
                                                                          is_active=True).order_by(
                                                 TradingModel.name).all()]
 
+    # Get all available tags (default + user's custom tags)
     all_tags = Tag.query.filter(
         db.or_(
             Tag.is_default == True,
             Tag.user_id == current_user.id
         )
-    ).filter(Tag.is_active == True).order_by(Tag.name).all()
+    ).filter(Tag.is_active == True).order_by(Tag.category, Tag.name).all()
 
+    # Group tags by category for the filter dropdown
+    tags_by_category = {}
+    for tag in all_tags:
+        category_name = tag.category.value if tag.category else 'Other'
+        if category_name not in tags_by_category:
+            tags_by_category[category_name] = []
+        tags_by_category[category_name].append((str(tag.id), tag.name, tag.color_category))
+
+    # Convert to the format expected by the template (similar to add_trade.html)
+    categorized_choices = []
+    for category_name, tag_list in tags_by_category.items():
+        categorized_choices.append((category_name, tag_list))
+
+    # For the simple choices (backward compatibility)
     filter_form.tags.choices = [('', 'All Tags')] + [(str(tag.id), tag.name) for tag in all_tags]
 
-    return filter_form
+    return filter_form, categorized_choices
 
 
 @trades_bp.route('/', methods=['GET'])
@@ -116,7 +131,7 @@ def view_trades_list():
     from flask_wtf.csrf import generate_csrf
 
     filter_form = TradeFilterForm(request.args)
-    _populate_filter_form_choices(filter_form)
+    filter_form, categorized_tags = _populate_filter_form_choices(filter_form)
 
     query = Trade.query.filter_by(user_id=current_user.id)
 
@@ -221,7 +236,7 @@ def view_trades_list():
                 if trade.exits.count() > 0 and trade.entries.count() > 0:
                     # Get first entry (earliest time)
                     first_entry = trade.entries.order_by(EntryPoint.entry_time.asc()).first()
-                    # Get last exit (latest time) - FIXED: Use proper SQLAlchemy syntax
+                    # Get last exit (latest time)
                     last_exit = trade.exits.order_by(ExitPoint.exit_time.desc()).first()
 
                     if first_entry and last_exit and first_entry.entry_time and last_exit.exit_time:
@@ -235,13 +250,17 @@ def view_trades_list():
         if key_func:
             trades_pagination.items = sorted(trades_pagination.items, key=key_func, reverse=sort_reverse)
 
+    # Set the title
+    title = "Trades List"
+    trades_on_page = trades_pagination.items
+
     return render_template("trades/view_trades_list.html",
-                           title="Trades List",
-                           trades=trades_pagination.items,
+                           title=title,
+                           trades=trades_on_page,
                            pagination=trades_pagination,
                            filter_form=filter_form,
+                           categorized_tags=categorized_tags,
                            csrf_token=generate_csrf())
-
 
 # --- ADD TRADE ---
 # Also fix the add_trade function in trades_bp.py
