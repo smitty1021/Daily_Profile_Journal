@@ -16,6 +16,9 @@ from app.models import (Trade, EntryPoint, ExitPoint, TradingModel, NewsEventIte
 from app.forms import TradeForm, EntryPointForm, ExitPointForm, TradeFilterForm, ImportTradesForm
 from app.utils import (_parse_form_float, _parse_form_int, _parse_form_time,
                        get_news_event_options, record_activity)
+from datetime import datetime, time as py_time, date as py_date
+from app.models import Trade, TradingModel, Tag, Instrument, EntryPoint, ExitPoint
+from app.extensions import db
 
 trades_bp = Blueprint('trades', __name__,
                       template_folder='../templates/trades',
@@ -90,13 +93,52 @@ def _populate_trade_form_choices(form):
 
 
 def _populate_filter_form_choices(filter_form):
-    from app.models import Tag, TagCategory
+    from app.models import Tag, TagCategory, Instrument
 
+    # Populate trading models
     filter_form.trading_model_id.choices = [(0, 'All Models')] + \
                                            [(tm.id, tm.name) for tm in
                                             TradingModel.query.filter_by(user_id=current_user.id,
                                                                          is_active=True).order_by(
                                                 TradingModel.name).all()]
+
+    # FIXED: Populate instruments properly with IDs
+    try:
+        # Get instruments that are actually used in trades
+        used_instruments = db.session.query(Trade.instrument_id, Trade.instrument_legacy).filter(
+            Trade.user_id == current_user.id
+        ).distinct().all()
+
+        instrument_choices = [('', 'All Instruments')]
+
+        # Add instruments from the new system (instrument_id)
+        for trade_instrument_id, trade_legacy in used_instruments:
+            if trade_instrument_id:
+                instrument = Instrument.query.get(trade_instrument_id)
+                if instrument:
+                    instrument_choices.append((str(instrument.id), f"{instrument.symbol} ({instrument.name})"))
+            elif trade_legacy:
+                # Add legacy instruments
+                instrument_choices.append((trade_legacy, trade_legacy))
+
+        # Remove duplicates and sort
+        seen = set()
+        unique_choices = []
+        for choice in instrument_choices:
+            if choice[0] not in seen:
+                seen.add(choice[0])
+                unique_choices.append(choice)
+
+        filter_form.instrument.choices = sorted(unique_choices, key=lambda x: x[1] if x[1] != 'All Instruments' else '')
+    except Exception as e:
+        print(f"Error populating instruments: {e}")
+        # Fallback to basic choices
+        filter_form.instrument.choices = [
+            ('', 'All Instruments'),
+            ('NQ', 'NQ'),
+            ('ES', 'ES'),
+            ('YM', 'YM')
+        ]
 
     # Get all available tags (default + user's custom tags)
     all_tags = Tag.query.filter(
@@ -140,12 +182,55 @@ def view_trades_list():
         query = query.filter(Trade.trade_date >= filter_form.start_date.data)
     if filter_form.end_date.data:
         query = query.filter(Trade.trade_date <= filter_form.end_date.data)
+
+    # FIXED: Instrument filtering - handle both legacy and new instrument system
     if filter_form.instrument.data:
-        query = query.filter(Trade.instrument == filter_form.instrument.data)
+        # Try to filter by instrument_id first (new system)
+        if filter_form.instrument.data.isdigit():
+            instrument_id = int(filter_form.instrument.data)
+            query = query.filter(Trade.instrument_id == instrument_id)
+        else:
+            # Fallback to symbol matching (legacy system)
+            query = query.filter(Trade.instrument_legacy == filter_form.instrument.data)
+
     if filter_form.direction.data:
         query = query.filter(Trade.direction == filter_form.direction.data)
+
     if filter_form.trading_model_id.data and filter_form.trading_model_id.data != 0:
         query = query.filter(Trade.trading_model_id == filter_form.trading_model_id.data)
+
+    # Handle how_closed filter (from request.args since it's not in the form)
+    how_closed_filter = request.args.get('how_closed')
+    if how_closed_filter:
+        query = query.filter(Trade.how_closed == how_closed_filter)
+
+    # Handle P&L filter
+    pnl_filter = request.args.get('pnl_filter')
+    if pnl_filter:
+        if pnl_filter == 'winners':
+            query = query.filter(Trade.gross_pnl > 0)
+        elif pnl_filter == 'losers':
+            query = query.filter(Trade.gross_pnl < 0)
+        elif pnl_filter == 'breakeven':
+            query = query.filter(Trade.gross_pnl == 0)
+
+    # Handle DCA filter
+    is_dca_filter = request.args.get('is_dca')
+    if is_dca_filter:
+        if is_dca_filter == 'true':
+            query = query.filter(Trade.is_dca == True)
+        elif is_dca_filter == 'false':
+            query = query.filter(Trade.is_dca == False)
+
+    # Handle news event filter
+    news_event_filter = request.args.get('news_event')
+    if news_event_filter:
+        if news_event_filter == 'none':
+            query = query.filter(db.or_(Trade.news_event == None, Trade.news_event == ''))
+        else:
+            query = query.filter(Trade.news_event == news_event_filter)
+
+    # Handle tags filter
     if filter_form.tags.data:
         tag_id = None
 
@@ -168,6 +253,11 @@ def view_trades_list():
         if tag_id:
             query = query.filter(Trade.tags.any(Tag.id == tag_id))
 
+    # Debug logging
+    print(f"Filter form data: {filter_form.data}")
+    print(f"Request args: {request.args}")
+
+    # Continue with rest of the function (sorting, pagination, etc.)
     sort_field = request.args.get('sort', 'date')
     sort_order = request.args.get('order', 'desc')
     sort_reverse = sort_order == 'desc'
@@ -192,12 +282,10 @@ def view_trades_list():
                                                                                                 Trade.trade_date.desc())
         query = query.order_by(*order_clauses)
     elif sort_field == 'how_closed':
-        # Handle potential None values in 'how_closed' by sorting them last
         order_clauses = (Trade.how_closed.desc().nullslast(), Trade.trade_date.desc()) if sort_reverse else (
             Trade.how_closed.asc().nullsfirst(), Trade.trade_date.desc())
         query = query.order_by(*order_clauses)
     else:
-        # Default sorting by date desc for any other field before pagination
         query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
 
     # Pagination with dynamic page size
@@ -224,7 +312,7 @@ def view_trades_list():
             key_func = lambda t: t.total_contracts_entered if t.total_contracts_entered is not None else -1
         elif sort_field == 'entry_time':
             key_func = lambda \
-                t: t.entries.first().entry_time if t.entries.first() and t.entries.first().entry_time else py_time.min
+                    t: t.entries.first().entry_time if t.entries.first() and t.entries.first().entry_time else py_time.min
         elif sort_field == 'entry':
             key_func = lambda t: t.average_entry_price if t.average_entry_price is not None else -float('inf')
         elif sort_field == 'exit':
@@ -234,13 +322,11 @@ def view_trades_list():
         elif sort_field == 'time_in_trade':
             def _calculate_time_in_trade(trade):
                 if trade.exits.count() > 0 and trade.entries.count() > 0:
-                    # Get first entry (earliest time)
                     first_entry = trade.entries.order_by(EntryPoint.entry_time.asc()).first()
-                    # Get last exit (latest time)
                     last_exit = trade.exits.order_by(ExitPoint.exit_time.desc()).first()
 
                     if first_entry and last_exit and first_entry.entry_time and last_exit.exit_time:
-                        # Combine date with times to create full datetime objects
+                        from datetime import datetime
                         entry_datetime = datetime.combine(trade.trade_date, first_entry.entry_time)
                         exit_datetime = datetime.combine(trade.trade_date, last_exit.exit_time)
                         return (exit_datetime - entry_datetime).total_seconds()
