@@ -200,9 +200,24 @@ def view_trades_list():
         query = query.filter(Trade.trading_model_id == filter_form.trading_model_id.data)
 
     # Handle how_closed filter (from request.args since it's not in the form)
+
     how_closed_filter = request.args.get('how_closed')
     if how_closed_filter:
+        print(f"DEBUG: Filtering by how_closed = '{how_closed_filter}'")
+
+        # Let's see what values actually exist in the database
+        existing_how_closed_values = db.session.query(Trade.how_closed).filter(
+            Trade.user_id == current_user.id
+        ).distinct().all()
+        print(f"DEBUG: Existing how_closed values in database:")
+        for value in existing_how_closed_values:
+            print(f"  - '{value[0]}'")
+
         query = query.filter(Trade.how_closed == how_closed_filter)
+
+        # Check how many trades match after this filter
+        count_after_filter = query.count()
+        print(f"DEBUG: Trades matching how_closed filter: {count_after_filter}")
 
     # Handle P&L filter
     pnl_filter = request.args.get('pnl_filter')
@@ -222,36 +237,16 @@ def view_trades_list():
         elif is_dca_filter == 'false':
             query = query.filter(Trade.is_dca == False)
 
-    # Handle news event filter
-    news_event_filter = request.args.get('news_event')
-    if news_event_filter:
-        if news_event_filter == 'none':
-            query = query.filter(db.or_(Trade.news_event == None, Trade.news_event == ''))
-        else:
-            query = query.filter(Trade.news_event == news_event_filter)
+    # Handle tags filter - support multiple tags
+    selected_tags = request.args.getlist('tags')  # Get list of selected tag IDs
+    if selected_tags and any(tag.strip() for tag in selected_tags if tag):  # Check if any non-empty tags
+        # Filter tags to only non-empty values
+        valid_tag_ids = [int(tag) for tag in selected_tags if tag.strip() and tag.isdigit()]
 
-    # Handle tags filter
-    if filter_form.tags.data:
-        tag_id = None
-
-        if isinstance(filter_form.tags.data, str) and filter_form.tags.data.isdigit():
-            tag_id = int(filter_form.tags.data)
-        elif isinstance(filter_form.tags.data, int):
-            tag_id = filter_form.tags.data
-        elif hasattr(filter_form.tags.data, '__iter__') and len(filter_form.tags.data) > 0:
-            first_tag = filter_form.tags.data[0]
-            if isinstance(first_tag, str) and first_tag.isdigit():
-                tag_id = int(first_tag)
-            elif isinstance(first_tag, int):
-                tag_id = first_tag
-
-        if not tag_id:
-            tag_param = request.args.get('tags')
-            if tag_param and tag_param.isdigit():
-                tag_id = int(tag_param)
-
-        if tag_id:
-            query = query.filter(Trade.tags.any(Tag.id == tag_id))
+        if valid_tag_ids:
+            # Use OR logic - show trades that have ANY of the selected tags
+            tag_filters = [Trade.tags.any(Tag.id == tag_id) for tag_id in valid_tag_ids]
+            query = query.filter(db.or_(*tag_filters))
 
     # Debug logging
     print(f"Filter form data: {filter_form.data}")

@@ -1602,12 +1602,9 @@ console.log('✅ Enhanced trade list functions loaded');
             {% set _ = active_filters.append('Direction: ' + request.args.get('direction')) %}
         {% endif %}
         {% if request.args.get('trading_model_id') and request.args.get('trading_model_id') != '0' %}
-            {% set model_label = 'Unknown Model' %}
-            {% for choice_value, choice_label in filter_form.trading_model_id.choices %}
-                {% if choice_value|string == request.args.get('trading_model_id') and choice_value != 0 %}
-                    {% set model_label = choice_label %}
-                {% endif %}
-            {% endfor %}
+            {% set model_id = request.args.get('trading_model_id') %}
+            {% set model_dict = dict(filter_form.trading_model_id.choices) %}
+            {% set model_label = model_dict.get(model_id|int, model_id) %}
             {% set _ = active_filters.append('Model: ' + model_label) %}
         {% endif %}
         {% if request.args.get('how_closed') %}
@@ -1629,23 +1626,28 @@ console.log('✅ Enhanced trade list functions loaded');
                 {% set _ = active_filters.append('DCA: No') %}
             {% endif %}
         {% endif %}
-        {% if request.args.get('news_event') %}
-            {% if request.args.get('news_event') == 'none' %}
-                {% set _ = active_filters.append('News Event: None') %}
-            {% else %}
-                {% set _ = active_filters.append('News Event: ' + request.args.get('news_event')|title) %}
-            {% endif %}
-        {% endif %}
-        {% if request.args.get('tags') %}
-            {% set tag_label = 'Unknown Tag' %}
-            {% for choice_value, choice_label in filter_form.tags.choices %}
-                {% if choice_value == request.args.get('tags') and choice_value != '' %}
-                    {% set tag_label = choice_label %}
+
+        {% if request.args.getlist('tags') %}
+            {% set selected_tag_ids = request.args.getlist('tags') %}
+            {% for tag_id in selected_tag_ids %}
+                {% if tag_id and tag_id.strip() %}
+                    {% set tag_label = tag_id %}
+                    {% set tag_color = 'neutral' %}
+
+                    {% if categorized_tags %}
+                        {% for category_name, tag_options in categorized_tags %}
+                            {% for tag_option_id, tag_option_name, tag_option_color in tag_options %}
+                                {% if tag_option_id == tag_id %}
+                                    {% set tag_label = tag_option_name %}
+                                    {% set tag_color = tag_option_color or 'neutral' %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    {% endif %}
+
+                    {% set _ = active_filters.append(('Tag', tag_label, tag_color)) %}
                 {% endif %}
             {% endfor %}
-            {% if request.args.get('tags') != '' %}
-                {% set _ = active_filters.append('Tag: ' + tag_label) %}
-            {% endif %}
         {% endif %}
 
         {% if active_filters %}
@@ -1656,7 +1658,36 @@ console.log('✅ Enhanced trade list functions loaded');
                     <strong>Trades filtered by:</strong>
                     <div class="mt-1">
                         {% for filter in active_filters %}
-                            <span class="badge bg-primary me-1 mb-1">{{ filter }}</span>
+                            {% if filter is sequence and filter|length == 3 and filter[0] == 'Tag' %}
+                                <!-- Tag with exact add_trade.html styling -->
+                                <span class="badge me-1 mb-1 tag-{{ filter[2] }}" style="
+                                    background-color: var(--bs-{{
+                                        'success' if filter[2] == 'good' else
+                                        'danger' if filter[2] == 'bad' else
+                                        'primary'
+                                    }}-bg-subtle) !important;
+                                    border-color: var(--bs-{{
+                                        'success' if filter[2] == 'good' else
+                                        'danger' if filter[2] == 'bad' else
+                                        'primary'
+                                    }}-border-subtle) !important;
+                                    color: var(--bs-{{
+                                        'success' if filter[2] == 'good' else
+                                        'danger' if filter[2] == 'bad' else
+                                        'primary'
+                                    }}-text-emphasis) !important;
+                                    border: 1px solid;
+                                    padding: 0.25rem 0.5rem;
+                                    border-radius: 0.375rem;
+                                    font-size: 0.75rem;
+                                    font-weight: 500;
+                                ">
+                                    {{ filter[0] }}: {{ filter[1] }}
+                                </span>
+                            {% else %}
+                                <!-- Regular filter badge -->
+                                <span class="badge bg-primary me-1 mb-1">{{ filter }}</span>
+                            {% endif %}
                         {% endfor %}
                     </div>
                 </div>
@@ -2323,16 +2354,12 @@ console.log('✅ Enhanced trade list functions loaded');
                             <label for="how_closed" class="form-label">How Closed</label>
                             <select name="how_closed" id="how_closed" class="form-select" aria-label="Filter by how trade was closed">
                                 <option value="">All</option>
-                                <option value="Take Profit" {{ 'selected' if request.args.get('how_closed') == 'Take Profit' else '' }}>Take Profit</option>
-                                <option value="Stop Loss" {{ 'selected' if request.args.get('how_closed') == 'Stop Loss' else '' }}>Stop Loss</option>
-                                <option value="Scratch" {{ 'selected' if request.args.get('how_closed') == 'Scratch' else '' }}>Scratch</option>
-                                <option value="Still Open" {{ 'selected' if request.args.get('how_closed') == 'Still Open' else '' }}>Still Open</option>
-                                <option value="Manual Close" {{ 'selected' if request.args.get('how_closed') == 'Manual Close' else '' }}>Manual Close</option>
-                                <option value="Manual" {{ 'selected' if request.args.get('how_closed') == 'Manual' else '' }}>Closed Manually</option>
-                                <option value="SL" {{ 'selected' if request.args.get('how_closed') == 'SL' else '' }}>Closed by Stop Loss</option>
-                                <option value="TP" {{ 'selected' if request.args.get('how_closed') == 'TP' else '' }}>Closed by Take Profit</option>
-                                <option value="Trailing SL" {{ 'selected' if request.args.get('how_closed') == 'Trailing SL' else '' }}>Closed by Trailing Stop Loss</option>
-                                <option value="Time Exit" {{ 'selected' if request.args.get('how_closed') == 'Time Exit' else '' }}>Exited by Time Rule</option>
+                                <option value="Closed Manually" {{ 'selected' if request.args.get('how_closed') == 'Closed Manually' else '' }}>Closed Manually</option>
+                                <option value="Closed by Stop Loss" {{ 'selected' if request.args.get('how_closed') == 'Closed by Stop Loss' else '' }}>Closed by Stop Loss</option>
+                                <option value="Closed by Take Profit" {{ 'selected' if request.args.get('how_closed') == 'Closed by Take Profit' else '' }}>Closed by Take Profit</option>
+                                <option value="Closed by Trailing Stop Loss" {{ 'selected' if request.args.get('how_closed') == 'Closed by Trailing Stop Loss' else '' }}>Closed by Trailing Stop Loss</option>
+                                <option value="Exited by Time Rule" {{ 'selected' if request.args.get('how_closed') == 'Exited by Time Rule' else '' }}>Exited by Time Rule</option>
+                                <option value="Still Open / Partially Exited" {{ 'selected' if request.args.get('how_closed') == 'Still Open / Partially Exited' else '' }}>Still Open / Partially Exited</option>
                             </select>
                         </div>
 
@@ -2355,34 +2382,20 @@ console.log('✅ Enhanced trade list functions loaded');
                             </select>
                         </div>
 
-                        <!-- News Events -->
-                        <div class="col-md-12">
-                            <label for="news_event" class="form-label">News Event</label>
-                            <select name="news_event" id="news_event" class="form-select" aria-label="Filter by news event">
-                                <option value="">All Events</option>
-                                <option value="none" {{ 'selected' if request.args.get('news_event') == 'none' else '' }}>No News Events</option>
-                                <option value="fomc" {{ 'selected' if request.args.get('news_event') == 'fomc' else '' }}>FOMC</option>
-                                <option value="nfp" {{ 'selected' if request.args.get('news_event') == 'nfp' else '' }}>NFP</option>
-                                <option value="cpi" {{ 'selected' if request.args.get('news_event') == 'cpi' else '' }}>CPI</option>
-                                <option value="earnings" {{ 'selected' if request.args.get('news_event') == 'earnings' else '' }}>Earnings</option>
-                                <option value="other" {{ 'selected' if request.args.get('news_event') == 'other' else '' }}>Other</option>
-                            </select>
-                        </div>
-
-                        <!-- Tags with Categorization -->
+                        <!-- Tags with Categorization - Multiple Selection -->
                         <div class="col-12">
                             <div class="mb-3">
                                 <label for="tags-filter-select" class="form-label">Tags</label>
-                                <select id="tags-filter-select" name="tags" class="form-select">
-                                    <option value="">All Tags</option>
+                                <select id="tags-filter-select" name="tags" class="form-select" multiple>
                                     {% if categorized_tags %}
                                         {% for category_name, tag_options in categorized_tags %}
                                             <optgroup label="{{ category_name }}">
                                                 {% for tag_id, tag_name, tag_color in tag_options %}
+                                                    {% set selected_tags = request.args.getlist('tags') %}
                                                     <option value="{{ tag_id }}"
                                                             data-color="{{ tag_color or 'neutral' }}"
                                                             class="tag-{{ tag_color or 'neutral' }}"
-                                                            {% if tag_id == request.args.get('tags') %}selected{% endif %}>
+                                                            {% if tag_id in selected_tags %}selected{% endif %}>
                                                         {{ tag_name }}
                                                     </option>
                                                 {% endfor %}
@@ -2480,27 +2493,41 @@ document.addEventListener('DOMContentLoaded', function() {
     const tagsFilterSelect = document.getElementById('tags-filter-select');
     if (tagsFilterSelect && typeof TomSelect !== 'undefined') {
         new TomSelect(tagsFilterSelect, {
-            plugins: ['clear_button'],
-            placeholder: 'Select a tag to filter...',
+            plugins: ['remove_button'],  // Allow removing individual tags
+            placeholder: 'Select tags to filter...',
             allowEmptyOption: true,
+            maxItems: null,  // Allow unlimited selections
             render: {
                 option: function(data, escape) {
                     if (data.value === '') {
                         return `<div class="option">${escape(data.text)}</div>`;
                     }
                     const colorClass = filterTagColors[data.value] ? `tag-${filterTagColors[data.value]}` : 'tag-neutral';
-                    return `<div class="option ${colorClass}">${escape(data.text)}</div>`;
+                    return `<div class="option ${colorClass}" style="
+                        background-color: var(--bs-${filterTagColors[data.value] === 'good' ? 'success' : filterTagColors[data.value] === 'bad' ? 'danger' : 'primary'}-bg-subtle);
+                        color: var(--bs-${filterTagColors[data.value] === 'good' ? 'success' : filterTagColors[data.value] === 'bad' ? 'danger' : 'primary'}-text-emphasis);
+                        border-color: var(--bs-${filterTagColors[data.value] === 'good' ? 'success' : filterTagColors[data.value] === 'bad' ? 'danger' : 'primary'}-border-subtle);
+                    ">${escape(data.text)}</div>`;
                 },
                 item: function(data, escape) {
                     if (data.value === '') {
                         return `<div class="item">${escape(data.text)}</div>`;
                     }
                     const colorClass = filterTagColors[data.value] ? `tag-${filterTagColors[data.value]}` : 'tag-neutral';
-                    return `<div class="item ${colorClass}">${escape(data.text)}</div>`;
+                    return `<div class="item ${colorClass}" style="
+                        background-color: var(--bs-${filterTagColors[data.value] === 'good' ? 'success' : filterTagColors[data.value] === 'bad' ? 'danger' : 'primary'}-bg-subtle);
+                        color: var(--bs-${filterTagColors[data.value] === 'good' ? 'success' : filterTagColors[data.value] === 'bad' ? 'danger' : 'primary'}-text-emphasis);
+                        border-color: var(--bs-${filterTagColors[data.value] === 'good' ? 'success' : filterTagColors[data.value] === 'bad' ? 'danger' : 'primary'}-border-subtle);
+                        border: 1px solid;
+                        padding: 0.25rem 0.5rem;
+                        border-radius: 0.375rem;
+                        font-size: 0.75rem;
+                        font-weight: 500;
+                    ">${escape(data.text)}</div>`;
                 }
             }
         });
-        console.log('TomSelect initialized for filter tags with colors');
+        console.log('TomSelect initialized for multi-select filter tags with colors');
     }
 
     // Quick filter buttons functionality
