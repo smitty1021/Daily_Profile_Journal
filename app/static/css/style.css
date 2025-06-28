@@ -3,7 +3,6 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     margin: 0; padding: 0; line-height: 1.6;
     background-color: var(--main-bg);
-    /*padding-top: 56px; /* Height of fixed-top navbar */
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 a { text-decoration: none; }
@@ -105,158 +104,89 @@ html[data-bs-theme="dark"] .sidebar-nav li a.active {
 .sidebar.desktop-icon-only .submenu.open { max-height: 0; }
 .sidebar.desktop-icon-only:hover .submenu.open { max-height: 500px; }
 
-
 .sidebar-footer { padding: 15px 25px; text-align: center; margin-top: auto; border-top: 1px solid var(--border-color); white-space: nowrap; overflow: hidden; }
 .main-content { flex-grow: 1; }
-.footer { background-color: var(--content-bg); border-top: 1px solid var(--border-color); }
 
-/* --- Action Button Standardization --- */
-/* Standard action buttons used throughout the application */
+/* --- Action Button Styles --- */
 .action-btn {
-    padding: 0.375rem 0.75rem !important;
-    font-size: 0.875rem !important;
-    font-weight: 400 !important;
-    line-height: 1.5 !important;
-    border-radius: 0.375rem !important;
-    border: 1px solid !important;
-    background-color: transparent !important;
-    white-space: nowrap !important;
-    min-height: 2.25rem !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    text-align: center !important;
-    vertical-align: middle !important;
-    cursor: pointer !important;
-    user-select: none !important;
-    transition: all 0.15s ease-in-out !important;
+    border-radius: 8px !important;
+    padding: 0.5rem 1rem !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    border: 2px solid transparent !important;
     text-decoration: none !important;
+    position: relative !important;
+    overflow: hidden !important;
+    z-index: 1 !important;
+    min-width: 100px !important;
+    text-align: center !important;
 }
 
-/* Action button hover effects */
 .action-btn:hover {
     transform: translateY(-1px) !important;
-    text-decoration: none !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
 }
 
-.action-btn:focus,
-.action-btn:active {
-    outline: 0 !important;
-    box-shadow: none !important;
-    transform: translateY(0) !important;
+/* Light theme action button styles */
+html[data-bs-theme="light"] .action-btn.btn-outline-primary {
+    color: #6200ea !important;
+    border-color: #6200ea !important;
 }
-
-/* Button group spacing - standardized across project */
-.btn-group .btn + .btn,
-.btn-group-sm .btn + .btn {
-    margin-left: 0.25rem !important;
-}
-
-/* Remove border-radius adjustments for adjacent buttons in groups */
-.btn-group > .btn:not(:first-child),
-.btn-group > .btn:not(:last-child) {
-    border-radius: 0.375rem !important;
-}
-
-.btn-group > .btn:first-child {
-    border-radius: 0.375rem !important;
-}
-
-.btn-group > .btn:last-child {
-    border-radius: 0.375rem !important;
-}
-
-/* Small button group specific spacing */
-.btn-group-sm .btn {
-    padding: 0.25rem 0.5rem !important;
-    font-size: 0.75rem !important;
-    margin-right: 0.25rem !important;
-}
-
-.btn-group-sm .btn:last-child {
-    margin-right: 0 !important;
-}
-
-/* Color variants for action buttons */
-.action-btn.btn-outline-primary {
-    color: #0d6efd !important;
-    border-color: #0d6efd !important;
-}
-.action-btn.btn-outline-primary:hover {
+html[data-bs-theme="light"] .action-btn.btn-outline-primary:hover {
     color: #fff !important;
-    background-color: #0d6efd !important;
-    border-color: #0d6efd !important;
+    background-color: #6200ea !important;
+    border-color: #6200ea !important;
 }
 
-.action-btn.btn-outline-secondary {
-    color: #6c757d !important;
-    border-color: #6c757d !important;
-}
-.action-btn.btn-outline-secondary:hover {
-    color: #fff !important;
-    background-color: #6c757d !important;
-    border-color: #6c757d !important;
-}
-
-.action-btn.btn-outline-success {
+html[data-bs-theme="light"] .action-btn.btn-outline-success {
     color: #198754 !important;
     border-color: #198754 !important;
 }
-.action-btn.btn-outline-success:hover {
+html[data-bs-theme="light"] .action-btn.btn-outline-success:hover {
     color: #fff !important;
     background-color: #198754 !important;
     border-color: #198754 !important;
 }
 
-.action-btn.btn-outline-info {
+html[data-bs-theme="light"] .action-btn.btn-outline-info {
     color: #0dcaf0 !important;
     border-color: #0dcaf0 !important;
 }
-.action-btn.btn-outline-info:hover {
+html[data-bs-theme="light"] .action-btn.btn-outline-info:hover {
     color: #000 !important;
     background-color: #0dcaf0 !important;
     border-color: #0dcaf0 !important;
 }
 
-.action-btn.btn-outline-warning {
+html[data-bs-theme="light"] .action-btn.btn-outline-warning {
     color: #ffc107 !important;
     border-color: #ffc107 !important;
 }
-.action-btn.btn-outline-warning:hover {
+html[data-bs-theme="light"] .action-btn.btn-outline-warning:hover {
     color: #000 !important;
     background-color: #ffc107 !important;
     border-color: #ffc107 !important;
 }
 
-.action-btn.btn-outline-danger {
+html[data-bs-theme="light"] .action-btn.btn-outline-danger {
     color: #dc3545 !important;
     border-color: #dc3545 !important;
 }
-.action-btn.btn-outline-danger:hover {
+html[data-bs-theme="light"] .action-btn.btn-outline-danger:hover {
     color: #fff !important;
     background-color: #dc3545 !important;
     border-color: #dc3545 !important;
 }
 
-/* Dark theme adjustments for action buttons */
+/* Dark theme action button styles */
 html[data-bs-theme="dark"] .action-btn.btn-outline-primary {
-    color: #6ea8fe !important;
-    border-color: #6ea8fe !important;
+    color: #9d8bf5 !important;
+    border-color: #9d8bf5 !important;
 }
 html[data-bs-theme="dark"] .action-btn.btn-outline-primary:hover {
     color: #000 !important;
-    background-color: #6ea8fe !important;
-    border-color: #6ea8fe !important;
-}
-
-html[data-bs-theme="dark"] .action-btn.btn-outline-secondary {
-    color: #adb5bd !important;
-    border-color: #adb5bd !important;
-}
-html[data-bs-theme="dark"] .action-btn.btn-outline-secondary:hover {
-    color: #000 !important;
-    background-color: #adb5bd !important;
-    border-color: #adb5bd !important;
+    background-color: #9d8bf5 !important;
+    border-color: #9d8bf5 !important;
 }
 
 html[data-bs-theme="dark"] .action-btn.btn-outline-success {
@@ -387,135 +317,86 @@ html[data-bs-theme="light"] .table-dark {
         padding: 0.3rem 0.6rem !important;
         min-height: 2rem !important;
     }
-} */
-.form-check-input:checked {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
 }
 
-/* Smooth transitions for collapsible elements */
-.collapse {
-    transition: all 0.3s ease;
-}
-
-/* --- Mobile-Specific Overrides --- */
-@media (max-width: 991.98px) {
-    .content-wrapper, .content-wrapper.full-width { margin-left: 0; }
-    .sidebar { transform: translateX(-100%); width: 260px; z-index: 1040; }
-    .sidebar.mobile-open { transform: translateX(0); }
-
-    /* THIS IS THE FIX for showing text on the mobile sidebar */
-    .sidebar.mobile-open .sidebar-nav .label,
-    .sidebar.mobile-open .sidebar-nav .arrow {
-        opacity: 1;
-        visibility: visible;
-        width: auto;
-    }
-    .sidebar.mobile-open .sidebar-nav li a {
-        justify-content: flex-start;
-    }
-    .sidebar.mobile-open .sidebar-nav li a .icon {
-        margin-right: 15px;
-    }
-
-    /* Mobile action button adjustments */
-    .action-btn {
-        min-width: 120px !important;
-        max-width: 160px !important;
-        flex: 1 !important;
-    }
-}
-
-/* Additional responsive improvements for action buttons */
-@media (max-width: 768px) {
-    .d-flex.justify-content-between.flex-wrap {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .d-flex.justify-content-between.flex-wrap > div {
-        justify-content: center;
-    }
-
-    .action-btn {
-        font-size: 0.8rem !important;
-        padding: 0.3rem 0.6rem !important;
-        min-height: 2rem !important;
-    }
-}
 /*
 ================================================
 Custom Flash Message (Notification) Styles
 ================================================
 */
-.flash-message-container {
-    position: fixed;
-    bottom: 20px; /* Changed from top to bottom */
-    right: 20px;
-    width: 100%;
-    max-width: 450px;
-    z-index: 1056;
-    display: flex;
-    flex-direction: column-reverse; /* Stack new notifications at bottom */
-    gap: 10px;
+.flash-message {
+    position: relative;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    border: 1px solid;
+    animation: slideInFromRight 0.3s ease-out;
 }
 
-/* Override Bootstrap's default margin for alerts inside our container */
-.flash-message-container .alert {
-    margin-top: 0;
-    width: 100%;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border: none;
+.flash-message.alert-success {
+    background-color: rgba(25, 135, 84, 0.1);
+    border-color: rgba(25, 135, 84, 0.3);
+    color: #0f5132;
 }
 
-/* Notification animations - slide up from bottom */
-@keyframes slideUpFromBottom {
+.flash-message.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #721c24;
+}
+
+.flash-message.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.3);
+    color: #664d03;
+}
+
+.flash-message.alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: rgba(13, 202, 240, 0.3);
+    color: #055160;
+}
+
+@keyframes slideInFromRight {
     from {
+        transform: translateX(100%);
         opacity: 0;
-        transform: translateY(100px);
     }
     to {
+        transform: translateX(0);
         opacity: 1;
-        transform: translateY(0);
     }
 }
 
-@keyframes slideDownToBottom {
-    from {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateY(100px);
-    }
+/* Dark theme flash messages */
+html[data-bs-theme="dark"] .flash-message.alert-success {
+    background-color: rgba(25, 135, 84, 0.2);
+    border-color: rgba(25, 135, 84, 0.4);
+    color: #75b798;
 }
 
-/* Tag animations for admin pages */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+html[data-bs-theme="dark"] .flash-message.alert-danger {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-color: rgba(220, 53, 69, 0.4);
+    color: #f1919c;
 }
 
-@keyframes fadeOut {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(-10px); }
+html[data-bs-theme="dark"] .flash-message.alert-warning {
+    background-color: rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.4);
+    color: #ffda6a;
 }
 
-/* Slide down animation for bulk actions toolbar */
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+html[data-bs-theme="dark"] .flash-message.alert-info {
+    background-color: rgba(13, 202, 240, 0.2);
+    border-color: rgba(13, 202, 240, 0.4);
+    color: #6edff6;
 }
 
-/* Override Bootstrap badge font-weight for tags */
-.badge.tag-good,
-.badge.tag-bad,
-.badge.tag-neutral {
-    font-weight: normal !important;
-}
-
-/* Random's Trading System Tag Colors - Matching Settings Style */
+/*
+================================================
+Tag Styling System
+================================================
+*/
 .tag-good {
     background-color: var(--bs-success-bg-subtle) !important;
     border-color: var(--bs-success-border-subtle) !important;
@@ -608,4 +489,638 @@ Custom Flash Message (Notification) Styles
     display: inline-flex !important;
     align-items: center !important;
     position: relative !important;
+}
+
+/*
+================================================
+TomSelect Enhanced Styling for Tags
+================================================
+*/
+
+/* Filter tag option colors in select dropdown */
+#tags-filter-select option[data-color="good"] {
+    color: #198754 !important;
+    background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+#tags-filter-select option[data-color="bad"] {
+    color: #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+#tags-filter-select option[data-color="neutral"] {
+    color: #0d6efd !important;
+    background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+/* Ensure proper contrast in dark mode */
+[data-bs-theme="dark"] #tags-filter-select option[data-color="good"] {
+    color: #75b798 !important;
+    background-color: rgba(117, 183, 152, 0.2) !important;
+}
+
+[data-bs-theme="dark"] #tags-filter-select option[data-color="bad"] {
+    color: #f1919c !important;
+    background-color: rgba(241, 145, 156, 0.2) !important;
+}
+
+[data-bs-theme="dark"] #tags-filter-select option[data-color="neutral"] {
+    color: #6ea8fe !important;
+    background-color: rgba(110, 168, 254, 0.2) !important;
+}
+
+/* Quick filters uniform spacing */
+.quick-filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.quick-filter-container .btn-group {
+    margin-bottom: 0;
+}
+
+/* TomSelect styling for filter tags */
+.ts-control.tag-good {
+    border-color: var(--bs-success-border-subtle) !important;
+}
+
+.ts-control.tag-bad {
+    border-color: var(--bs-danger-border-subtle) !important;
+}
+
+.ts-control.tag-neutral {
+    border-color: var(--bs-primary-border-subtle) !important;
+}
+
+/* TomSelect dropdown styling */
+.ts-dropdown .option.tag-good {
+    background-color: var(--bs-success-bg-subtle) !important;
+    color: var(--bs-success-text-emphasis) !important;
+}
+
+.ts-dropdown .option.tag-bad {
+    background-color: var(--bs-danger-bg-subtle) !important;
+    color: var(--bs-danger-text-emphasis) !important;
+}
+
+.ts-dropdown .option.tag-neutral {
+    background-color: var(--bs-primary-bg-subtle) !important;
+    color: var(--bs-primary-text-emphasis) !important;
+}
+
+.ts-dropdown .option.tag-good:hover,
+.ts-dropdown .option.tag-good.active {
+    background-color: var(--bs-success) !important;
+    color: white !important;
+}
+
+.ts-dropdown .option.tag-bad:hover,
+.ts-dropdown .option.tag-bad.active {
+    background-color: var(--bs-danger) !important;
+    color: white !important;
+}
+
+.ts-dropdown .option.tag-neutral:hover,
+.ts-dropdown .option.tag-neutral.active {
+    background-color: var(--bs-primary) !important;
+    color: white !important;
+}
+
+/* Selected items styling */
+.ts-control .item.tag-good {
+    background-color: var(--bs-success-bg-subtle) !important;
+    color: var(--bs-success-text-emphasis) !important;
+    border-color: var(--bs-success-border-subtle) !important;
+}
+
+.ts-control .item.tag-bad {
+    background-color: var(--bs-danger-bg-subtle) !important;
+    color: var(--bs-danger-text-emphasis) !important;
+    border-color: var(--bs-danger-border-subtle) !important;
+}
+
+.ts-control .item.tag-neutral {
+    background-color: var(--bs-primary-bg-subtle) !important;
+    color: var(--bs-primary-text-emphasis) !important;
+    border-color: var(--bs-primary-border-subtle) !important;
+}
+
+/* Enhanced TomSelect control for multi-line tags */
+.ts-control.multi {
+    min-height: 2.5rem !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0.375rem 0.75rem !important;
+}
+
+.ts-control.multi .ts-input {
+    min-width: 120px !important;
+    flex-wrap: wrap !important;
+}
+
+.ts-control.multi .item {
+    margin: 0.125rem !important;
+    padding: 0.25rem 0.5rem !important;
+    border-radius: 0.375rem !important;
+    font-size: 0.875rem !important;
+    white-space: nowrap !important;
+    max-width: none !important;
+}
+
+/* Ensure proper wrapping and overflow handling */
+.ts-control .item {
+    display: inline-flex !important;
+    align-items: center !important;
+    word-break: normal !important;
+    overflow: visible !important;
+}
+
+/* Remove button styling within tags */
+.ts-control .item .remove {
+    margin-left: 0.5rem !important;
+    opacity: 0.7 !important;
+    font-size: 0.75rem !important;
+}
+
+.ts-control .item .remove:hover {
+    opacity: 1 !important;
+    color: inherit !important;
+}
+
+/* Responsive TomSelect adjustments */
+@media (max-width: 768px) {
+    .ts-control.multi {
+        min-height: 3rem !important;
+        padding: 0.5rem !important;
+    }
+
+    .ts-control.multi .item {
+        margin: 0.1rem !important;
+        padding: 0.2rem 0.4rem !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/*
+================================================
+Trade Details and Cards Styling
+================================================
+*/
+
+/* Trade detail cards container */
+.trade-details-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* Individual card styling */
+.trade-detail-card {
+    background-color: var(--content-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+}
+
+.trade-detail-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Card headers */
+.trade-detail-card h6 {
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Performance indicators */
+.performance-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.performance-indicator.positive {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: var(--bs-success);
+}
+
+.performance-indicator.negative {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--bs-danger);
+}
+
+/* Rating dots */
+.rating-dots {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.rating-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    opacity: 0.3;
+}
+
+.rating-dot.filled {
+    opacity: 1;
+}
+
+.rating-dot.excellent {
+    background: linear-gradient(135deg, #198754, #20c997);
+}
+
+.rating-dot.good {
+    background: linear-gradient(135deg, #0d6efd, #6610f2);
+}
+
+.rating-dot.average {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+}
+
+.rating-dot.poor {
+    background: linear-gradient(135deg, #dc3545, #e83e8c);
+}
+
+/* Responsive trade details */
+@media (max-width: 768px) {
+    .trade-details-cards {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .trade-detail-card {
+        padding: 0.75rem;
+    }
+}
+
+/*
+================================================
+Enhanced Table Styling
+================================================
+*/
+
+/* Trade list table enhancements */
+.trade-list-table {
+    background-color: var(--content-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.trade-list-table thead th {
+    background-color: var(--sidebar-bg);
+    color: var(--text-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    padding: 1rem 0.75rem;
+    border: none;
+}
+
+.trade-list-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s ease;
+}
+
+.trade-list-table tbody tr:hover {
+    background-color: rgba(var(--primary-color), 0.05);
+}
+
+.trade-list-table tbody td {
+    padding: 0.75rem;
+    vertical-align: middle;
+    border: none;
+}
+
+/* Expandable row styling */
+.expandable-row {
+    cursor: pointer;
+}
+
+.expandable-row:hover {
+    background-color: rgba(var(--primary-color), 0.1);
+}
+
+.expanded-content {
+    background-color: var(--main-bg);
+    border-top: 1px solid var(--border-color);
+}
+
+/*
+================================================
+Utility Classes
+================================================
+*/
+
+/* Text utilities */
+.text-profit {
+    color: var(--bs-success) !important;
+    font-weight: 600;
+}
+
+.text-loss {
+    color: var(--bs-danger) !important;
+    font-weight: 600;
+}
+
+.text-neutral {
+    color: var(--text-secondary) !important;
+}
+
+/* Background utilities */
+.bg-subtle-success {
+    background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+.bg-subtle-danger {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.bg-subtle-warning {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.bg-subtle-info {
+    background-color: rgba(13, 202, 240, 0.1) !important;
+}
+
+/* Border utilities */
+.border-subtle-success {
+    border-color: rgba(25, 135, 84, 0.3) !important;
+}
+
+.border-subtle-danger {
+    border-color: rgba(220, 53, 69, 0.3) !important;
+}
+
+.border-subtle-warning {
+    border-color: rgba(255, 193, 7, 0.3) !important;
+}
+
+.border-subtle-info {
+    border-color: rgba(13, 202, 240, 0.3) !important;
+}
+
+/* Loading and animation utilities */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Fade in animation */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Slide down animation */
+.slide-down {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 1000px;
+    }
+}
+
+/*
+================================================
+Form Enhancements
+================================================
+*/
+
+/* Enhanced form controls */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25);
+}
+
+/* Custom checkbox styling */
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-check-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25);
+}
+
+/* Form group spacing */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Enhanced button groups */
+.btn-group .btn {
+    border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.btn-group .btn:last-child {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+/*
+================================================
+Modal Enhancements
+================================================
+*/
+
+/* Enhanced modal styling */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    background-color: var(--content-bg);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--sidebar-bg);
+    border-radius: 12px 12px 0 0;
+    padding: 1.25rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+    color: var(--text-color);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+    background-color: var(--main-bg);
+    border-radius: 0 0 12px 12px;
+    padding: 1rem 1.5rem;
+}
+
+/* Modal backdrop enhancement */
+.modal-backdrop {
+    background-color: rgba(0,0,0,0.6);
+}
+
+/*
+================================================
+Scrollbar Styling
+================================================
+*/
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--main-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) var(--main-bg);
+}
+
+/*
+================================================
+Print Styles
+================================================
+*/
+
+@media print {
+    /* Hide non-essential elements when printing */
+    .sidebar,
+    .navbar,
+    .action-btn,
+    .modal,
+    .flash-message {
+        display: none !important;
+    }
+
+    /* Adjust layout for print */
+    .content-wrapper {
+        margin-left: 0 !important;
+    }
+
+    /* Ensure good contrast for print */
+    body {
+        background: white !important;
+        color: black !important;
+    }
+
+    .trade-detail-card {
+        border: 1px solid #ccc !important;
+        break-inside: avoid;
+        margin-bottom: 1rem;
+    }
+}
+
+/*
+================================================
+Accessibility Enhancements
+================================================
+*/
+
+/* Focus indicators */
+*:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Skip to content link */
+.skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: var(--primary-color);
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 9999;
+}
+
+.skip-to-content:focus {
+    top: 6px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000;
+        --text-color: #000;
+        --main-bg: #fff;
+        --content-bg: #fff;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
