@@ -592,6 +592,15 @@
     color: white !important;
 }
 
+/* Fix action button spacing */
+.btn-group-sm .btn {
+    margin-right: 0.25rem !important;
+}
+
+.btn-group-sm .btn:last-child {
+    margin-right: 0 !important;
+}
+
 /* ========== RESPONSIVE DESIGN ========== */
 
 @media (max-width: 1400px) {
@@ -644,6 +653,233 @@
         padding: 0.25rem 0.5rem;
         font-size: 0.75rem;
     }
+}
+
+/* ========== ACCESSIBILITY & INTERACTIONS ========== */
+
+.trade-row:focus {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: -2px;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Print styles */
+@media print {
+    .trade-details-row {
+        page-break-inside: avoid;
+    }
+
+    .btn-group {
+        display: none !important;
+    }
+}
+
+/* ========== ENHANCED TAGS FILTER WITH COLOR CATEGORIES ========== */
+
+#tags-filter-select option[data-color="good"] {
+    color: #198754 !important;
+    background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+#tags-filter-select option[data-color="bad"] {
+    color: #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+#tags-filter-select option[data-color="neutral"] {
+    color: #0d6efd !important;
+    background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+/* Ensure proper contrast in dark mode */
+[data-bs-theme="dark"] #tags-filter-select option[data-color="good"] {
+    color: #75b798 !important;
+    background-color: rgba(117, 183, 152, 0.2) !important;
+}
+
+[data-bs-theme="dark"] #tags-filter-select option[data-color="bad"] {
+    color: #f1919c !important;
+    background-color: rgba(241, 145, 156, 0.2) !important;
+}
+
+[data-bs-theme="dark"] #tags-filter-select option[data-color="neutral"] {
+    color: #6ea8fe !important;
+    background-color: rgba(110, 168, 254, 0.2) !important;
+}
+
+/* Quick filters uniform spacing */
+.quick-filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.quick-filter-container .btn-group {
+    margin-bottom: 0;
+}
+
+/* ========== TOMSELECT STYLING FOR FILTER TAGS ========== */
+
+.ts-control.tag-good {
+    border-color: var(--bs-success-border-subtle) !important;
+}
+
+.ts-control.tag-bad {
+    border-color: var(--bs-danger-border-subtle) !important;
+}
+
+.ts-control.tag-neutral {
+    border-color: var(--bs-primary-border-subtle) !important;
+}
+
+/* TomSelect dropdown styling */
+.ts-dropdown .option.tag-good {
+    background-color: var(--bs-success-bg-subtle) !important;
+    color: var(--bs-success-text-emphasis) !important;
+}
+
+.ts-dropdown .option.tag-bad {
+    background-color: var(--bs-danger-bg-subtle) !important;
+    color: var(--bs-danger-text-emphasis) !important;
+}
+
+.ts-dropdown .option.tag-neutral {
+    background-color: var(--bs-primary-bg-subtle) !important;
+    color: var(--bs-primary-text-emphasis) !important;
+}
+
+.ts-dropdown .option.tag-good:hover,
+.ts-dropdown .option.tag-good.active {
+    background-color: var(--bs-success) !important;
+    color: white !important;
+}
+
+.ts-dropdown .option.tag-bad:hover,
+.ts-dropdown .option.tag-bad.active {
+    background-color: var(--bs-danger) !important;
+    color: white !important;
+}
+
+.ts-dropdown .option.tag-neutral:hover,
+.ts-dropdown .option.tag-neutral.active {
+    background-color: var(--bs-primary) !important;
+    color: white !important;
+}
+
+/* Selected items styling */
+.ts-control .item.tag-good {
+    background-color: var(--bs-success-bg-subtle) !important;
+    color: var(--bs-success-text-emphasis) !important;
+    border-color: var(--bs-success-border-subtle) !important;
+}
+
+.ts-control .item.tag-bad {
+    background-color: var(--bs-danger-bg-subtle) !important;
+    color: var(--bs-danger-text-emphasis) !important;
+    border-color: var(--bs-danger-border-subtle) !important;
+}
+
+.ts-control .item.tag-neutral {
+    background-color: var(--bs-primary-bg-subtle) !important;
+    color: var(--bs-primary-text-emphasis) !important;
+    border-color: var(--bs-primary-border-subtle) !important;
+}
+
+/* Enhanced TomSelect multi-tag styling */
+.tomselect-enhanced.tomselect-multi-tags .ts-control {
+    min-height: 3rem !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0.5rem !important;
+    line-height: 1.4 !important;
+    flex-wrap: wrap !important;
+    align-content: flex-start !important;
+}
+
+.tomselect-enhanced.tomselect-multi-tags .ts-control .ts-input {
+    min-width: 120px !important;
+    flex: 1 1 auto !important;
+    order: 999 !important;
+}
+
+.tomselect-enhanced.tomselect-multi-tags .ts-control .item {
+    margin: 0.125rem !important;
+    flex: 0 0 auto !important;
+    max-width: calc(100% - 140px) !important;
+}
+
+/* Mobile responsive adjustments */
+.tomselect-enhanced.tomselect-multi-tags.ts-mobile .ts-control {
+    min-height: 3.5rem !important;
+    padding: 0.75rem 0.5rem !important;
+}
+
+.tomselect-enhanced.tomselect-multi-tags.ts-mobile .ts-control .item {
+    margin: 0.1rem !important;
+    padding: 0.2rem 0.5rem !important;
+    font-size: 0.8rem !important;
+    max-width: calc(100% - 100px) !important;
+}
+
+/* Enhanced dropdown styling */
+.tomselect-enhanced .ts-dropdown {
+    border: 1px solid var(--bs-border-color) !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+    z-index: 1055 !important;
+}
+
+.tomselect-enhanced .ts-dropdown .option {
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.tomselect-enhanced .ts-dropdown .option:hover {
+    transform: translateX(2px) !important;
+    opacity: 0.9 !important;
+}
+
+.tomselect-enhanced .ts-dropdown .option.selected {
+    background-color: var(--bs-primary-bg-subtle) !important;
+    color: var(--bs-primary-text-emphasis) !important;
+}
+
+.tomselect-enhanced .ts-dropdown .option.selected::after {
+    content: "✓";
+    float: right;
+    color: var(--bs-success);
+    font-weight: bold;
+}
+
+/* Clear button styling */
+.tomselect-enhanced .clear-button {
+    background: var(--bs-danger) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 50% !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 12px !important;
+    margin-left: 0.25rem !important;
+}
+
+.tomselect-enhanced .clear-button:hover {
+    background: var(--bs-danger-dark) !important;
+    transform: scale(1.1) !important;
 }
 </style>
 
@@ -1268,9 +1504,14 @@ const TradeListApp = {
 
     showError(message) {
         console.error('Error:', message);
-        // You could integrate with a toast notification system here
-        // For now, use alert as fallback
-        alert('Error: ' + message);
+        // Use custom notification system if available, otherwise fallback to alert
+        if (typeof showError === 'function') {
+            showError(message);
+        } else if (typeof showNotification === 'function') {
+            showNotification(message, 'danger', 'Error');
+        } else {
+            alert('Error: ' + message);
+        }
     },
 
     setupPerformanceMonitoring() {
@@ -1395,7 +1636,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
 </script>
 {% endblock %}
 
-<!-- Section 13 -- HTML CONTENT: Page Header and Filters -->
+<!-- Section 13 -- HTML CONTENT: Page Header (Clean, No Filter Block) -->
 
 {% block content %}
 <div class="container-fluid mt-4 mb-0">
@@ -1405,8 +1646,12 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
             <h1 class="display-6" style="margin-bottom: .1rem;">
                 <i class="fas fa-chart-line me-2"></i>{{ title }}
             </h1>
+        </div>
+    </div>
 
-            <!-- Filter Summary Block -->
+<!-- Section 14 -- HTML CONTENT: Pagination and Action Buttons -->
+
+            <!-- Compact Filter Notification Bar (Single Line) -->
             {% set active_filters = [] %}
             {% if request.args.get('start_date') %}
                 {% set _ = active_filters.append('Start Date: ' + request.args.get('start_date')) %}
@@ -1448,6 +1693,21 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                     {% set _ = active_filters.append('DCA: No') %}
                 {% endif %}
             {% endif %}
+            {% if request.args.get('min_contracts') %}
+                {% set _ = active_filters.append('Min Contracts: ' + request.args.get('min_contracts')) %}
+            {% endif %}
+            {% if request.args.get('max_contracts') %}
+                {% set _ = active_filters.append('Max Contracts: ' + request.args.get('max_contracts')) %}
+            {% endif %}
+            {% if request.args.get('min_rating') %}
+                {% set _ = active_filters.append('Min Rating: ' + request.args.get('min_rating') + '+') %}
+            {% endif %}
+            {% if request.args.get('min_pnl') %}
+                {% set _ = active_filters.append('Min P&L:  + request.args.get('min_pnl')) %}
+            {% endif %}
+            {% if request.args.get('max_pnl') %}
+                {% set _ = active_filters.append('Max P&L:  + request.args.get('max_pnl')) %}
+            {% endif %}
 
             {% if request.args.getlist('tags') %}
                 {% set selected_tag_ids = request.args.getlist('tags') %}
@@ -1471,58 +1731,6 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                     {% endif %}
                 {% endfor %}
             {% endif %}
-
-            {% if active_filters %}
-            <div class="alert alert-info alert-dismissible fade show mb-3" role="alert" style="border-left: 4px solid #0d6efd;">
-                <div class="d-flex align-items-start">
-                    <i class="fas fa-filter me-2 mt-1"></i>
-                    <div class="flex-grow-1">
-                        <strong>Trades filtered by:</strong>
-                        <div class="mt-1">
-                            {% for filter in active_filters %}
-                                {% if filter is sequence and filter|length == 3 and filter[0] == 'Tag' %}
-                                    <!-- Tag with exact add_trade.html styling -->
-                                    <span class="badge me-1 mb-1 tag-{{ filter[2] }}" style="
-                                        background-color: var(--bs-{{
-                                            'success' if filter[2] == 'good' else
-                                            'danger' if filter[2] == 'bad' else
-                                            'primary'
-                                        }}-bg-subtle) !important;
-                                        border-color: var(--bs-{{
-                                            'success' if filter[2] == 'good' else
-                                            'danger' if filter[2] == 'bad' else
-                                            'primary'
-                                        }}-border-subtle) !important;
-                                        color: var(--bs-{{
-                                            'success' if filter[2] == 'good' else
-                                            'danger' if filter[2] == 'bad' else
-                                            'primary'
-                                        }}-text-emphasis) !important;
-                                        border: 1px solid;
-                                        padding: 0.25rem 0.5rem;
-                                        border-radius: 0.375rem;
-                                        font-size: 0.75rem;
-                                        font-weight: 500;
-                                    ">
-                                        {{ filter[0] }}: {{ filter[1] }}
-                                    </span>
-                                {% else %}
-                                    <!-- Regular filter badge -->
-                                    <span class="badge bg-primary me-1 mb-1">{{ filter }}</span>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <div class="ms-3">
-                        <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-outline-primary btn-sm" title="Clear all filters">
-                            <i class="fas fa-times me-1"></i>Clear All
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-<!-- Section 14 -- HTML CONTENT: Pagination and Action Buttons -->
 
             <!-- Pagination and Action Buttons Row -->
             <div class="d-flex justify-content-between align-items-center">
@@ -1608,8 +1816,8 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                     </div>
                 </div>
 
-                <!-- Enhanced Action Buttons -->
-                <div class="btn-group btn-group-sm">
+                <!-- Enhanced Action Buttons with proper spacing -->
+                <div class="d-flex gap-2 align-items-center">
                     <!-- Clear Filters Button - Only show when filters are active -->
                     {% if active_filters %}
                     <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-warning btn-sm" title="Clear all active filters">
@@ -1632,6 +1840,48 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                     </a>
                 </div>
             </div>
+
+            <!-- Compact Single-Line Filter Notification -->
+            {% if active_filters %}
+            <div class="d-flex align-items-center justify-content-between py-2 px-3 mt-2 mb-1" style="background-color: var(--bs-info-bg-subtle); border: 1px solid var(--bs-info-border-subtle); border-radius: 0.375rem; font-size: 0.875rem;">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <i class="fas fa-filter text-info"></i>
+                    <span class="fw-semibold text-info">Filtered by:</span>
+                    {% for filter in active_filters %}
+                        {% if filter is sequence and filter|length == 3 and filter[0] == 'Tag' %}
+                            <!-- Tag with color coding -->
+                            <span class="badge tag-{{ filter[2] }}" style="
+                                background-color: var(--bs-{{
+                                    'success' if filter[2] == 'good' else
+                                    'danger' if filter[2] == 'bad' else
+                                    'primary'
+                                }}-bg-subtle) !important;
+                                border-color: var(--bs-{{
+                                    'success' if filter[2] == 'good' else
+                                    'danger' if filter[2] == 'bad' else
+                                    'primary'
+                                }}-border-subtle) !important;
+                                color: var(--bs-{{
+                                    'success' if filter[2] == 'good' else
+                                    'danger' if filter[2] == 'bad' else
+                                    'primary'
+                                }}-text-emphasis) !important;
+                                border: 1px solid;
+                                font-size: 0.75rem;
+                            ">
+                                {{ filter[0] }}: {{ filter[1] }}
+                            </span>
+                        {% else %}
+                            <!-- Regular filter badge -->
+                            <span class="badge bg-info text-dark" style="font-size: 0.75rem;">{{ filter }}</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-outline-info btn-sm py-1 px-2" title="Clear all filters" style="font-size: 0.75rem;">
+                    <i class="fas fa-times me-1"></i>Clear
+                </a>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -2086,10 +2336,21 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
 </div>
 
 <!-- Section 21 -- HTML MODALS: Filter Modal and Custom Confirmation Modal -->
+<!-- Section 22 -- TEMPLATE CLOSING: Proper closing of all Jinja blocks -->
 
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No trades found</h4>
+            <p class="text-muted">Start by <a href="{{ url_for('trades.add_trade') }}">logging your first trade</a></p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Add the modals at the end -->
 <!-- Filter Modal -->
 <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="filterModalLabel">Filter Trades</h5>
@@ -2098,24 +2359,21 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
             <form method="GET" action="{{ url_for('trades.view_trades_list') }}">
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="start_date" class="form-label">Start Date</label>
                                 <input type="date" class="form-control" id="start_date" name="start_date"
                                        value="{{ request.args.get('start_date', '') }}">
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="end_date" class="form-label">End Date</label>
                                 <input type="date" class="form-control" id="end_date" name="end_date"
                                        value="{{ request.args.get('end_date', '') }}">
                             </div>
                         </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="instrument_filter" class="form-label">Instrument</label>
                                 <select class="form-select" id="instrument_filter" name="instrument">
@@ -2132,7 +2390,10 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
                             <div class="mb-3">
                                 <label for="direction_filter" class="form-label">Direction</label>
                                 <select class="form-select" id="direction_filter" name="direction">
@@ -2142,10 +2403,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                 </select>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <div class="mb-3">
                                 <label for="trading_model_filter" class="form-label">Trading Model</label>
                                 <select class="form-select" id="trading_model_filter" name="trading_model_id">
@@ -2162,7 +2420,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <div class="mb-3">
                                 <label for="how_closed_filter" class="form-label">How Closed</label>
                                 <select class="form-select" id="how_closed_filter" name="how_closed">
@@ -2174,21 +2432,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                 </select>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="pnl_filter" class="form-label">P&L Filter</label>
-                                <select class="form-select" id="pnl_filter" name="pnl_filter">
-                                    <option value="">All Trades</option>
-                                    <option value="winners" {{ 'selected' if request.args.get('pnl_filter') == 'winners' else '' }}>Winners Only</option>
-                                    <option value="losers" {{ 'selected' if request.args.get('pnl_filter') == 'losers' else '' }}>Losers Only</option>
-                                    <option value="breakeven" {{ 'selected' if request.args.get('pnl_filter') == 'breakeven' else '' }}>Breakeven</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <div class="mb-3">
                                 <label for="is_dca_filter" class="form-label">DCA Trades</label>
                                 <select class="form-select" id="is_dca_filter" name="is_dca">
@@ -2200,23 +2444,86 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                         </div>
                     </div>
 
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="pnl_filter" class="form-label">P&L Filter</label>
+                                <select class="form-select" id="pnl_filter" name="pnl_filter">
+                                    <option value="">All Trades</option>
+                                    <option value="winners" {{ 'selected' if request.args.get('pnl_filter') == 'winners' else '' }}>Winners Only</option>
+                                    <option value="losers" {{ 'selected' if request.args.get('pnl_filter') == 'losers' else '' }}>Losers Only</option>
+                                    <option value="breakeven" {{ 'selected' if request.args.get('pnl_filter') == 'breakeven' else '' }}>Breakeven</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="min_contracts_filter" class="form-label">Min Contracts</label>
+                                <input type="number" class="form-control" id="min_contracts_filter" name="min_contracts"
+                                       value="{{ request.args.get('min_contracts', '') }}" placeholder="e.g., 5">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="max_contracts_filter" class="form-label">Max Contracts</label>
+                                <input type="number" class="form-control" id="max_contracts_filter" name="max_contracts"
+                                       value="{{ request.args.get('max_contracts', '') }}" placeholder="e.g., 20">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="min_rating_filter" class="form-label">Min Rating</label>
+                                <select class="form-select" id="min_rating_filter" name="min_rating">
+                                    <option value="">Any Rating</option>
+                                    <option value="1" {{ 'selected' if request.args.get('min_rating') == '1' else '' }}>1+</option>
+                                    <option value="2" {{ 'selected' if request.args.get('min_rating') == '2' else '' }}>2+</option>
+                                    <option value="3" {{ 'selected' if request.args.get('min_rating') == '3' else '' }}>3+</option>
+                                    <option value="4" {{ 'selected' if request.args.get('min_rating') == '4' else '' }}>4+</option>
+                                    <option value="5" {{ 'selected' if request.args.get('min_rating') == '5' else '' }}>5</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="min_pnl_filter" class="form-label">Min P&L ($)</label>
+                                <input type="number" class="form-control" id="min_pnl_filter" name="min_pnl" step="0.01"
+                                       value="{{ request.args.get('min_pnl', '') }}" placeholder="e.g., -500">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="max_pnl_filter" class="form-label">Max P&L ($)</label>
+                                <input type="number" class="form-control" id="max_pnl_filter" name="max_pnl" step="0.01"
+                                       value="{{ request.args.get('max_pnl', '') }}" placeholder="e.g., 1000">
+                            </div>
+                        </div>
+                    </div>
+
                     {% if categorized_tags %}
-                    <div class="mb-3">
-                        <label for="tags_filter" class="form-label">Tags</label>
-                        <select multiple class="form-select" id="tags_filter" name="tags" size="4">
-                            {% for category_name, tag_options in categorized_tags %}
-                                <optgroup label="{{ category_name }}">
-                                    {% for tag_id, tag_name, tag_color in tag_options %}
-                                        <option value="{{ tag_id }}"
-                                                data-color="{{ tag_color or 'neutral' }}"
-                                                {{ 'selected' if tag_id in request.args.getlist('tags') else '' }}>
-                                            {{ tag_name }}
-                                        </option>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label for="tags_filter" class="form-label">Tags</label>
+                                <select multiple class="form-select" id="tags_filter" name="tags">
+                                    {% for category_name, tag_options in categorized_tags %}
+                                        <optgroup label="{{ category_name }}">
+                                            {% for tag_id, tag_name, tag_color in tag_options %}
+                                                <option value="{{ tag_id }}"
+                                                        data-color="{{ tag_color or 'neutral' }}"
+                                                        class="tag-{{ tag_color or 'neutral' }}"
+                                                        {{ 'selected' if tag_id in request.args.getlist('tags') else '' }}>
+                                                    {{ tag_name }}
+                                                </option>
+                                            {% endfor %}
+                                        </optgroup>
                                     {% endfor %}
-                                </optgroup>
-                            {% endfor %}
-                        </select>
-                        <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple tags</small>
+                                </select>
+                                <small class="form-text text-muted">Select multiple tags to filter by</small>
+                            </div>
+                        </div>
                     </div>
                     {% endif %}
                 </div>
@@ -2248,4 +2555,46 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
         </div>
     </div>
 </div>
+
+<!-- Load notifications.js for custom notifications -->
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+
+<!-- Initialize TomSelect for Tags Filter -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize TomSelect for tags filter with exact same styling as add_trade.html
+    const tagsFilterSelect = document.getElementById('tags_filter');
+    if (tagsFilterSelect) {
+        // Create tag color mapping
+        const tagColors = {};
+        {% if categorized_tags %}
+            {% for category_name, tag_options in categorized_tags %}
+                {% for tag_id, tag_name, tag_color in tag_options %}
+                    tagColors['{{ tag_id }}'] = '{{ tag_color or "neutral" }}';
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+
+        new TomSelect(tagsFilterSelect, {
+            plugins: ['remove_button'],
+            placeholder: 'Select or search for tags...',
+            render: {
+                option: function(data, escape) {
+                    const tagId = data.value;
+                    const colorClass = tagColors[tagId] ? `tag-${tagColors[tagId]}` : 'tag-neutral';
+                    return `<div class="option ${colorClass}">${escape(data.text)}</div>`;
+                },
+                item: function(data, escape) {
+                    const tagId = data.value;
+                    const colorClass = tagColors[tagId] ? `tag-${tagColors[tagId]}` : 'tag-neutral';
+                    return `<div class="item ${colorClass}">${escape(data.text)}</div>`;
+                }
+            }
+        });
+        console.log('TomSelect initialized for filter tags with colors');
+    }
+});
+</script>
+
+
 {% endblock %}
