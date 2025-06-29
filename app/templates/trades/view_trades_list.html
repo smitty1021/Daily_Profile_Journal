@@ -53,11 +53,12 @@
 <!-- Section 2: -- Base CSS Styles -->
 <style>
 /* Enhanced base styles with better performance */
+
 .table-container {
     position: relative;
     max-height: 720px !important;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
     border: 1px solid var(--bs-border-color);
     border-radius: 0.375rem;
     scroll-behavior: smooth;
@@ -596,13 +597,16 @@
 }
 
 /* Fix action button spacing */
-.btn-group-sm .btn {
-    margin-right: 0.25rem !important;
+
+.btn-group .btn {
+    margin-right: 0.5rem !important;
 }
 
-.btn-group-sm .btn:last-child {
+.btn-group .btn:last-child {
     margin-right: 0 !important;
 }
+
+
 
 /* ========== RESPONSIVE DESIGN ========== */
 
@@ -643,20 +647,7 @@
     }
 }
 
-@media (max-width: 768px) {
-    .table-container {
-        max-height: 600px !important;
-    }
 
-    .trade-details-container {
-        padding: 0.75rem;
-    }
-
-    .btn-group-sm .btn {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-    }
-}
 
 /* ========== ACCESSIBILITY & INTERACTIONS ========== */
 
@@ -689,22 +680,48 @@
 
 /* ========== ENHANCED TAGS FILTER WITH COLOR CATEGORIES ========== */
 
+/* ========== ENHANCED TAGS FILTER WITH COLOR CATEGORIES ========== */
+
+/* Filter modal tags select styling */
+#tags-filter-select {
+    background-color: var(--bs-body-bg) !important;
+    border: 1px solid var(--bs-border-color) !important;
+    color: var(--bs-body-color) !important;
+}
+
+#tags-filter-select option {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+    padding: 0.5rem !important;
+}
+
 #tags-filter-select option[data-color="good"] {
     color: #198754 !important;
-    background-color: rgba(25, 135, 84, 0.1) !important;
+    background-color: var(--bs-success-bg-subtle) !important;
 }
 
 #tags-filter-select option[data-color="bad"] {
     color: #dc3545 !important;
-    background-color: rgba(220, 53, 69, 0.1) !important;
+    background-color: var(--bs-danger-bg-subtle) !important;
 }
 
 #tags-filter-select option[data-color="neutral"] {
     color: #0d6efd !important;
-    background-color: rgba(13, 110, 253, 0.1) !important;
+    background-color: var(--bs-primary-bg-subtle) !important;
 }
 
 /* Ensure proper contrast in dark mode */
+[data-bs-theme="dark"] #tags-filter-select {
+    background-color: #2b2d31 !important;
+    border-color: #40444b !important;
+    color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] #tags-filter-select option {
+    background-color: #2b2d31 !important;
+    color: #ffffff !important;
+}
+
 [data-bs-theme="dark"] #tags-filter-select option[data-color="good"] {
     color: #75b798 !important;
     background-color: rgba(117, 183, 152, 0.2) !important;
@@ -1642,7 +1659,8 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
 <!-- Section 13 -- HTML CONTENT: Page Header (Clean, No Filter Block) -->
 
 {% block content %}
-<div class="container-fluid mt-4 mb-0">
+
+<div class="container mt-4 mb-0">
     <!-- Enhanced Page Header -->
     <div class="row align-items-center" style="margin-bottom: .1rem;">
         <div class="col-12">
@@ -1820,8 +1838,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                 </div>
 
                 <!-- Enhanced Action Buttons with proper spacing -->
-                <div class="d-flex align-items-center">
-                    <div class="btn-group me-2" role="group">
+                <div class="d-flex align-items-center gap-2">
                         <!-- Clear Filters Button - Only show when filters are active -->
                         {% if active_filters %}
                         <a href="{{ url_for('trades.view_trades_list') }}" class="btn btn-warning btn-sm" title="Clear all active filters">
@@ -1844,7 +1861,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                         </a>
                     </div>
                 </div>
-            </div>
+
 
             <!-- Compact Single-Line Filter Notification -->
             {% if active_filters %}
@@ -1899,55 +1916,55 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                 <thead class="sticky-header">
                     <tr role="row">
                         <th width="1" class="text-center table-header-clean" role="columnheader"></th>
-                        <th width="80" class="sortable" data-sort="date" role="columnheader" tabindex="0"
+                        <th width="70" class="sortable" data-sort="date" role="columnheader" tabindex="0"
                             aria-label="Sort by Date">
                             Date <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="40" class="sortable" data-sort="instrument" role="columnheader" tabindex="0"
+                        <th width="35" class="sortable" data-sort="instrument" role="columnheader" tabindex="0"
                             aria-label="Sort by Instrument">
                             Sym <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="120" class="sortable" data-sort="model" role="columnheader" tabindex="0"
+                        <th width="90" class="sortable" data-sort="model" role="columnheader" tabindex="0"
                             aria-label="Sort by Trading Model">
                             Model <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="80" class="sortable" data-sort="direction" role="columnheader" tabindex="0"
+                        <th width="60" class="sortable" data-sort="direction" role="columnheader" tabindex="0"
                             aria-label="Sort by Direction">
-                            Direction <i class="fas fa-sort sort-icon"></i>
+                            Dir <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="80" class="sortable" data-sort="contracts" role="columnheader" tabindex="0"
+                        <th width="50" class="sortable" data-sort="contracts" role="columnheader" tabindex="0"
                             aria-label="Sort by Contracts">
-                            Contracts <i class="fas fa-sort sort-icon"></i>
+                            Qty <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="80" class="sortable" data-sort="entry_time" role="columnheader" tabindex="0"
+                        <th width="60" class="sortable" data-sort="entry_time" role="columnheader" tabindex="0"
                             aria-label="Sort by Entry Time">
-                            Entry Time <i class="fas fa-sort sort-icon"></i>
+                            Time <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="85" class="sortable" data-sort="entry" role="columnheader" tabindex="0"
+                        <th width="65" class="sortable" data-sort="entry" role="columnheader" tabindex="0"
                             aria-label="Sort by Entry Price">
-                            Entry Price <i class="fas fa-sort sort-icon"></i>
+                            Entry <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="85" class="sortable" data-sort="exit" role="columnheader" tabindex="0"
+                        <th width="65" class="sortable" data-sort="exit" role="columnheader" tabindex="0"
                             aria-label="Sort by Exit Price">
-                            Exit Price <i class="fas fa-sort sort-icon"></i>
+                            Exit <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="95" class="sortable" data-sort="time_in_trade" role="columnheader" tabindex="0"
+                        <th width="75" class="sortable" data-sort="time_in_trade" role="columnheader" tabindex="0"
                             aria-label="Sort by Time in Trade">
-                            Time in Trade <i class="fas fa-sort sort-icon"></i>
+                            Duration <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="90" class="sortable" data-sort="how_closed" role="columnheader" tabindex="0"
+                        <th width="80" class="sortable" data-sort="how_closed" role="columnheader" tabindex="0"
                             aria-label="Sort by How Closed">
-                            How Closed <i class="fas fa-sort sort-icon"></i>
+                            Closed <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="90" class="sortable" data-sort="avg_rating" role="columnheader" tabindex="0"
+                        <th width="60" class="sortable" data-sort="avg_rating" role="columnheader" tabindex="0"
                             aria-label="Sort by Trade Rating">
-                            Trade Rate <i class="fas fa-sort sort-icon"></i>
+                            Rating <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="80" class="sortable" data-sort="pnl" role="columnheader" tabindex="0"
+                        <th width="70" class="sortable" data-sort="pnl" role="columnheader" tabindex="0"
                             aria-label="Sort by P&L">
                             P&L <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="110" role="columnheader">Actions</th>
+                        <th width="90" role="columnheader">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -2138,7 +2155,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                                 <span class="section-label">Entry Points</span>
                                                 <span class="section-summary">({{ trade.total_contracts_entered or 0 }} total contracts @ avg {{ "{:.2f}".format(trade.average_entry_price) if trade.average_entry_price else 'N/A' }})</span>
                                             </div>
-                                            <div class="
+                                            <div>
 
 <!-- Section 19 -- HTML CONTENT: Entry and Exit Points -->
 
