@@ -217,6 +217,8 @@
     color: #ffffff;
     padding: 1rem;
     border-top: 1px solid #40444b;
+    display: flex;
+    justify-content: center; /* Add this */
 }
 
 /* Cards row layout */
@@ -226,6 +228,8 @@
     align-items: flex-start;
     overflow-x: auto;
     padding-bottom: 0.5rem;
+    max-width: 100%; /* Add this to prevent overflow */
+    justify-content: center; /* Add this */
 }
 
 /* Individual cards */
@@ -444,54 +448,6 @@
     color: white;
 }
 
-/* ========== ENHANCED TAG STYLING WITH COLORS ========== */
-
-.tag-badge {
-    padding: 0.15rem 0.4rem;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    white-space: nowrap;
-    flex-shrink: 0;
-    border: 1px solid;
-    background: transparent !important;
-    font-weight: 500;
-}
-
-/* Good performance tags - Green */
-.tag-good {
-    color: #198754 !important;
-    border-color: #198754 !important;
-}
-
-/* Bad performance tags - Red */
-.tag-bad {
-    color: #dc3545 !important;
-    border-color: #dc3545 !important;
-}
-
-/* Neutral/informational tags - Blue */
-.tag-neutral {
-    color: #0d6efd !important;
-    border-color: #0d6efd !important;
-}
-
-<!-- Section 5: -- Light Theme Support and Responsive CSS -->
-/* Light theme support */
-[data-bs-theme="light"] .tag-good {
-    color: #198754 !important;
-    border-color: #198754 !important;
-}
-
-[data-bs-theme="light"] .tag-bad {
-    color: #dc3545 !important;
-    border-color: #dc3545 !important;
-}
-
-[data-bs-theme="light"] .tag-neutral {
-    color: #0d6efd !important;
-    border-color: #0d6efd !important;
-}
-
 /* ========== LIGHT THEME SUPPORT ========== */
 
 [data-bs-theme="light"] .trade-details-container {
@@ -604,7 +560,6 @@
 }
 
 .pagination-arrow-borderless:hover {
-    background: var(--bs-primary);
     color: white;
     transform: translateY(-1px);
 }
@@ -646,9 +601,6 @@
 .btn-group .btn:last-child {
     margin-right: 0 !important;
 }
-
-
-
 
 /* ========== RESPONSIVE DESIGN ========== */
 
@@ -720,62 +672,9 @@
     }
 }
 
-/* ========== ENHANCED TAGS FILTER WITH COLOR CATEGORIES ========== */
 
-/* Filter modal tags select styling */
-#tags-filter-select {
-    background-color: var(--bs-body-bg) !important;
-    border: 1px solid var(--bs-border-color) !important;
-    color: var(--bs-body-color) !important;
-}
 
-#tags-filter-select option {
-    background-color: var(--bs-body-bg) !important;
-    color: var(--bs-body-color) !important;
-    padding: 0.5rem !important;
-}
 
-#tags-filter-select option[data-color="good"] {
-    color: #198754 !important;
-    background-color: var(--bs-success-bg-subtle) !important;
-}
-
-#tags-filter-select option[data-color="bad"] {
-    color: #dc3545 !important;
-    background-color: var(--bs-danger-bg-subtle) !important;
-}
-
-#tags-filter-select option[data-color="neutral"] {
-    color: #0d6efd !important;
-    background-color: var(--bs-primary-bg-subtle) !important;
-}
-
-/* Ensure proper contrast in dark mode */
-[data-bs-theme="dark"] #tags-filter-select {
-    background-color: #2b2d31 !important;
-    border-color: #40444b !important;
-    color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] #tags-filter-select option {
-    background-color: #2b2d31 !important;
-    color: #ffffff !important;
-}
-
-[data-bs-theme="dark"] #tags-filter-select option[data-color="good"] {
-    color: #75b798 !important;
-    background-color: rgba(117, 183, 152, 0.2) !important;
-}
-
-[data-bs-theme="dark"] #tags-filter-select option[data-color="bad"] {
-    color: #f1919c !important;
-    background-color: rgba(241, 145, 156, 0.2) !important;
-}
-
-[data-bs-theme="dark"] #tags-filter-select option[data-color="neutral"] {
-    color: #6ea8fe !important;
-    background-color: rgba(110, 168, 254, 0.2) !important;
-}
 
 /* Quick filters uniform spacing */
 .quick-filter-container {
@@ -789,138 +688,7 @@
     margin-bottom: 0;
 }
 
-/* ========== TOMSELECT STYLING FOR FILTER TAGS ========== */
 
-.ts-control.tag-good {
-    border-color: var(--bs-success-border-subtle) !important;
-}
-
-.ts-control.tag-bad {
-    border-color: var(--bs-danger-border-subtle) !important;
-}
-
-.ts-control.tag-neutral {
-    border-color: var(--bs-primary-border-subtle) !important;
-}
-
-/* TomSelect dropdown styling */
-.ts-dropdown .option.tag-good {
-    background-color: var(--bs-success-bg-subtle) !important;
-    color: var(--bs-success-text-emphasis) !important;
-}
-
-.ts-dropdown .option.tag-bad {
-    background-color: var(--bs-danger-bg-subtle) !important;
-    color: var(--bs-danger-text-emphasis) !important;
-}
-
-.ts-dropdown .option.tag-neutral {
-    background-color: var(--bs-primary-bg-subtle) !important;
-    color: var(--bs-primary-text-emphasis) !important;
-}
-
-.ts-dropdown .option.tag-good:hover,
-.ts-dropdown .option.tag-good.active {
-    background-color: var(--bs-success) !important;
-    color: white !important;
-}
-
-.ts-dropdown .option.tag-bad:hover,
-.ts-dropdown .option.tag-bad.active {
-    background-color: var(--bs-danger) !important;
-    color: white !important;
-}
-
-.ts-dropdown .option.tag-neutral:hover,
-.ts-dropdown .option.tag-neutral.active {
-    background-color: var(--bs-primary) !important;
-    color: white !important;
-}
-
-/* Selected items styling */
-.ts-control .item.tag-good {
-    background-color: var(--bs-success-bg-subtle) !important;
-    color: var(--bs-success-text-emphasis) !important;
-    border-color: var(--bs-success-border-subtle) !important;
-}
-
-.ts-control .item.tag-bad {
-    background-color: var(--bs-danger-bg-subtle) !important;
-    color: var(--bs-danger-text-emphasis) !important;
-    border-color: var(--bs-danger-border-subtle) !important;
-}
-
-.ts-control .item.tag-neutral {
-    background-color: var(--bs-primary-bg-subtle) !important;
-    color: var(--bs-primary-text-emphasis) !important;
-    border-color: var(--bs-primary-border-subtle) !important;
-}
-
-/* Enhanced TomSelect multi-tag styling */
-.tomselect-enhanced.tomselect-multi-tags .ts-control {
-    min-height: 3rem !important;
-    max-height: none !important;
-    overflow: visible !important;
-    padding: 0.5rem !important;
-    line-height: 1.4 !important;
-    flex-wrap: wrap !important;
-    align-content: flex-start !important;
-}
-
-.tomselect-enhanced.tomselect-multi-tags .ts-control .ts-input {
-    min-width: 120px !important;
-    flex: 1 1 auto !important;
-    order: 999 !important;
-}
-
-.tomselect-enhanced.tomselect-multi-tags .ts-control .item {
-    margin: 0.125rem !important;
-    flex: 0 0 auto !important;
-    max-width: calc(100% - 140px) !important;
-}
-
-/* Mobile responsive adjustments */
-.tomselect-enhanced.tomselect-multi-tags.ts-mobile .ts-control {
-    min-height: 3.5rem !important;
-    padding: 0.75rem 0.5rem !important;
-}
-
-.tomselect-enhanced.tomselect-multi-tags.ts-mobile .ts-control .item {
-    margin: 0.1rem !important;
-    padding: 0.2rem 0.5rem !important;
-    font-size: 0.8rem !important;
-    max-width: calc(100% - 100px) !important;
-}
-
-/* Enhanced dropdown styling */
-.tomselect-enhanced .ts-dropdown {
-    border: 1px solid var(--bs-border-color) !important;
-    border-radius: 0.5rem !important;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
-    z-index: 1055 !important;
-}
-
-.tomselect-enhanced .ts-dropdown .option {
-    transition: all 0.2s ease !important;
-    cursor: pointer !important;
-}
-
-.tomselect-enhanced .ts-dropdown .option:hover {
-    transform: translateX(2px) !important;
-    opacity: 0.9 !important;
-}
-
-.tomselect-enhanced .ts-dropdown .option.selected {
-    background-color: var(--bs-primary-bg-subtle) !important;
-    color: var(--bs-primary-text-emphasis) !important;
-}
-
-.tomselect-enhanced .ts-dropdown .option.selected::after {
-    content: "✓";
-    float: right;
-    color: var(--bs-success);
-    font-weight: bold;
-}
 
 /* Clear button styling */
 .tomselect-enhanced .clear-button {
@@ -1011,98 +779,6 @@
 }
 
 
-
-/* ========== LIGHT THEME SUPPORT ========== */
-
-[data-bs-theme="light"] .trade-details-container {
-    background: #f8f9fa;
-    color: #212529;
-    border-top-color: #dee2e6;
-}
-
-[data-bs-theme="light"] .details-card {
-    background: #ffffff;
-    border-color: #dee2e6;
-}
-
-[data-bs-theme="light"] .card-header,
-[data-bs-theme="light"] .card-header-split {
-    background: #e9ecef;
-    color: #212529;
-    border-bottom-color: #dee2e6;
-}
-
-[data-bs-theme="light"] .transaction-item,
-[data-bs-theme="light"] .transaction-line {
-    background: #f8f9fa;
-    border-color: #dee2e6;
-    color: #495057;
-}
-
-[data-bs-theme="light"] .detail-item {
-    border-bottom-color: #dee2e6;
-}
-
-[data-bs-theme="light"] .detail-item .label {
-    color: #6c757d;
-}
-
-[data-bs-theme="light"] .detail-item .value {
-    color: #212529;
-}
-
-[data-bs-theme="light"] .section-title,
-[data-bs-theme="light"] .section-summary {
-    color: #6c757d;
-}
-
-[data-bs-theme="light"] .section-label {
-    color: #198754 !important;
-}
-
-[data-bs-theme="light"] .exit-points-section .section-label {
-    color: #dc3545 !important;
-}
-
-[data-bs-theme="light"] .rating-item {
-    border-bottom-color: #dee2e6;
-}
-
-[data-bs-theme="light"] .rating-name {
-    color: #6c757d;
-}
-
-[data-bs-theme="light"] .performance-radar-label {
-    color: #6c757d;
-}
-
-[data-bs-theme="light"] .rating-dot {
-    background-color: #e9ecef;
-    border-color: #6c757d;
-}
-
-[data-bs-theme="light"] .radar-chart-container {
-    background: #ffffff;
-    border-color: #dee2e6;
-}
-
-[data-bs-theme="light"] .radar-label {
-    color: #6c757d;
-}
-
-[data-bs-theme="light"] .screenshot-section {
-    background: #f8f9fa;
-    border-top-color: #dee2e6;
-}
-
-[data-bs-theme="light"] .screenshot-section .label,
-[data-bs-theme="light"] .key-details-card .screenshot-section .label {
-    color: #6c757d;
-}
-
-[data-bs-theme="light"] .key-details-card .screenshot-section {
-    border-top-color: #dee2e6;
-}
 
 </style>
 
@@ -2801,7 +2477,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
 <!-- Initialize TomSelect for Tags Filter -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize TomSelect for tags filter with exact same styling as add_trade.html
+    // Initialize TomSelect for tags filter with proper color classes
     const tagsFilterSelect = document.getElementById('tags-filter-select');
     if (tagsFilterSelect) {
         // Create tag color mapping
