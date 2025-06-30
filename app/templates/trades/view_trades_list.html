@@ -1538,6 +1538,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
 <!-- Section 13 -- HTML CONTENT: Page Header (Clean, No Filter Block) -->
 
 {% block content %}
+
 <div class="container-fluid mt-4 mb-0">
 <!-- Enhanced Page Header -->
 <div class="row align-items-center" style="margin-bottom: .1rem;">
@@ -1607,25 +1608,24 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                 {% set _ = active_filters.append('Max P&L: $' + request.args.get('max_pnl')) %}
             {% endif %}
 
-            {% if request.args.getlist('tags') %}
-                {% set selected_tag_ids = request.args.getlist('tags') %}
+            {% if request.args.get('tags') or request.args.getlist('tags') %}
+                {% set selected_tag_ids = request.args.getlist('tags') if request.args.getlist('tags') else [request.args.get('tags')] %}
                 {% for tag_id in selected_tag_ids %}
                     {% if tag_id and tag_id.strip() %}
-                        {% set tag_label = tag_id %}
-                        {% set tag_color = 'neutral' %}
+                        {% set ns = namespace(tag_label=tag_id, tag_color='neutral') %}
 
                         {% if categorized_tags %}
                             {% for category_name, tag_options in categorized_tags %}
                                 {% for tag_option_id, tag_option_name, tag_option_color in tag_options %}
                                     {% if tag_option_id == tag_id %}
-                                        {% set tag_label = tag_option_name %}
-                                        {% set tag_color = tag_option_color or 'neutral' %}
+                                        {% set ns.tag_label = tag_option_name %}
+                                        {% set ns.tag_color = tag_option_color or 'neutral' %}
                                     {% endif %}
                                 {% endfor %}
                             {% endfor %}
                         {% endif %}
 
-                        {% set _ = active_filters.append(('Tag', tag_label, tag_color)) %}
+                        {% set _ = active_filters.append(('Tag', ns.tag_label, ns.tag_color)) %}
                     {% endif %}
                 {% endfor %}
             {% endif %}

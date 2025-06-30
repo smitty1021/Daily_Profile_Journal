@@ -148,18 +148,23 @@ def _populate_filter_form_choices(filter_form):
         )
     ).filter(Tag.is_active == True).order_by(Tag.category, Tag.name).all()
 
-    # Group tags by category for the filter dropdown
-    tags_by_category = {}
-    for tag in all_tags:
-        category_name = tag.category.value if tag.category else 'Other'
-        if category_name not in tags_by_category:
-            tags_by_category[category_name] = []
-        tags_by_category[category_name].append((str(tag.id), tag.name, tag.color_category))
+    # Group tags by category using the same logic as _populate_tags_choices
+    grouped_tags = {category: [] for category in TagCategory}
 
-    # Convert to the format expected by the template (similar to add_trade.html)
+    for tag in all_tags:
+        if tag.category in grouped_tags:
+            # Convert tag.id to string and include color_category
+            grouped_tags[tag.category].append((
+                str(tag.id),
+                tag.name,
+                tag.color_category or 'neutral'
+            ))
+
+    # Convert to the format expected by the template (same as add_trade.html)
     categorized_choices = []
-    for category_name, tag_list in tags_by_category.items():
-        categorized_choices.append((category_name, tag_list))
+    for category_enum, tags_list in grouped_tags.items():
+        if tags_list:  # Only include categories that have tags
+            categorized_choices.append((category_enum.value, tags_list))
 
     # For the simple choices (backward compatibility)
     filter_form.tags.choices = [('', 'All Tags')] + [(str(tag.id), tag.name) for tag in all_tags]
@@ -237,16 +242,24 @@ def view_trades_list():
         elif is_dca_filter == 'false':
             query = query.filter(Trade.is_dca == False)
 
-    # Handle tags filter - support multiple tags
+
+    # Handle tags filter - support multiple tags with AND logic
     selected_tags = request.args.getlist('tags')  # Get list of selected tag IDs
     if selected_tags and any(tag.strip() for tag in selected_tags if tag):  # Check if any non-empty tags
         # Filter tags to only non-empty values
         valid_tag_ids = [int(tag) for tag in selected_tags if tag.strip() and tag.isdigit()]
 
         if valid_tag_ids:
-            # Use OR logic - show trades that have ANY of the selected tags
-            tag_filters = [Trade.tags.any(Tag.id == tag_id) for tag_id in valid_tag_ids]
-            query = query.filter(db.or_(*tag_filters))
+            # Use AND logic - show trades that have ALL of the selected tags
+            for tag_id in valid_tag_ids:
+                query = query.filter(Trade.tags.any(Tag.id == tag_id))
+
+    selected_tag_details = []
+    if selected_tags:
+        valid_tag_ids = [int(tag) for tag in selected_tags if tag.strip() and tag.isdigit()]
+        if valid_tag_ids:
+            tags_for_display = Tag.query.filter(Tag.id.in_(valid_tag_ids)).all()
+            selected_tag_details = [(tag.id, tag.name, tag.color_category or 'neutral') for tag in tags_for_display]
 
     # Debug logging
     print(f"Filter form data: {filter_form.data}")
@@ -331,6 +344,8 @@ def view_trades_list():
         if key_func:
             trades_pagination.items = sorted(trades_pagination.items, key=key_func, reverse=sort_reverse)
 
+
+
     # Set the title
     title = "Trades List"
     trades_on_page = trades_pagination.items
@@ -341,6 +356,7 @@ def view_trades_list():
                            pagination=trades_pagination,
                            filter_form=filter_form,
                            categorized_tags=categorized_tags,
+                           selected_tag_details=selected_tag_details,
                            csrf_token=generate_csrf())
 
 # --- ADD TRADE ---
