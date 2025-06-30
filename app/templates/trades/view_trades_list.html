@@ -544,6 +544,47 @@
     color: #dc3545 !important;
 }
 
+[data-bs-theme="light"] .rating-item {
+    border-bottom-color: #dee2e6;
+}
+
+[data-bs-theme="light"] .rating-name {
+    color: #6c757d;
+}
+
+[data-bs-theme="light"] .rating-dot {
+    background-color: #e9ecef;
+    border-color: #6c757d;
+}
+
+@media (max-width: 768px) {
+    .ratings-layout {
+        flex-direction: column;
+        gap: 1.5rem;
+        min-height: auto;
+    }
+
+    .ratings-left {
+        min-width: auto;
+    }
+
+    .ratings-right {
+        flex: 1;
+        width: 100%;
+        margin-left: 0;
+        padding: 1rem;
+    }
+
+    .ratings-card {
+        margin-right: 0;
+    }
+
+    .radar-chart-canvas {
+        width: 200px;
+        height: 200px;
+    }
+}
+
 /* ========== PAGINATION & BUTTONS ========== */
 
 .pagination-arrow-borderless {
@@ -678,8 +719,6 @@
         display: none !important;
     }
 }
-
-/* ========== ENHANCED TAGS FILTER WITH COLOR CATEGORIES ========== */
 
 /* ========== ENHANCED TAGS FILTER WITH COLOR CATEGORIES ========== */
 
@@ -902,6 +941,169 @@
     background: var(--bs-danger-dark) !important;
     transform: scale(1.1) !important;
 }
+
+/* ========== RATINGS LAYOUT ========== */
+
+.ratings-layout {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    min-height: 260px;
+}
+
+.ratings-left {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.ratings-right {
+    flex: 0 0 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 0.5rem 1rem 1rem 0.5rem;
+    margin-left: 1rem;
+    position: relative;
+}
+
+.radar-chart-canvas {
+    margin-top: 0;
+}
+
+.rating-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #40444b;
+}
+
+.rating-item:last-child {
+    border-bottom: none;
+}
+
+.rating-name {
+    color: #b9bbbe;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+
+
+/* Enhanced rating items with better spacing */
+.rating-item:first-child {
+    padding-top: 0;
+}
+
+.rating-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* Special spacing for management as requested */
+.rating-item[data-rating-category="management"] {
+    padding: 0.8rem 0;
+    margin: 0.2rem 0;
+}
+
+
+
+/* ========== LIGHT THEME SUPPORT ========== */
+
+[data-bs-theme="light"] .trade-details-container {
+    background: #f8f9fa;
+    color: #212529;
+    border-top-color: #dee2e6;
+}
+
+[data-bs-theme="light"] .details-card {
+    background: #ffffff;
+    border-color: #dee2e6;
+}
+
+[data-bs-theme="light"] .card-header,
+[data-bs-theme="light"] .card-header-split {
+    background: #e9ecef;
+    color: #212529;
+    border-bottom-color: #dee2e6;
+}
+
+[data-bs-theme="light"] .transaction-item,
+[data-bs-theme="light"] .transaction-line {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    color: #495057;
+}
+
+[data-bs-theme="light"] .detail-item {
+    border-bottom-color: #dee2e6;
+}
+
+[data-bs-theme="light"] .detail-item .label {
+    color: #6c757d;
+}
+
+[data-bs-theme="light"] .detail-item .value {
+    color: #212529;
+}
+
+[data-bs-theme="light"] .section-title,
+[data-bs-theme="light"] .section-summary {
+    color: #6c757d;
+}
+
+[data-bs-theme="light"] .section-label {
+    color: #198754 !important;
+}
+
+[data-bs-theme="light"] .exit-points-section .section-label {
+    color: #dc3545 !important;
+}
+
+[data-bs-theme="light"] .rating-item {
+    border-bottom-color: #dee2e6;
+}
+
+[data-bs-theme="light"] .rating-name {
+    color: #6c757d;
+}
+
+[data-bs-theme="light"] .performance-radar-label {
+    color: #6c757d;
+}
+
+[data-bs-theme="light"] .rating-dot {
+    background-color: #e9ecef;
+    border-color: #6c757d;
+}
+
+[data-bs-theme="light"] .radar-chart-container {
+    background: #ffffff;
+    border-color: #dee2e6;
+}
+
+[data-bs-theme="light"] .radar-label {
+    color: #6c757d;
+}
+
+[data-bs-theme="light"] .screenshot-section {
+    background: #f8f9fa;
+    border-top-color: #dee2e6;
+}
+
+[data-bs-theme="light"] .screenshot-section .label,
+[data-bs-theme="light"] .key-details-card .screenshot-section .label {
+    color: #6c757d;
+}
+
+[data-bs-theme="light"] .key-details-card .screenshot-section {
+    border-top-color: #dee2e6;
+}
+
 </style>
 
 
@@ -2154,10 +2356,6 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                                 <span class="section-label">Entry Points</span>
                                                 <span class="section-summary">({{ trade.total_contracts_entered or 0 }} total contracts @ avg {{ "{:.2f}".format(trade.average_entry_price) if trade.average_entry_price else 'N/A' }})</span>
                                             </div>
-                                            <div>
-
-<!-- Section 19 -- HTML CONTENT: Entry and Exit Points -->
-
                                             <div class="transactions-list">
                                                 {% for entry in trade.entries %}
                                                 <div class="transaction-line">
@@ -2227,6 +2425,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                                 </div>
                                             </div>
 
+
                                             <div class="detail-item">
                                                 <span class="label">Screenshot:</span>
                                                 <span class="value">
@@ -2238,10 +2437,10 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                                 </span>
                                             </div>
                                         </div>
+
+
                                     </div>
                                 </div>
-
-<!-- Section 20 -- HTML CONTENT: Performance Card and Closing -->
 
                                 <!-- Performance Card -->
                                 <div class="details-card performance-card">
@@ -2327,13 +2526,40 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                                             N/A
                                                         {% endif %}
                                                     {% else %}
-                                                        {% if trade.how_closed in ['Still Open', None, ''] %}
-                                                            <span class="text-muted">Open</span>
-                                                        {% else %}
-                                                            N/A
-                                                        {% endif %}
+                                                        N/A
                                                     {% endif %}
                                                 </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Trade Ratings Card -->
+                                <div class="details-card ratings-card">
+                                    <div class="card-header">Trade Ratings</div>
+                                    <div class="card-content">
+                                        <div class="ratings-layout">
+                                            <div class="ratings-left">
+                                                {% for rating_name, rating_value in [
+                                                    ('Preparation', trade.preparation_rating),
+                                                    ('Rules', trade.rules_rating),
+                                                    ('Management', trade.management_rating),
+                                                    ('Target', trade.target_rating),
+                                                    ('Entry', trade.entry_rating)
+                                                ] %}
+                                                <div class="rating-item" data-rating-category="{{ rating_name.lower() }}" data-rating-value="{{ rating_value or 0 }}">
+                                                    <span class="rating-name">{{ rating_name }}</span>
+                                                    <div class="rating-dots">
+                                                        {% for i in range(1, 6) %}
+                                                            <div class="rating-dot {% if rating_value and i <= rating_value %}filled-{{ rating_value }}{% endif %}"></div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="ratings-right">
+                                                <canvas id="radarChart-{{ trade.id }}" class="radar-chart-canvas" width="240" height="240"></canvas>
                                             </div>
                                         </div>
                                     </div>
@@ -2342,8 +2568,8 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                         </div>
                     </td>
                 </tr>
-
                 {% endfor %}
+
                 </tbody>
             </table>
         </div>

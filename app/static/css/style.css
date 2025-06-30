@@ -722,20 +722,56 @@ Trade Details and Cards Styling
 }
 
 /* Rating dots */
+/* Rating dots - Updated for new filled-X pattern */
 .rating-dots {
     display: flex;
-    gap: 0.25rem;
+    gap: 0.35rem;
     align-items: center;
 }
 
 .rating-dot {
-    width: 8px;
-    height: 8px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
+    background-color: #40444b;
+    border: 1px solid #6c757d;
     transition: all 0.2s ease;
-    opacity: 0.3;
+    opacity: 0.3; /* Muted unfilled dots */
 }
 
+/* Override for filled dots - make them vibrant */
+.rating-dot[class*="filled-"] {
+    opacity: 1;
+    box-shadow: 0 0 6px rgba(0,0,0,0.4);
+}
+
+/* Vibrant colors for numbered ratings */
+.rating-dot.filled-1 {
+    background: #dc3545;
+    border-color: #dc3545;
+} /* Bright Red */
+
+.rating-dot.filled-2 {
+    background: #fd7e14;
+    border-color: #fd7e14;
+} /* Bright Orange */
+
+.rating-dot.filled-3 {
+    background: #ffc107;
+    border-color: #ffc107;
+} /* Bright Yellow */
+
+.rating-dot.filled-4 {
+    background: #20c997;
+    border-color: #20c997;
+} /* Bright Teal */
+
+.rating-dot.filled-5 {
+    background: #28a745;
+    border-color: #28a745;
+} /* Bright Green */
+
+/* Legacy support for old filled class pattern */
 .rating-dot.filled {
     opacity: 1;
 }
