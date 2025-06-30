@@ -53,7 +53,31 @@
 <!-- Section 2: -- Base CSS Styles -->
 <style>
 /* Enhanced base styles with better performance */
+/* Enhanced table performance with GPU acceleration */
+.table-fixed {
+    table-layout: fixed;
+    width: 100%;
+    margin-bottom: 0;
+    transform: translateZ(0);
+    will-change: scroll-position;
+}
 
+/* Consistent font sizes and centering with better contrast - MADE MORE COMPACT */
+.table-fixed th,
+.table-fixed td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 2px 2px !important;
+    font-size: 0.875rem !important;
+    font-weight: normal !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+    text-align: center !important;
+    color: var(--bs-body-color) !important;
+}
+
+/* Make table container more compact and centered */
 .table-container {
     position: relative;
     max-height: 720px !important;
@@ -64,35 +88,11 @@
     scroll-behavior: smooth;
 }
 
-/* Enhanced table performance with GPU acceleration */
-.table-fixed {
-    table-layout: fixed;
-    width: 100%;
-    margin-bottom: 0;
-    transform: translateZ(0);
-    will-change: scroll-position;
-}
-
 .btn-outline-primary,
 .btn-outline-warning,
 .btn-outline-danger,
 .btn-outline-info {
     border: none !important;
-}
-
-/* Consistent font sizes and centering with better contrast */
-.table-fixed th,
-.table-fixed td {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding: 6px 4px !important;
-    font-size: 0.875rem !important;
-    font-weight: normal !important;
-    line-height: 1.2 !important;
-    vertical-align: middle !important;
-    text-align: center !important;
-    color: var(--bs-body-color) !important;
 }
 
 /* Loading states for better UX */
@@ -1661,14 +1661,12 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
 
 {% block content %}
 <div class="container-fluid mt-4 mb-0">
-    <!-- Enhanced Page Header -->
-    <div class="row align-items-center" style="margin-bottom: .1rem;">
-        <div class="col-12">
-            <h1 class="display-6" style="margin-bottom: .1rem;">
-                <i class="fas fa-chart-line me-2"></i>{{ title }}
-            </h1>
-        </div>
-    </div>
+<!-- Enhanced Page Header -->
+<div class="row align-items-center" style="margin-bottom: .1rem;">
+    <div class="col-12">
+        <h1 class="display-6" style="margin-bottom: .1rem;">
+            <i class="fas fa-chart-line me-2"></i>{{ title }}
+        </h1>
 
 
 <!-- Section 14 -- HTML CONTENT: Pagination and Action Buttons -->
@@ -1917,7 +1915,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                 <thead class="sticky-header">
                     <tr role="row">
                         <th width="1" class="text-center table-header-clean" role="columnheader"></th>
-                        <th width="70" class="sortable" data-sort="date" role="columnheader" tabindex="0"
+                        <th width="65" class="sortable" data-sort="date" role="columnheader" tabindex="0"
                             aria-label="Sort by Date">
                             Date <i class="fas fa-sort sort-icon"></i>
                         </th>
@@ -1925,47 +1923,47 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                             aria-label="Sort by Instrument">
                             Sym <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="90" class="sortable" data-sort="model" role="columnheader" tabindex="0"
+                        <th width="85" class="sortable" data-sort="model" role="columnheader" tabindex="0"
                             aria-label="Sort by Trading Model">
                             Model <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="60" class="sortable" data-sort="direction" role="columnheader" tabindex="0"
+                        <th width="45" class="sortable" data-sort="direction" role="columnheader" tabindex="0"
                             aria-label="Sort by Direction">
                             Dir <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="50" class="sortable" data-sort="contracts" role="columnheader" tabindex="0"
+                        <th width="35" class="sortable" data-sort="contracts" role="columnheader" tabindex="0"
                             aria-label="Sort by Contracts">
                             Qty <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="60" class="sortable" data-sort="entry_time" role="columnheader" tabindex="0"
+                        <th width="45" class="sortable" data-sort="entry_time" role="columnheader" tabindex="0"
                             aria-label="Sort by Entry Time">
                             Time <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="65" class="sortable" data-sort="entry" role="columnheader" tabindex="0"
+                        <th width="55" class="sortable" data-sort="entry" role="columnheader" tabindex="0"
                             aria-label="Sort by Entry Price">
                             Entry <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="65" class="sortable" data-sort="exit" role="columnheader" tabindex="0"
+                        <th width="55" class="sortable" data-sort="exit" role="columnheader" tabindex="0"
                             aria-label="Sort by Exit Price">
                             Exit <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="75" class="sortable" data-sort="time_in_trade" role="columnheader" tabindex="0"
+                        <th width="65" class="sortable" data-sort="time_in_trade" role="columnheader" tabindex="0"
                             aria-label="Sort by Time in Trade">
                             Duration <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="80" class="sortable" data-sort="how_closed" role="columnheader" tabindex="0"
+                        <th width="75" class="sortable" data-sort="how_closed" role="columnheader" tabindex="0"
                             aria-label="Sort by How Closed">
                             Closed <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="60" class="sortable" data-sort="avg_rating" role="columnheader" tabindex="0"
+                        <th width="50" class="sortable" data-sort="avg_rating" role="columnheader" tabindex="0"
                             aria-label="Sort by Trade Rating">
                             Rating <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="70" class="sortable" data-sort="pnl" role="columnheader" tabindex="0"
+                        <th width="65" class="sortable" data-sort="pnl" role="columnheader" tabindex="0"
                             aria-label="Sort by P&L">
                             P&L <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="90" role="columnheader">Actions</th>
+                        <th width="85" role="columnheader">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
