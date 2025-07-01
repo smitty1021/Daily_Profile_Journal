@@ -1,0 +1,430 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary mb-1">
+                        <i class="fas fa-{% if scenario %}edit{% else %}plus{% endif %} me-2"></i>
+                        {{ title }}
+                    </h2>
+                    <p class="text-muted mb-0">
+                        {% if scenario %}
+                            Modify scenario definition and trading criteria
+                        {% else %}
+                            Create a new P12 scenario based on Random's methodology
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('p12_scenarios.list_scenarios') }}" 
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+        
+        <div class="row">
+            <!-- Left Column - Basic Info -->
+            <div class="col-lg-8">
+                <!-- Basic Information Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Basic Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Scenario Number -->
+                                <div class="mb-3">
+                                    {{ form.scenario_number.label(class="form-label fw-semibold") }}
+                                    {{ form.scenario_number(class="form-control" + (" is-invalid" if form.scenario_number.errors else "")) }}
+                                    {% if form.scenario_number.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.scenario_number.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">{{ form.scenario_number.description }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- Directional Bias -->
+                                <div class="mb-3">
+                                    {{ form.directional_bias.label(class="form-label fw-semibold") }}
+                                    {{ form.directional_bias(class="form-select" + (" is-invalid" if form.directional_bias.errors else "")) }}
+                                    {% if form.directional_bias.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.directional_bias.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scenario Name -->
+                        <div class="mb-3">
+                            {{ form.scenario_name.label(class="form-label fw-semibold") }}
+                            {{ form.scenario_name(class="form-control" + (" is-invalid" if form.scenario_name.errors else "")) }}
+                            {% if form.scenario_name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.scenario_name.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.scenario_name.description }}</div>
+                        </div>
+
+                        <!-- Short Description -->
+                        <div class="mb-3">
+                            {{ form.short_description.label(class="form-label fw-semibold") }}
+                            {{ form.short_description(class="form-control" + (" is-invalid" if form.short_description.errors else "")) }}
+                            {% if form.short_description.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.short_description.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.short_description.description }}</div>
+                        </div>
+
+                        <!-- Detailed Description -->
+                        <div class="mb-3">
+                            {{ form.detailed_description.label(class="form-label fw-semibold") }}
+                            {{ form.detailed_description(class="form-control" + (" is-invalid" if form.detailed_description.errors else "")) }}
+                            {% if form.detailed_description.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.detailed_description.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.detailed_description.description }}</div>
+                        </div>
+
+                        <!-- HOD/LOD Implication -->
+                        <div class="mb-0">
+                            {{ form.hod_lod_implication.label(class="form-label fw-semibold") }}
+                            {{ form.hod_lod_implication(class="form-control" + (" is-invalid" if form.hod_lod_implication.errors else "")) }}
+                            {% if form.hod_lod_implication.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.hod_lod_implication.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.hod_lod_implication.description }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trading Criteria Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-crosshairs me-2"></i>Trading Criteria
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Alert Criteria -->
+                        <div class="mb-3">
+                            {{ form.alert_criteria.label(class="form-label fw-semibold") }}
+                            {{ form.alert_criteria(class="form-control" + (" is-invalid" if form.alert_criteria.errors else "")) }}
+                            {% if form.alert_criteria.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.alert_criteria.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.alert_criteria.description }}</div>
+                        </div>
+
+                        <!-- Confirmation Criteria -->
+                        <div class="mb-3">
+                            {{ form.confirmation_criteria.label(class="form-label fw-semibold") }}
+                            {{ form.confirmation_criteria(class="form-control" + (" is-invalid" if form.confirmation_criteria.errors else "")) }}
+                            {% if form.confirmation_criteria.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.confirmation_criteria.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.confirmation_criteria.description }}</div>
+                        </div>
+
+                        <!-- Entry Strategy -->
+                        <div class="mb-0">
+                            {{ form.entry_strategy.label(class="form-label fw-semibold") }}
+                            {{ form.entry_strategy(class="form-control" + (" is-invalid" if form.entry_strategy.errors else "")) }}
+                            {% if form.entry_strategy.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.entry_strategy.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.entry_strategy.description }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Management Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>Risk Management
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <!-- Risk Percentage -->
+                                <div class="mb-3">
+                                    {{ form.risk_percentage.label(class="form-label fw-semibold") }}
+                                    <div class="input-group">
+                                        {{ form.risk_percentage(class="form-control" + (" is-invalid" if form.risk_percentage.errors else "")) }}
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    {% if form.risk_percentage.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.risk_percentage.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">{{ form.risk_percentage.description }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- Active Status -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Status</label>
+                                    <div class="form-check form-switch">
+                                        {{ form.is_active(class="form-check-input") }}
+                                        {{ form.is_active.label(class="form-check-label") }}
+                                    </div>
+                                    <div class="form-text">{{ form.is_active.description }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Typical Targets -->
+                        <div class="mb-3">
+                            {{ form.typical_targets.label(class="form-label fw-semibold") }}
+                            {{ form.typical_targets(class="form-control" + (" is-invalid" if form.typical_targets.errors else "")) }}
+                            {% if form.typical_targets.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.typical_targets.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.typical_targets.description }}</div>
+                        </div>
+
+                        <!-- Stop Loss Guidance -->
+                        <div class="mb-0">
+                            {{ form.stop_loss_guidance.label(class="form-label fw-semibold") }}
+                            {{ form.stop_loss_guidance(class="form-control" + (" is-invalid" if form.stop_loss_guidance.errors else "")) }}
+                            {% if form.stop_loss_guidance.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.stop_loss_guidance.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.stop_loss_guidance.description }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column - Image and Preview -->
+            <div class="col-lg-4">
+                <!-- Image Upload Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-image me-2"></i>Scenario Image
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Current Image Preview -->
+                        {% if scenario and scenario.image_path %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Current Image</label>
+                            <div class="current-image-preview">
+                                <img src="{{ url_for('p12_scenarios.serve_image', scenario_id=scenario.id) }}" 
+                                     class="img-fluid rounded border" 
+                                     alt="Current scenario image"
+                                     style="max-height: 200px; width: 100%; object-fit: cover;">
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Upload New Image -->
+                        <div class="mb-3">
+                            {{ form.scenario_image.label(class="form-label fw-semibold") }}
+                            {{ form.scenario_image(class="form-control" + (" is-invalid" if form.scenario_image.errors else ""), id="imageUpload") }}
+                            {% if form.scenario_image.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.scenario_image.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">{{ form.scenario_image.description }}</div>
+                        </div>
+
+                        <!-- Image Preview -->
+                        <div id="imagePreview" class="d-none">
+                            <label class="form-label fw-semibold">Preview</label>
+                            <img id="previewImg" class="img-fluid rounded border" 
+                                 style="max-height: 200px; width: 100%; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Reference Card -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Quick Reference
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6 class="fw-semibold text-primary">P12 Time Window</h6>
+                            <p class="small text-muted mb-0">
+                                Analysis: 06:00-08:30 EST<br>
+                                P12 Range: 18:00-06:00 EST
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 class="fw-semibold text-primary">Key Levels</h6>
+                            <p class="small text-muted mb-0">
+                                P12 High, P12 Mid, P12 Low<br>
+                                Settlement, PDH/PDL
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 class="fw-semibold text-primary">Confirmation Tools</h6>
+                            <p class="small text-muted mb-0">
+                                Hourly Quarters, 05 Boxes<br>
+                                Volume, Price Action
+                            </p>
+                        </div>
+
+                        <div class="mb-0">
+                            <h6 class="fw-semibold text-primary">Risk Guidelines</h6>
+                            <p class="small text-muted mb-0">
+                                Typical: 0.25% - 0.50%<br>
+                                Structural stops preferred
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="row">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('p12_scenarios.list_scenarios') }}" 
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                    <div>
+                        {% if scenario %}
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-2"></i>Update Scenario
+                            </button>
+                        {% else %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Create Scenario
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Image preview functionality
+document.getElementById('imageUpload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            preview.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.classList.add('d-none');
+    }
+});
+
+// Form validation enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-resize textareas
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+        
+        // Initial resize
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    });
+});
+</script>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.form-label.fw-semibold {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-text {
+    font-size: 0.825rem;
+    color: #6c757d;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.current-image-preview {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+}
+
+#imagePreview {
+    border: 2px dashed #0d6efd;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    background-color: #f0f8ff;
+}
+
+.input-group-text {
+    background-color: #e9ecef;
+    border-color: #ced4da;
+}
+
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+</style>
+{% endblock %}
