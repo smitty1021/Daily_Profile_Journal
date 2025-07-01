@@ -14,25 +14,23 @@ else:
         {
             'symbol': 'NQ', 'name': 'E-mini NASDAQ-100', 'exchange': 'CME',
             'asset_class': 'Equity Index', 'product_group': 'E-mini Futures',
-            'point_value': 5.0, 'tick_size': 0.25, 'currency': 'USD'
+            'point_value': 20.0, 'tick_size': 0.25, 'currency': 'USD', 'is_active': True
         },
         {
             'symbol': 'ES', 'name': 'E-mini S&P 500', 'exchange': 'CME',
             'asset_class': 'Equity Index', 'product_group': 'E-mini Futures',
-            'point_value': 12.5, 'tick_size': 0.25, 'currency': 'USD'
+            'point_value': 50.0, 'tick_size': 0.25, 'currency': 'USD', 'is_active': True
         },
         {
             'symbol': 'YM', 'name': 'E-mini Dow Jones', 'exchange': 'CME',
             'asset_class': 'Equity Index', 'product_group': 'E-mini Futures',
-            'point_value': 5.0, 'tick_size': 1.0, 'currency': 'USD'
+            'point_value': 5.0, 'tick_size': 1.0, 'currency': 'USD', 'is_active': True
         }
     ]
 
-    # Add instruments to database
     for data in instruments_data:
         instrument = Instrument(**data)
         db.session.add(instrument)
 
-    # Commit changes
     db.session.commit()
-    print(f"Successfully created {len(instruments_data)} default instruments!")
+    print("✅ Instruments created!")

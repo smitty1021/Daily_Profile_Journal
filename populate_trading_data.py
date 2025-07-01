@@ -538,7 +538,7 @@ def get_realistic_price(symbol, trade_date):
         'ES': (4000, 4800),
         'NQ': (12000, 16000),
         'YM': (33000, 38000),
-        'RTY': (1800, 2200)
+
     }
 
     min_price, max_price = price_ranges.get(symbol, (4000, 4800))

@@ -74,20 +74,20 @@ def seed_instruments_command():
     click.echo(f"Created {len(instruments_data)} default instruments.")
 
 # Example: Command to create a default admin user (if not already present)
-# @app.cli.command("create-admin")
-# @click.argument("username")
-# @click.argument("email")
-# @click.argument("password")
-# def create_admin_command(username, email, password):
-#     from app.models import User, UserRole
-#     if User.find_by_username(username) or User.find_by_email(email):
-#         click.echo("Admin user with that username or email already exists.")
-#         return
-#     admin = User(username=username, email=email, role=UserRole.ADMIN, is_email_verified=True, is_active=True)
-#     admin.set_password(password)
-#     db.session.add(admin)
-#     db.session.commit()
-#     click.echo(f"Admin user {username} created.")
+#@app.cli.command("create-admin")
+#@click.argument("username")
+#@click.argument("email")
+#@click.argument("password")
+#def create_admin_command(username, email, password):
+#    from app.models import User, UserRole
+#    if User.find_by_username(username) or User.find_by_email(email):
+#        click.echo("Admin user with that username or email already exists.")
+#        return
+#   admin = User(username=username, email=email, role=UserRole.ADMIN, is_email_verified=True, is_active=True)
+#    admin.set_password(admin123)
+#    db.session.add(admin)
+#    db.session.commit()
+#    click.echo(f"Admin user {username} created.")
 
 if __name__ == '__main__':
     # The FLASK_DEBUG environment variable will be used if set.

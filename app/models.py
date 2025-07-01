@@ -683,6 +683,7 @@ class Trade(db.Model):
     instrument_obj = db.relationship('Instrument', back_populates='trades')
     instrument_legacy = db.Column(db.String(20), nullable=True, index=True)  # Backward compatibility
     point_value = db.Column(db.Float, nullable=True)  # Direct storage for manual overrides
+    pnl = db.Column(db.Float, nullable=True, index=True)  # Stored P&L for fast filtering
 
     # Basic trade information
     trade_date = db.Column(db.Date, nullable=False, default=py_date.today)
@@ -818,6 +819,12 @@ class Trade(db.Model):
             pnl_per_contract_in_points = avg_entry - avg_exit
 
         return pnl_per_contract_in_points * contracts_exited * pv
+
+    def calculate_and_store_pnl(self):
+        """Calculate P&L and store it in the pnl column for fast database filtering"""
+        calculated_pnl = self.gross_pnl  # Use the existing property calculation
+        self.pnl = calculated_pnl
+        return calculated_pnl
 
     @property
     def risk_reward_ratio(self):

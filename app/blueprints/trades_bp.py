@@ -224,15 +224,15 @@ def view_trades_list():
         count_after_filter = query.count()
         print(f"DEBUG: Trades matching how_closed filter: {count_after_filter}")
 
-    # Handle P&L filter
+    # Handle P&L filter - now using the stored pnl column
     pnl_filter = request.args.get('pnl_filter')
     if pnl_filter:
         if pnl_filter == 'winners':
-            query = query.filter(Trade.gross_pnl > 0)
+            query = query.filter(Trade.pnl > 0)
         elif pnl_filter == 'losers':
-            query = query.filter(Trade.gross_pnl < 0)
+            query = query.filter(Trade.pnl < 0)
         elif pnl_filter == 'breakeven':
-            query = query.filter(Trade.gross_pnl == 0)
+            query = query.filter(Trade.pnl == 0)
 
     # Handle DCA filter
     is_dca_filter = request.args.get('is_dca')
@@ -459,6 +459,8 @@ def add_trade():
                     )
                     db.session.add(new_exit)
 
+            new_trade.calculate_and_store_pnl()
+
             # Add tags
             if form.tags.data:
                 for tag_id in form.tags.data:
@@ -675,6 +677,8 @@ def edit_trade(trade_id):
                 exit_to_delete = ExitPoint.query.get(exit_id)
                 if exit_to_delete:
                     db.session.delete(exit_to_delete)
+
+            trade_to_edit.calculate_and_store_pnl()
 
             # Handle tags
             trade_to_edit.tags.clear()
