@@ -293,6 +293,10 @@ def view_trades_list():
         order_clauses = (Trade.how_closed.desc().nullslast(), Trade.trade_date.desc()) if sort_reverse else (
             Trade.how_closed.asc().nullsfirst(), Trade.trade_date.desc())
         query = query.order_by(*order_clauses)
+    elif sort_field == 'pnl':
+        order_clauses = (Trade.pnl.desc().nullslast(), Trade.trade_date.desc()) if sort_reverse else (
+            Trade.pnl.asc().nullsfirst(), Trade.trade_date.desc())
+        query = query.order_by(*order_clauses)
     else:
         query = query.order_by(Trade.trade_date.desc(), Trade.id.desc())
 
@@ -304,7 +308,7 @@ def view_trades_list():
     trades_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
 
     # In-memory sorting for calculated properties (P&L, Ratings, etc.)
-    property_sort_fields = ['pnl', 'contracts', 'entry_time', 'entry', 'exit', 'avg_rating', 'time_in_trade']
+    property_sort_fields = ['contracts', 'entry_time', 'entry', 'exit', 'avg_rating', 'time_in_trade']
     if sort_field in property_sort_fields:
 
         def _calculate_avg_rating(trade):

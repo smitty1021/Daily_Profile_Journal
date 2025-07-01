@@ -1979,7 +1979,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                             {% if trade.pnl > 0 %}
                                 <span style="color: #198754; font-weight: bold;" aria-label="Profit: ${{ '{:,.2f}'.format(trade.pnl) }}">${{ "{:,.2f}".format(trade.pnl) }}</span>
                             {% elif trade.pnl < 0 %}
-                                <span style="color: #dc3545; font-weight: bold;" aria-label="Loss: ${{ '{:+,.2f}'.format(trade.pnl) }}">${{ "{:+,.2f}".format(trade.pnl) }}</span>
+                                <span style="color: #dc3545; font-weight: bold;" aria-label="Loss: ${{ '{:,.2f}'.format(trade.pnl) }}">${{ "{:,.2f}".format(trade.pnl) }}</span>
                             {% else %}
                                 <span style="color: #6c757d; font-weight: bold;" aria-label="Break even: ${{ '{:,.2f}'.format(trade.pnl) }}">${{ "{:,.2f}".format(trade.pnl) }}</span>
                             {% endif %}
