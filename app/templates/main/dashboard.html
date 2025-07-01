@@ -575,9 +575,9 @@
                                 {{ trade.direction.lower() if trade.direction else 'N/A' }}
                             </td>
                             <td>{{ trade.total_contracts_entered or 0 }}</td>
-                            <td class="pnl-{{ 'positive' if trade.gross_pnl and trade.gross_pnl >= 0 else 'negative' }}">
-                                {% if trade.gross_pnl is not none %}
-                                    ${{ "{:+,.2f}".format(trade.gross_pnl) }}
+                            <td class="pnl-{{ 'positive' if trade.pnl and trade.pnl >= 0 else 'negative' }}">
+                                {% if trade.pnl is not none %}
+                                    ${{ "{:+,.2f}".format(trade.pnl) }}
                                 {% else %}
                                     $0.00
                                 {% endif %}

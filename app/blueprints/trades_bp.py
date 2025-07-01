@@ -315,7 +315,7 @@ def view_trades_list():
 
         key_func = None
         if sort_field == 'pnl':
-            key_func = lambda t: t.gross_pnl if t.gross_pnl is not None else -float('inf')
+            key_func = lambda t: t.pnl if t.pnl is not None else -float('inf')
         elif sort_field == 'contracts':
             key_func = lambda t: t.total_contracts_entered if t.total_contracts_entered is not None else -1
         elif sort_field == 'entry_time':
@@ -850,7 +850,7 @@ def export_trades_csv():
             trade.id, trade.trade_date.strftime('%Y-%m-%d'), trade.instrument, trade.direction, trade.point_value,
             trade.total_contracts_entered, trade.average_entry_price,
             trade.total_contracts_exited, trade.average_exit_price,
-            trade.gross_pnl, trade.pnl_in_r, trade.dollar_risk,
+            trade.pnl, trade.pnl_in_r, trade.dollar_risk,
             trade.initial_stop_loss, trade.terminus_target, trade.mae, trade.mfe,
             trade.how_closed, trade.trading_model.name if trade.trading_model else '',
             ', '.join([tag.name for tag in trade.tags]) if trade.tags else '', trade.trade_notes, trade.overall_analysis_notes, trade.trade_management_notes,

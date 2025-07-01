@@ -227,7 +227,8 @@
     gap: 1rem;
     align-items: flex-start;
     overflow-x: auto;
-    padding-bottom: 0.5rem;
+    padding-bottom: 1rem;
+    padding-top: 1rem;
     max-width: 100%; /* Add this to prevent overflow */
     justify-content: center; /* Add this */
 }
@@ -1841,7 +1842,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                             aria-label="Sort by P&L">
                             P&L <i class="fas fa-sort sort-icon"></i>
                         </th>
-                        <th width="85" role="columnheader">Actions</th>
+                        <th width="85" role="columnheader"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1851,8 +1852,8 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                 {% for trade in trades %}
                 <!-- Enhanced Trade Row with clean styling -->
                 <tr class="trade-row
-                    {% if trade.gross_pnl and trade.gross_pnl > 0 %}table-success-subtle
-                    {% elif trade.gross_pnl and trade.gross_pnl < 0 %}table-danger-subtle
+                    {% if trade.pnl and trade.pnl > 0 %}table-success-subtle
+                    {% elif trade.pnl and trade.pnl < 0 %}table-danger-subtle
                     {% endif %}"
                     data-trade-id="{{ trade.id }}" role="row" tabindex="0"
                     aria-label="Trade {{ trade.trade_date.strftime('%m/%d/%Y') }} {{ trade.instrument }} {{ trade.direction }}">
@@ -1974,13 +1975,13 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
 
                     <!-- Enhanced P&L with no + sign for winners -->
                     <td role="gridcell">
-                        {% if trade.gross_pnl is not none %}
-                            {% if trade.gross_pnl > 0 %}
-                                <span style="color: #198754; font-weight: bold;" aria-label="Profit: ${{ '{:,.2f}'.format(trade.gross_pnl) }}">${{ "{:,.2f}".format(trade.gross_pnl) }}</span>
-                            {% elif trade.gross_pnl < 0 %}
-                                <span style="color: #dc3545; font-weight: bold;" aria-label="Loss: ${{ '{:+,.2f}'.format(trade.gross_pnl) }}">${{ "{:+,.2f}".format(trade.gross_pnl) }}</span>
+                        {% if trade.pnl is not none %}
+                            {% if trade.pnl > 0 %}
+                                <span style="color: #198754; font-weight: bold;" aria-label="Profit: ${{ '{:,.2f}'.format(trade.pnl) }}">${{ "{:,.2f}".format(trade.pnl) }}</span>
+                            {% elif trade.pnl < 0 %}
+                                <span style="color: #dc3545; font-weight: bold;" aria-label="Loss: ${{ '{:+,.2f}'.format(trade.pnl) }}">${{ "{:+,.2f}".format(trade.pnl) }}</span>
                             {% else %}
-                                <span style="color: #6c757d; font-weight: bold;" aria-label="Break even: ${{ '{:,.2f}'.format(trade.gross_pnl) }}">${{ "{:,.2f}".format(trade.gross_pnl) }}</span>
+                                <span style="color: #6c757d; font-weight: bold;" aria-label="Break even: ${{ '{:,.2f}'.format(trade.pnl) }}">${{ "{:,.2f}".format(trade.pnl) }}</span>
                             {% endif %}
                         {% else %}
                             <span aria-label="P&L not available">N/A</span>
@@ -2029,7 +2030,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                         <!-- Entry Points Section -->
                                         <div class="entry-points-section">
                                             <div class="section-header-line">
-                                                <span class="section-label">Entry Points</span>
+                                                <span class="section-label">Entries</span>
                                                 <span class="section-summary">({{ trade.total_contracts_entered or 0 }} total contracts @ avg {{ "{:.2f}".format(trade.average_entry_price) if trade.average_entry_price else 'N/A' }})</span>
                                             </div>
                                             <div class="transactions-list">
@@ -2044,7 +2045,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                         <!-- Exit Points Section -->
                                         <div class="exit-points-section">
                                             <div class="section-header-line">
-                                                <span class="section-label">Exit Points</span>
+                                                <span class="section-label">Exits</span>
                                                 <span class="section-summary">({{ trade.total_contracts_exited or 0 }} total contracts @ avg {{ "{:.2f}".format(trade.average_exit_price) if trade.average_exit_price else 'N/A' }})</span>
                                             </div>
                                             <div class="transactions-list">
@@ -2125,9 +2126,9 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                         <div class="details-list">
                                             <div class="detail-item">
                                                 <span class="label">Gross P&L:</span>
-                                                <span class="value {% if trade.gross_pnl %}{% if trade.gross_pnl > 0 %}profit{% elif trade.gross_pnl < 0 %}loss{% endif %}{% endif %}">
-                                                    {% if trade.gross_pnl is not none %}
-                                                        ${{ "{:,.2f}".format(trade.gross_pnl) }}
+                                                <span class="value {% if trade.pnl %}{% if trade.pnl > 0 %}profit{% elif trade.pnl < 0 %}loss{% endif %}{% endif %}">
+                                                    {% if trade.pnl is not none %}
+                                                        ${{ "{:,.2f}".format(trade.pnl) }}
                                                     {% else %}
                                                         N/A
                                                     {% endif %}
@@ -2164,7 +2165,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                                 </span>
                                             </div>
                                             <div class="detail-item">
-                                                <span class="label">MAE (Points):</span>
+                                                <span class="label">MAE:</span>
                                                 <span class="value loss">
                                                     {% if trade.mae is not none and trade.average_entry_price %}
                                                         {% set mae_percent = ((trade.mae / trade.average_entry_price) * 100) %}
@@ -2178,7 +2179,7 @@ console.log('✅ Enhanced trade list template loaded with accessibility and perf
                                                 </span>
                                             </div>
                                             <div class="detail-item">
-                                                <span class="label">MFE (Points):</span>
+                                                <span class="label">MFE:</span>
                                                 <span class="value profit">
                                                     {% if trade.mfe is not none and trade.average_entry_price %}
                                                         {% set mfe_percent = ((trade.mfe / trade.average_entry_price) * 100) %}

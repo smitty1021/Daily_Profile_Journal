@@ -77,11 +77,11 @@ def calculate_trading_stats(trades):
         return get_default_stats()
 
     # Filter trades with PnL data
-    trades_with_pnl = [t for t in trades if t.gross_pnl is not None]
+    trades_with_pnl = [t for t in trades if t.pnl is not None]
 
     # Win/Loss calculations
-    winning_trades = [t for t in trades_with_pnl if t.gross_pnl > 0]
-    losing_trades = [t for t in trades_with_pnl if t.gross_pnl < 0]
+    winning_trades = [t for t in trades_with_pnl if t.pnl > 0]
+    losing_trades = [t for t in trades_with_pnl if t.pnl < 0]
 
     winning_count = len(winning_trades)
     losing_count = len(losing_trades)
@@ -90,9 +90,9 @@ def calculate_trading_stats(trades):
     win_rate = (winning_count / total_trades * 100) if total_trades > 0 else 0
 
     # PnL calculations
-    total_pnl = sum(t.gross_pnl for t in trades_with_pnl)
-    gross_profit = sum(t.gross_pnl for t in winning_trades) if winning_trades else 0
-    gross_loss = abs(sum(t.gross_pnl for t in losing_trades)) if losing_trades else 0
+    total_pnl = sum(t.pnl for t in trades_with_pnl)
+    gross_profit = sum(t.pnl for t in winning_trades) if winning_trades else 0
+    gross_loss = abs(sum(t.pnl for t in losing_trades)) if losing_trades else 0
 
     # Average winners and losers
     avg_winner = gross_profit / winning_count if winning_count > 0 else 0
@@ -125,7 +125,7 @@ def prepare_calendar_data(trades):
         if date_str not in calendar_data:
             calendar_data[date_str] = {'pnl': 0, 'trades': 0}
 
-        calendar_data[date_str]['pnl'] += trade.gross_pnl or 0
+        calendar_data[date_str]['pnl'] += trade.pnl or 0
         calendar_data[date_str]['trades'] += 1
 
     # Round PnL values for display
@@ -147,7 +147,7 @@ def prepare_chart_data(trades):
     daily_data = defaultdict(float)
     for trade in trades_sorted:
         date_str = trade.trade_date.strftime('%m/%d')
-        daily_data[date_str] += trade.gross_pnl or 0
+        daily_data[date_str] += trade.pnl or 0
 
     # Get last 15 trading days for daily chart
     daily_items = list(daily_data.items())[-15:] if len(daily_data) > 15 else list(daily_data.items())
@@ -160,7 +160,7 @@ def prepare_chart_data(trades):
     equity_labels = []
 
     for trade in trades_sorted[-30:]:  # Last 30 trades for equity curve
-        running_total += trade.gross_pnl or 0
+        running_total += trade.pnl or 0
         equity_curve.append(round(running_total, 2))
         equity_labels.append(trade.trade_date.strftime('%m/%d'))
 
@@ -168,7 +168,7 @@ def prepare_chart_data(trades):
     monthly_data = defaultdict(float)
     for trade in trades_sorted:
         month_key = trade.trade_date.strftime('%Y-%m')
-        monthly_data[month_key] += trade.gross_pnl or 0
+        monthly_data[month_key] += trade.pnl or 0
 
     # Get last 6 months
     monthly_items = list(monthly_data.items())[-6:] if len(monthly_data) > 6 else list(monthly_data.items())
