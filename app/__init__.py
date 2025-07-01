@@ -93,6 +93,12 @@ def create_app(config_class=None):
     app.config['SESSION_TYPE'] = 'filesystem'
     app.config['SESSION_FILE_DIR'] = os.path.join(app.instance_path, 'flask_session')
     os.makedirs(app.config['SESSION_FILE_DIR'], exist_ok=True)
+    p12_folder = os.path.join(app.config['UPLOAD_FOLDER'], 'p12_scenarios')
+    if not os.path.exists(p12_folder):
+        try:
+            os.makedirs(p12_folder)
+        except OSError as e:
+            app.logger.error(f"Could not create P12_SCENARIOS_FOLDER: {e}")
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -243,6 +249,10 @@ def create_app(config_class=None):
         # ADDED: Import and Register Journal Blueprint
         from .blueprints.journal_bp import journal_bp
         app.register_blueprint(journal_bp, url_prefix='/journal')
+
+        #P12
+        from app.blueprints.p12_scenarios_bp import p12_scenarios_bp
+        app.register_blueprint(p12_scenarios_bp)
 
 
         @app.errorhandler(403)

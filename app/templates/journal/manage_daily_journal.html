@@ -113,11 +113,44 @@
         <h3><i class="fas fa-chart-line me-2"></i>2. Pre-Market Analysis</h3>
 
         {# MODIFIED: Re-organized for clarity #}
-        <h4>P12 Analysis</h4>
-        <div class="grid-layout-2">
-            {{ forms.render_field(form.p12_scenario_selected, input_class="form-select") }}
+        <div class="mb-3">
+            {{ form.p12_scenario_id.label(class="form-label fw-semibold") }}
+            {{ form.p12_scenario_id(class="form-select", id="p12_scenario_select") }}
+            {% if form.p12_scenario_id.errors %}
+                <div class="invalid-feedback">
+                    {% for error in form.p12_scenario_id.errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
+            <div class="form-text">{{ form.p12_scenario_id.description }}</div>
         </div>
-        {{ forms.render_field(form.p12_expected_outcomes, input_class="quill-target", rows="3") }} {# Kept as RTE #}
+
+        <!-- P12 Levels -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form.p12_high.label(class="form-label") }}
+                    {{ form.p12_high(class="form-control") }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form.p12_mid.label(class="form-label") }}
+                    {{ form.p12_mid(class="form-control") }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form.p12_low.label(class="form-label") }}
+                    {{ form.p12_low(class="form-control") }}
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            {{ form.p12_notes.label(class="form-label") }}
+            {{ form.p12_notes(class="form-control") }}
+            <div class="form-text">{{ form.p12_notes.description }}</div>
+        </div>
 
         <hr class="my-4">
         <h4>4-Step Process & Variables</h4>
@@ -288,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // MODIFIED: Only initialize Quill on the fields that need it
     // The fields you wanted as simple text inputs are no longer initialized here.
-    initializeQuillForField('p12_expected_outcomes', '{{ form.p12_expected_outcomes.render_kw.get("placeholder", "") if form.p12_expected_outcomes.render_kw else "" }}');
+    initializeQuillForField('p12_notes', '{{ form.p12_notes.render_kw.get("placeholder", "") if form.p12_notes.render_kw else "" }}');
     initializeQuillForField('realistic_expectance_notes', '{{ form.realistic_expectance_notes.render_kw.get("placeholder", "") if form.realistic_expectance_notes.render_kw else "" }}');
     initializeQuillForField('engagement_structure_notes', '{{ form.engagement_structure_notes.render_kw.get("placeholder", "") if form.engagement_structure_notes.render_kw else "" }}');
     initializeQuillForField('key_levels_notes', '{{ form.key_levels_notes.render_kw.get("placeholder", "") if form.key_levels_notes.render_kw else "" }}');

@@ -2,11 +2,14 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import (StringField, PasswordField, BooleanField, SubmitField, MultipleFileField,
                      TextAreaField, FloatField, SelectField, IntegerField, DateField,
-                     TimeField, FormField, FieldList, SelectMultipleField)
+                     TimeField, FormField, FieldList, SelectMultipleField, DecimalField)  # <-- Add DecimalField here
 from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional, NumberRange, InputRequired
 from app.models import UserRole  # Assuming UserRole is used elsewhere or for consistency
 from app.models import TagCategory
 from wtforms.fields import SelectMultipleField
+from app.models import P12Scenario
+
+
 
 
 class OptGroupSelectMultipleField(SelectMultipleField):
@@ -434,10 +437,38 @@ class DailyJournalForm(FlaskForm):
                                            coerce=coerce_int_optional, validators=[Optional()])
 
     # Part 2: Pre-market Analysis
-    p12_scenario_choices = [("None", "-- Select P12 --")] + [(f"{i}{ab}", f"P12 {i}{ab}") for i in range(1, 6) for ab in
-                                                             ["A", "B"]]  # From __init__.py constants
-    p12_scenario_selected = SelectField('P12 Scenario Selected', choices=p12_scenario_choices, validators=[Optional()])
-    p12_expected_outcomes = TextAreaField('P12 Expected Outcomes/Notes', validators=[Optional()], render_kw={"rows": 3})
+    # Add to form class:
+    p12_scenario_id = SelectField(
+        'P12 Scenario',
+        coerce=int,
+        validators=[Optional()],
+        description='Select the P12 scenario observed between 06:00-08:30 EST'
+    )
+
+    p12_high = DecimalField(
+        'P12 High',
+        validators=[Optional()],
+        description='18:00-06:00 EST range high'
+    )
+
+    p12_mid = DecimalField(
+        'P12 Mid',
+        validators=[Optional()],
+        description='Midpoint of P12 range'
+    )
+
+    p12_low = DecimalField(
+        'P12 Low',
+        validators=[Optional()],
+        description='18:00-06:00 EST range low'
+    )
+
+    p12_notes = TextAreaField(
+        'P12 Analysis Notes',
+        validators=[Optional()],
+        description='Additional P12 scenario observations',
+        render_kw={'rows': 3}
+    )
 
     session_direction_choices = [("None", "N/A")] + [(d, d) for d in ["Long", "Short"]]
     session_status_choices = [("None", "N/A")] + [(s, s) for s in
@@ -633,6 +664,119 @@ class DailyJournalForm(FlaskForm):
                                              coerce=coerce_int_optional, validators=[Optional()])
 
     submit = SubmitField('Save Daily Journal')
+
+    def __init__(self, *args, **kwargs):  # <-- Move it here
+        super().__init__(*args, **kwargs)
+        # Populate P12 scenario choices
+        scenarios = P12Scenario.query.filter_by(is_active=True).order_by(P12Scenario.scenario_number).all()
+        self.p12_scenario_id.choices = [(0, 'Select P12 scenario...')] + [
+            (s.id, f"Scenario {s.scenario_number}: {s.scenario_name}") for s in scenarios
+        ]
+
+
+class P12ScenarioForm(FlaskForm):
+    """Form for creating/editing P12 scenarios."""
+
+    scenario_number = IntegerField(
+        'Scenario Number',
+        validators=[DataRequired(), NumberRange(min=1, max=5)],
+        description='Enter 1, 2, 3, 4, or 5'
+    )
+
+    scenario_name = StringField(
+        'Scenario Name',
+        validators=[DataRequired(), Length(max=100)],
+        description='Brief name for this scenario'
+    )
+
+    short_description = StringField(
+        'Short Description',
+        validators=[DataRequired(), Length(max=200)],
+        description='One-line summary of the scenario'
+    )
+
+    detailed_description = TextAreaField(
+        'Detailed Description',
+        validators=[DataRequired()],
+        description='Full explanation of what happens in this scenario',
+        render_kw={'rows': 6}
+    )
+
+    hod_lod_implication = TextAreaField(
+        'HOD/LOD Implication',
+        validators=[DataRequired()],
+        description='Where the High of Day/Low of Day is likely located',
+        render_kw={'rows': 4}
+    )
+
+    directional_bias = SelectField(
+        'Directional Bias',
+        choices=[
+            ('', 'Select bias...'),
+            ('bullish', 'Bullish'),
+            ('bearish', 'Bearish'),
+            ('neutral', 'Neutral'),
+            ('choppy', 'Choppy/Ranging')
+        ],
+        validators=[Optional()]
+    )
+
+    alert_criteria = TextAreaField(
+        'Alert Criteria',
+        validators=[DataRequired()],
+        description='What price action to watch for to identify this scenario',
+        render_kw={'rows': 4}
+    )
+
+    confirmation_criteria = TextAreaField(
+        'Confirmation Criteria',
+        validators=[DataRequired()],
+        description='How to confirm this scenario is actually playing out',
+        render_kw={'rows': 4}
+    )
+
+    entry_strategy = TextAreaField(
+        'Entry Strategy',
+        validators=[DataRequired()],
+        description='How to trade this scenario (entry points, timing)',
+        render_kw={'rows': 5}
+    )
+
+    typical_targets = TextAreaField(
+        'Typical Targets',
+        validators=[Optional()],
+        description='Common target areas (P12 levels, percentages, etc.)',
+        render_kw={'rows': 3}
+    )
+
+    stop_loss_guidance = TextAreaField(
+        'Stop Loss Guidance',
+        validators=[Optional()],
+        description='Where to place stops for this scenario',
+        render_kw={'rows': 3}
+    )
+
+    risk_percentage = FloatField(
+        'Risk Percentage',
+        validators=[Optional(), NumberRange(min=0.01, max=10.0)],
+        description='Typical risk % for this scenario (e.g., 0.35, 0.50)'
+    )
+
+    scenario_image = FileField(
+        'Scenario Image',
+        validators=[
+            FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Images only!')
+        ],
+        description='Upload a chart image showing this scenario'
+    )
+
+    is_active = BooleanField(
+        'Active Scenario',
+        default=True,
+        description='Whether this scenario is available for selection'
+    )
+
+    submit = SubmitField('Save Scenario')
 
 
 class InstrumentForm(FlaskForm):

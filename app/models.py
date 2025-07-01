@@ -967,6 +967,14 @@ class DailyJournal(db.Model):
     # Part 2: Pre-market Analysis (Four Steps & P12)
     p12_scenario_selected = db.Column(db.String(10), default="None")
     p12_expected_outcomes = db.Column(db.Text, nullable=True)
+    p12_scenario_id = db.Column(db.Integer, db.ForeignKey('p12_scenario.id'), nullable=True)
+    p12_scenario = db.relationship('P12Scenario', backref='daily_journals', lazy=True)
+
+    # P12 Levels (optional reference data)
+    p12_high = db.Column(db.Numeric(10, 2), nullable=True)
+    p12_mid = db.Column(db.Numeric(10, 2), nullable=True)
+    p12_low = db.Column(db.Numeric(10, 2), nullable=True)
+    p12_notes = db.Column(db.Text, nullable=True)
 
     # Session Analysis (Asia, London, NY1, NY2)
     asia_direction = db.Column(db.String(10), default="None")
@@ -1301,3 +1309,63 @@ class TagUsageStats(db.Model):
                 .order_by(cls.last_used.desc())
                 .limit(limit)
                 .all())
+
+
+class P12Scenario(db.Model):
+    """
+    P12 Scenarios based on Random's (Matt Mickey) methodology.
+    Defines the 5 core P12 scenarios that occur between 06:00-08:30 EST.
+    """
+    __tablename__ = 'p12_scenario'
+
+    id = db.Column(db.Integer, primary_key=True)
+    scenario_number = db.Column(db.Integer, nullable=False, unique=True)  # 1, 2, 3, 4, 5
+    scenario_name = db.Column(db.String(100), nullable=False)
+    short_description = db.Column(db.String(200), nullable=False)
+    detailed_description = db.Column(db.Text, nullable=False)
+
+    # Trading implications
+    hod_lod_implication = db.Column(db.Text, nullable=False)  # Where HOD/LOD likely is
+    directional_bias = db.Column(db.String(50), nullable=True)  # bullish/bearish/neutral/choppy
+
+    # Alert and confirmation criteria
+    alert_criteria = db.Column(db.Text, nullable=False)  # What to watch for
+    confirmation_criteria = db.Column(db.Text, nullable=False)  # How to confirm scenario
+
+    # Entry strategies
+    entry_strategy = db.Column(db.Text, nullable=False)  # How to trade this scenario
+    typical_targets = db.Column(db.Text, nullable=True)  # Common target areas
+
+    # Risk management
+    stop_loss_guidance = db.Column(db.Text, nullable=True)
+    risk_percentage = db.Column(db.Float, nullable=True)  # 0.35, 0.50 etc.
+
+    # Image and visual aids
+    image_filename = db.Column(db.String(255), nullable=True)
+    image_path = db.Column(db.String(500), nullable=True)
+
+    # Metadata
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Usage tracking
+    times_selected = db.Column(db.Integer, default=0, nullable=False)  # How often users select this
+
+    def __repr__(self):
+        return f'<P12Scenario {self.scenario_number}: {self.scenario_name}>'
+
+    @property
+    def full_image_path(self):
+        """Get the full path to the scenario image."""
+        if self.image_path:
+            from flask import current_app
+            upload_folder = current_app.config.get('UPLOAD_FOLDER',
+                                                   os.path.join(current_app.instance_path, 'uploads'))
+            return os.path.join(upload_folder, 'p12_scenarios', self.image_path)
+        return None
+
+    def increment_usage(self):
+        """Track when this scenario is selected by users."""
+        self.times_selected += 1
+        db.session.commit()

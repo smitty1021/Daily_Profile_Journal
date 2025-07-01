@@ -96,6 +96,24 @@ def manage_daily_journal(date_str=None):
         # Ensure journal_date is set correctly (it should be from form or target_date)
         daily_journal.journal_date = target_date
 
+        # Handle P12 scenario
+        if form.p12_scenario_id.data and form.p12_scenario_id.data != 0:
+            daily_journal.p12_scenario_id = form.p12_scenario_id.data
+
+            # Track usage
+            from app.models import P12Scenario
+            scenario = P12Scenario.query.get(form.p12_scenario_id.data)
+            if scenario:
+                scenario.increment_usage()
+        else:
+            daily_journal.p12_scenario_id = None
+
+        # Handle P12 levels
+        daily_journal.p12_high = form.p12_high.data
+        daily_journal.p12_mid = form.p12_mid.data
+        daily_journal.p12_low = form.p12_low.data
+        daily_journal.p12_notes = form.p12_notes.data
+
         try:
             db.session.flush()  # To get daily_journal.id if it's new
 
