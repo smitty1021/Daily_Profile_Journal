@@ -49,6 +49,17 @@
                         <span class="badge bg-info">5 Scenarios</span>
                     </div>
                 </a>
+                <!-- Trading Models Management Section -->
+                <a href="{{ url_for('admin.manage_default_trading_models') }}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-sitemap me-2"></i>
+                            <strong>Manage Default Trading Models</strong>
+                            <p class="mb-1 text-muted">Configure system-wide default trading models based on Random's methodology for all users</p>
+                        </div>
+                        <span class="badge bg-primary">{{ default_models_count or 0 }} Models</span>
+                    </div>
+                </a>
             </div>
 
             <h4>Other Configuration:</h4>

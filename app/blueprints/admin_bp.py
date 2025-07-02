@@ -12,12 +12,82 @@ from app.models import Tag, TagCategory  # Add to existing imports
 from app.forms import AdminDefaultTagForm
 from app.models import Instrument  # Add to existing imports
 from app.forms import InstrumentForm, InstrumentFilterForm  # Add to existing imports
-
+from app.models import TradingModel
+from app.forms import TradingModelForm
 admin_bp = Blueprint('admin', __name__,
                      template_folder='../templates/admin',
                      url_prefix='/admin')
 
-# Add these routes to your app/blueprints/admin_bp.py:
+# Add these imports at the top if not already present
+
+from app.forms import TradingModelForm
+from app.models import User, UserRole, Activity, Instrument, Tag, TagCategory, TradingModel
+
+
+@admin_bp.route('/default-trading-models')
+@login_required
+@admin_required
+def manage_default_trading_models():
+    """Admin page to manage default trading models"""
+    models = TradingModel.query.filter_by(is_default=True).order_by(TradingModel.name).all()
+    return render_template('admin/default_trading_models.html',
+                           title='Manage Default Trading Models',
+                           models=models)
+
+
+@admin_bp.route('/default-trading-models/<int:model_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_default_trading_model(model_id):
+    """Edit a default trading model"""
+    model = TradingModel.query.get_or_404(model_id)
+    if not model.is_default:
+        flash('This is not a default model.', 'warning')
+        return redirect(url_for('admin.manage_default_trading_models'))
+
+    form = TradingModelForm(obj=model)
+
+    if form.validate_on_submit():
+        form.populate_obj(model)
+        model.created_by_admin_user_id = current_user.id
+        try:
+            db.session.commit()
+            flash(f'Default model "{model.name}" updated successfully!', 'success')
+            return redirect(url_for('admin.manage_default_trading_models'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating model: {str(e)}', 'danger')
+
+    return render_template('admin/edit_default_trading_model.html',
+                           title=f'Edit Default Model: {model.name}',
+                           form=form, model=model)
+
+
+@admin_bp.route('/default-trading-models/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_default_trading_model():
+    """Create a new default trading model"""
+    form = TradingModelForm()
+
+    if form.validate_on_submit():
+        model = TradingModel()
+        form.populate_obj(model)
+        model.is_default = True
+        model.user_id = current_user.id  # Still needs a user_id for FK constraint
+        model.created_by_admin_user_id = current_user.id
+        try:
+            db.session.add(model)
+            db.session.commit()
+            flash(f'Default model "{model.name}" created successfully!', 'success')
+            return redirect(url_for('admin.manage_default_trading_models'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating model: {str(e)}', 'danger')
+
+    return render_template('admin/create_default_trading_model.html',
+                           title='Create Default Trading Model',
+                           form=form)
 
 @admin_bp.route('/default-tags/create', methods=['POST'])
 @login_required
@@ -527,6 +597,7 @@ def system_config():
         total_instruments = Instrument.query.count()
         active_instruments = Instrument.query.filter_by(is_active=True).count()
         inactive_instruments = total_instruments - active_instruments
+        default_models_count = TradingModel.query.filter_by(is_default=True).count()
 
         # Get instruments by asset class (active only)
         instruments_by_class = db.session.query(
@@ -561,16 +632,15 @@ def system_config():
 
         return render_template('admin/system_config.html',
                                title='System Configuration',
-                               # Instrument data
                                total_instruments=total_instruments,
                                active_instruments=active_instruments,
                                inactive_instruments=inactive_instruments,
                                instruments_by_class=instruments_by_class,
-                               # Tag data
                                total_tags=total_tags,
                                active_tags=active_tags,
                                inactive_tags=inactive_tags,
-                               tags_by_category=tags_by_category)
+                               tags_by_category=tags_by_category,
+                               default_models_count=default_models_count)
 
     except Exception as e:
         current_app.logger.error(f"Error loading system configuration: {e}", exc_info=True)
@@ -833,3 +903,5 @@ def add_tag_category():
         'success': False,
         'message': 'Adding new categories requires code deployment. Current categories are fixed in the TagCategory enum.'
     })
+
+

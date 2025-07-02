@@ -324,12 +324,55 @@ html[data-bs-theme="light"] .table-dark {
 Custom Flash Message (Notification) Styles
 ================================================
 */
+/* UPDATED: Bottom-right notification container */
+.flash-message-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+    width: auto;
+    pointer-events: none;
+}
+
+.flash-message-container .alert {
+    pointer-events: auto;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: none;
+    animation: slideUpFromBottom 0.4s ease-out;
+}
+
+/* UPDATED: Bottom-right animations */
+@keyframes slideUpFromBottom {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideDownToBottom {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+}
+
+/* Keep existing alert styles but remove the old slideInFromRight animation */
 .flash-message {
     position: relative;
     margin-bottom: 1rem;
     border-radius: 8px;
     border: 1px solid;
-    animation: slideInFromRight 0.3s ease-out;
+    /* REMOVED: animation: slideInFromRight 0.3s ease-out; */
 }
 
 .flash-message.alert-success {
@@ -356,6 +399,8 @@ Custom Flash Message (Notification) Styles
     color: #055160;
 }
 
+/* REMOVE this old animation completely */
+/*
 @keyframes slideInFromRight {
     from {
         transform: translateX(100%);
@@ -366,8 +411,9 @@ Custom Flash Message (Notification) Styles
         opacity: 1;
     }
 }
+*/
 
-/* Dark theme flash messages */
+/* Dark theme flash messages - keep these */
 html[data-bs-theme="dark"] .flash-message.alert-success {
     background-color: rgba(25, 135, 84, 0.2);
     border-color: rgba(25, 135, 84, 0.4);

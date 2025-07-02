@@ -300,11 +300,12 @@ class BootstrapManager:
         """Create Random's 6 core trading models."""
         print("\n📋 Creating Random's trading models...")
 
-        models_data = [
+        default_models_data = [
             {
                 'name': '0930 Opening Range',
                 'version': '2.1',
                 'is_active': True,
+                'is_default': True,
                 'overview_logic': """The 0930 Opening Range model captures the initial momentum and direction at the New York market open. 
                 Based on Random's Four Steps methodology, this model identifies "Snap" patterns (High, Low, HH/LL) in the first few minutes 
                 after 9:30 AM EST. The model can trade either direction (breakout or Return to VWAP) depending on the daily classification 
@@ -350,6 +351,7 @@ class BootstrapManager:
                 'name': 'HOD/LOD Reversal',
                 'version': '1.8',
                 'is_active': True,
+                'is_default': True,
                 'overview_logic': """Mean reversion strategy targeting reversals at the High of Day (HOD) or Low of Day (LOD). 
                 Uses Random's Four Steps to identify likely HOD/LOD zones and times, then waits for confirmation signals like 
                 059 boxes, hourly momentum changes, or 1-minute rejection patterns. NOT for trend days - requires patience 
@@ -396,6 +398,7 @@ class BootstrapManager:
                 'name': 'Captain Backtest',
                 'version': '2.3',
                 'is_active': True,
+                'is_default': True,
                 'overview_logic': """Trend-following model designed to capture HOD/LOD by front-running NY2 session. 
                 Requires H4 range (06:00-09:59 EST) break by 11:30, followed by pullback and continuation. 
                 Higher expectancy but requires trending days (DWP/DNP). Targets 0.50% minimum with potential 
@@ -440,6 +443,7 @@ class BootstrapManager:
                 'name': 'P12 Scenario-Based',
                 'version': '1.5',
                 'is_active': True,
+                'is_default': True,
                 'overview_logic': """Uses 12-hour Globex range (18:00-06:00 EST) High/Mid/Low as key structural levels. 
                 Observes 06:00-08:30 price action relative to P12 levels to classify into 5 scenarios. 
                 Provides bias for HOD/LOD location and probable price path. Trades taken at P12 levels 
@@ -484,6 +488,7 @@ class BootstrapManager:
                 'name': 'Quarterly Theory & 05 Boxes',
                 'version': '1.2',
                 'is_active': True,
+                'is_default': True,
                 'overview_logic': """Precision entry model using hourly quarter levels and 05 boxes for optimal 
                 trade timing. Can be standalone or used to enhance other models. Focuses on statistical 
                 reaction points within hourly structures. Emphasizes scaling and precise risk management.""",
@@ -528,6 +533,7 @@ class BootstrapManager:
                 'name': 'Midnight Open Retracement',
                 'version': '1.0',
                 'is_active': True,
+                'is_default': True,
                 'overview_logic': """Statistical retracement model targeting moves back to Midnight Open price. 
                 Active 08:00-11:15 EST window. Uses hourly footprints and distribution analysis to identify 
                 optimal entry points for mean reversion to Midnight Open level.""",
@@ -568,7 +574,9 @@ class BootstrapManager:
                 'model_max_weekly_loss': '12%',
                 'model_consecutive_loss_limit': '3 trades',
             },
+        ]
 
+        user_models_data = [
             {
                 'name': 'Fucktard-FOMO-FAFO',
                 'version': '1.0',
@@ -621,15 +629,27 @@ class BootstrapManager:
         ]
 
         created_models = []
-        for model_data in models_data:
+
+        # Create default models (assigned to admin but marked as default)
+        for model_data in default_models_data:
             model_data['user_id'] = self.admin_user.id
+            model_data['created_by_admin_user_id'] = self.admin_user.id
+            model = TradingModel(**model_data)
+            db.session.add(model)
+            created_models.append(model)
+
+        # Create user-specific models (assigned to test user)
+        for model_data in user_models_data:
+            model_data['user_id'] = self.test_user.id
+            model_data['created_by_admin_user_id'] = None  # Not created by admin
             model = TradingModel(**model_data)
             db.session.add(model)
             created_models.append(model)
 
         db.session.commit()
         self.trading_models = created_models
-        print(f"✅ Created {len(created_models)} trading models")
+        print(f"✅ Created {len(default_models_data)} default trading models")
+        print(f"✅ Created {len(user_models_data)} user-specific trading models")
 
     def create_news_events(self):
         """Create default news events."""

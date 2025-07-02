@@ -18,14 +18,18 @@ trading_models_bp = Blueprint('trading_models', __name__,
 
 # You can also specify a static_folder if this blueprint has its own static files
 
+# Replace the existing models_list route with this:
 @trading_models_bp.route('/')
 @login_required
-def view_trading_models_list():
-    """Displays a list of all trading models for the currently logged-in user."""
-    current_app.logger.info(f"User {current_user.username} viewing their trading models list.")
-    # Filter models by the current_user's id
-    models = TradingModel.query.filter_by(user_id=current_user.id).order_by(TradingModel.name).all()
-    return render_template('view_trading_models_list.html', models=models, title="Your Trading Models")
+def models_list():
+    """View all trading models (default + personal)"""
+    user_models = TradingModel.query.filter_by(user_id=current_user.id, is_default=False).all()
+    default_models = TradingModel.get_default_models()
+
+    return render_template('view_trading_models_list.html',
+                           title='Trading Models',
+                           user_models=user_models,
+                           default_models=default_models)
 
 
 @trading_models_bp.route('/add', methods=['GET', 'POST'])

@@ -51,7 +51,10 @@ class User(db.Model, UserMixin):
     files = db.relationship('File', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     settings = db.relationship('Settings', backref='user', uselist=False, cascade='all, delete-orphan')
     api_keys = db.relationship('ApiKey', backref='user', lazy='dynamic', cascade='all, delete-orphan')
-    trading_models = db.relationship('TradingModel', backref='user', lazy='dynamic')
+    trading_models = db.relationship('TradingModel',
+                                     foreign_keys='TradingModel.user_id',
+                                     backref='user',
+                                     lazy='dynamic')
     trades = db.relationship('Trade', backref='user', lazy='dynamic')
     daily_journals = db.relationship('DailyJournal', backref='user', lazy='dynamic')
     weekly_journals = db.relationship('WeeklyJournal', backref='user', lazy='dynamic')
@@ -640,10 +643,34 @@ class TradingModel(db.Model):
     updated_at = db.Column(db.DateTime, default=dt.utcnow, onupdate=dt.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', name='fk_tradingmodel_user'), nullable=False, index=True)
 
+    # Add these fields after the existing fields in TradingModel class
+    is_default = db.Column(db.Boolean, default=False, nullable=False)
+    created_by_admin_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    # Add this new relationship
+    created_by_admin = db.relationship('User',
+                                       foreign_keys=[created_by_admin_user_id],
+                                       backref='created_default_models')
+
     __table_args__ = (db.UniqueConstraint('user_id', 'name', name='uq_user_tradingmodel_name'),)
 
     def __repr__(self):
         return f"<TradingModel '{self.name}' (User: {self.user_id})>"
+
+    @classmethod
+    def get_default_models(cls):
+        """Get all default trading models"""
+        return cls.query.filter_by(is_default=True, is_active=True).order_by(cls.name).all()
+
+    @classmethod
+    def get_available_for_user(cls, user_id):
+        """Get all models available to a specific user (default + personal)"""
+        return cls.query.filter(
+            db.or_(
+                cls.is_default == True,
+                cls.user_id == user_id
+            )
+        ).filter(cls.is_active == True).order_by(cls.name).all()
 
 
 # --- Trade Related Models ---
