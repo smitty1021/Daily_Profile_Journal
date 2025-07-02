@@ -1319,8 +1319,8 @@ class P12Scenario(db.Model):
     __tablename__ = 'p12_scenario'
 
     id = db.Column(db.Integer, primary_key=True)
-    scenario_number = db.Column(db.Integer, nullable=False, unique=True)  # 1, 2, 3, 4, 5
-    scenario_name = db.Column(db.String(100), nullable=False)
+    scenario_number = db.Column(db.String(5), nullable=False, unique=True)
+    scenario_name = db.Column(db.String(100), nullable=False, unique=True)
     short_description = db.Column(db.String(200), nullable=False)
     detailed_description = db.Column(db.Text, nullable=False)
 

@@ -120,30 +120,26 @@
                                 <!-- Models to Activate -->
                                 <div class="mb-3">
                                     {{ form.models_to_activate.label(class="form-label fw-semibold") }}
-                                    {{ form.models_to_activate(class="form-select" + (" is-invalid" if form.models_to_activate.errors else ""), multiple=True, size="6") }}
+                                    {{ form.models_to_activate(class="form-select" + (" is-invalid" if form.models_to_activate.errors else ""), multiple=true, size="6") }}
                                     {% if form.models_to_activate.errors %}
                                         <div class="invalid-feedback">
                                             {% for error in form.models_to_activate.errors %}{{ error }}{% endfor %}
                                         </div>
                                     {% endif %}
-                                    {% if form.models_to_activate.description %}
-                                        <div class="form-text">{{ form.models_to_activate.description }}</div>
-                                    {% endif %}
+                                    <div class="form-text">Select trading models that should be activated for this scenario</div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <!-- Models to Avoid -->
                                 <div class="mb-3">
                                     {{ form.models_to_avoid.label(class="form-label fw-semibold") }}
-                                    {{ form.models_to_avoid(class="form-select" + (" is-invalid" if form.models_to_avoid.errors else ""), multiple=True, size="6") }}
+                                    {{ form.models_to_avoid(class="form-select" + (" is-invalid" if form.models_to_avoid.errors else ""), multiple=true, size="6") }}
                                     {% if form.models_to_avoid.errors %}
                                         <div class="invalid-feedback">
                                             {% for error in form.models_to_avoid.errors %}{{ error }}{% endfor %}
                                         </div>
                                     {% endif %}
-                                    {% if form.models_to_avoid.description %}
-                                        <div class="form-text">{{ form.models_to_avoid.description }}</div>
-                                    {% endif %}
+                                    <div class="form-text">Select trading models that should be avoided for this scenario</div>
                                 </div>
                             </div>
                         </div>

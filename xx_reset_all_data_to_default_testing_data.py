@@ -37,7 +37,7 @@ from app import create_app, db
 from app.models import (
     User, UserRole, TradingModel, Trade, EntryPoint, ExitPoint,
     Instrument, Tag, TagCategory, NewsEventItem, AccountSetting,
-    DailyJournal, Settings, Activity
+    DailyJournal, Settings, Activity, P12Scenario
 )
 
 
@@ -95,6 +95,35 @@ class BootstrapManager:
         self.admin_user = admin
         print(f"✅ Admin user created: {admin.username} (ID: {admin.id})")
         print(f"🔑 Default password: admin123 (CHANGE THIS!)")
+
+    def create_test_user(self):
+        """Create the test user account."""
+        print("\n👤 Creating test user...")
+
+        test_user_data = {
+            'username': 'testuser',
+            'email': 'smitty1021@gmail.com',
+            'name': 'Test User',
+            'role': UserRole.USER,
+            'is_active': True,
+            'is_email_verified': True,
+            'bio': 'Test user account for trading journal application.'
+        }
+
+        test_user = User(**test_user_data)
+        test_user.set_password('testuser1')
+
+        db.session.add(test_user)
+        db.session.commit()
+
+        # Create default settings for test user
+        settings = Settings(user_id=test_user.id)
+        db.session.add(settings)
+        db.session.commit()
+
+        self.test_user = test_user
+        print(f"✅ Test user created: {test_user.username} (ID: {test_user.id})")
+        print(f"🔑 Password: testuser1")
 
     def create_default_tags(self):
         """Create default tags based on Random's methodology."""
@@ -226,6 +255,7 @@ class BootstrapManager:
         ]
 
         created_instruments = []
+
         for instr_data in instruments_data:
             instrument = Instrument(**instr_data)
             db.session.add(instrument)
@@ -238,6 +268,33 @@ class BootstrapManager:
             self.instruments[instrument.symbol] = instrument
 
         print(f"✅ Created {len(created_instruments)} trading instruments")
+
+    def _get_random_p12_scenario(self):
+        """Get a random P12 scenario for the daily journal."""
+        # Get all P12 scenarios from database
+        scenarios = P12Scenario.query.filter_by(is_active=True).all()
+        if scenarios:
+            return random.choice(scenarios)
+        return None
+
+    def _generate_random_p12_levels(self, instrument_symbol='ES'):
+        """Generate realistic P12 High/Mid/Low levels based on instrument."""
+        if instrument_symbol == 'ES':
+            base_price = random.uniform(4200, 4700)
+            range_size = random.uniform(15, 45)  # 15-45 point range
+        elif instrument_symbol == 'NQ':
+            base_price = random.uniform(13000, 15500)
+            range_size = random.uniform(50, 150)  # 50-150 point range
+        else:
+            base_price = random.uniform(4200, 4700)  # Default to ES-like
+            range_size = random.uniform(15, 45)
+
+        # P12 Mid is the base, High and Low are above/below
+        p12_mid = round(base_price, 2)
+        p12_high = round(p12_mid + (range_size / 2), 2)
+        p12_low = round(p12_mid - (range_size / 2), 2)
+
+        return p12_high, p12_mid, p12_low
 
     def create_trading_models(self):
         """Create Random's 6 core trading models."""
@@ -510,7 +567,57 @@ class BootstrapManager:
                 'model_max_daily_loss': '8%',
                 'model_max_weekly_loss': '12%',
                 'model_consecutive_loss_limit': '3 trades',
-            }
+            },
+
+            {
+                'name': 'Fucktard-FOMO-FAFO',
+                'version': '1.0',
+                'is_active': True,
+                'overview_logic': """The Fucktard-FOMO-FAFO (Fear of Missing Out - Fuck Around and Find Out) model represents 
+                unstructured, emotion-driven trading decisions made without proper analysis or adherence to systematic methodology. 
+                This model captures impulsive entries based on price movement momentum, social media sentiment, or perceived "hot tips" 
+                without consideration of Random's Four Steps framework or risk management protocols.""",
+
+                'primary_chart_tf': 'Variable',
+                'execution_chart_tf': 'Any available',
+                'context_chart_tf': 'None - decision made without context',
+
+                'technical_indicators_used': """- Price movement (basic observation)
+                - Social media sentiment indicators
+                - "Hot tip" information from unverified sources
+                - Recent news headlines (surface level)
+                - Fear/greed emotional indicators
+                - Market "buzz" and momentum""",
+
+                'instrument_applicability': 'Any available instrument, often unfamiliar ones',
+                'session_applicability': 'Any time, often at market extremes or during high volatility',
+                'optimal_market_conditions': 'High volatility environments with significant price movement and market excitement',
+                'sub_optimal_market_conditions': 'All conditions - this model lacks systematic approach to market assessment',
+
+                'entry_trigger_description': """Impulsive entry based on:
+                - Sudden large price movements in either direction
+                - Social media posts suggesting "guaranteed" profits
+                - News headlines creating urgency
+                - Feeling of missing out on profitable opportunities
+                - Emotional reaction to recent wins/losses""",
+
+                'stop_loss_strategy': 'Often absent or moved impulsively. When present, typically too tight or too wide without logical basis',
+                'take_profit_strategy': """Highly variable and emotional:
+                - Premature exits on small gains due to fear
+                - Holding losing positions hoping for recovery
+                - Moving targets based on greed rather than analysis
+                - Exit driven by external noise rather than plan""",
+                'min_risk_reward_ratio': 0.1,
+
+                'position_sizing_rules': 'Inconsistent sizing based on emotions - often too large on "sure things" or revenge trades',
+                'trade_management_breakeven_rules': 'No systematic breakeven rules - management driven by fear and greed cycles',
+                'trade_management_partial_profit_rules': 'All-or-nothing approach - rarely scales positions systematically',
+
+                'model_max_loss_per_trade': 'Undefined - risk management not systematically applied',
+                'model_max_daily_loss': 'Undefined - can lead to significant drawdowns',
+                'model_max_weekly_loss': 'Undefined - lacks systematic risk controls',
+                'model_consecutive_loss_limit': 'No systematic limit - emotional decision making continues',
+            },
         ]
 
         created_models = []
@@ -582,7 +689,7 @@ class BootstrapManager:
         db.session.commit()
         print(f"✅ Created {len(created_settings)} account settings")
 
-    def generate_realistic_trades(self, num_trades=750):
+    def generate_realistic_trades(self, num_trades=2000):
         """Generate realistic trades with proper P&L calculations."""
         print(f"\n📊 Generating {num_trades} realistic trades...")
 
@@ -624,11 +731,11 @@ class BootstrapManager:
         }
 
         created_trades = []
-        start_date = date.today() - timedelta(days=1800)  # 6 months of data
+        start_date = date.today() - timedelta(days=3650)
 
         for i in range(num_trades):
             # Random date within the last 6 months, weekdays only
-            days_back = random.randint(0, 1800)
+            days_back = random.randint(0, 3650)
             trade_date = start_date + timedelta(days=days_back)
 
             # Skip weekends
@@ -720,6 +827,12 @@ class BootstrapManager:
             base_rating = 4 if outcome == 'win' else random.choice([2, 3, 3, 4])
             ratings_variance = 1
 
+            # Assign trades: 100 to admin, rest to test user
+            if i < 100:
+                assigned_user_id = self.admin_user.id
+            else:
+                assigned_user_id = self.test_user.id
+
             # Create trade
             trade = Trade(
                 instrument_id=instrument.id,
@@ -740,7 +853,7 @@ class BootstrapManager:
                 preparation_rating=max(1, min(5, base_rating + random.randint(-ratings_variance, ratings_variance))),
                 trade_notes=self._get_trade_note(model.name, outcome),
                 trading_model_id=model.id,
-                user_id=self.admin_user.id
+                user_id=assigned_user_id  # Use the assigned user ID
             )
 
             db.session.add(trade)
@@ -925,16 +1038,38 @@ class BootstrapManager:
         daily_classification = self._get_daily_classification()
         session_behavior = self._get_session_behavior()
 
+        p12_scenario = self._get_random_p12_scenario()
+
+        # Get primary instrument for the day (from trades)
+        primary_instrument = 'ES'  # Default
+        if trades_for_day:
+            primary_instrument = trades_for_day[0].instrument  # Remove .symbol here
+
+        # Generate P12 levels
+        p12_high, p12_mid, p12_low = self._generate_random_p12_levels(primary_instrument)
+
+        # Store P12 scenario for reference in analysis
+        self._current_p12_scenario = p12_scenario
+
         # Generate psychology ratings
         psych_ratings = self._generate_psych_ratings(performance)
 
         # Count unique models used
         unique_models = len(set([t.trading_model.name for t in trades_for_day if t.trading_model]))
 
-        # Create journal entry
+        # Determine which user the journal belongs to based on trades
+        journal_user_id = trades_for_day[0].user_id if trades_for_day else self.admin_user.id
+
         journal = DailyJournal(
-            user_id=self.admin_user.id,
+            user_id=journal_user_id,
             journal_date=trade_date,
+
+            # ADD P12 scenario data
+            p12_scenario_id=p12_scenario.id if p12_scenario else None,
+            p12_high=p12_high,
+            p12_mid=p12_mid,
+            p12_low=p12_low,
+            p12_notes=f"P12 Analysis: {p12_scenario.scenario_name if p12_scenario else 'No scenario selected'}. Range: {p12_high - p12_low:.1f} points.",
 
             # Pre-market section using Random's Four Steps
             p12_expected_outcomes=self._generate_four_steps_analysis(daily_classification, session_behavior,
@@ -1046,6 +1181,11 @@ class BootstrapManager:
         classification, class_desc = daily_classification
         session, session_desc = session_behavior
 
+        # Get the P12 scenario if available
+        p12_scenario_text = ""
+        if hasattr(self, '_current_p12_scenario') and self._current_p12_scenario:
+            p12_scenario_text = f" P12 Scenario {self._current_p12_scenario.scenario_number} identified: {self._current_p12_scenario.short_description}."
+
         # Step 1: Define HOD/LOD
         step1_templates = [
             "Dashboard analysis shows {0} bias. {1} - expecting HOD around 15:00, LOD likely already in from overnight session.",
@@ -1053,7 +1193,7 @@ class BootstrapManager:
             "P12 analysis indicates {0} formation. {1} Time zone analysis shows clear directional bias for RTH session.",
             "Globex range and overnight action point to {0} day. {1} HOD/LOD zones identified using dashboard logic."
         ]
-        step1 = random.choice(step1_templates).format(classification, session_desc)
+        step1 = random.choice(step1_templates).format(classification, session_desc, p12_scenario_text)
 
         # Step 2: Incorporate Variables
         rvol = random.randint(80, 180)
@@ -1321,6 +1461,219 @@ class BootstrapManager:
 
         return ratings
 
+    def create_p12_scenarios(self):
+        """Create Random's 5 P12 scenarios with model recommendations."""
+        print("\n📊 Creating P12 scenarios...")
+
+        scenarios_data = [
+            # Scenario 1A - Bullish (Low of Day likely already in)
+            {
+                'scenario_number': '1A',
+                'scenario_name': 'Scenario 1A: P12 Mid Rejection, Stay Above (Bullish)',
+                'short_description': 'Price tests P12 Mid from below, rejects, stays above P12 High',
+                'detailed_description': 'Price approaches P12 Mid from below during 06:00-08:30 EST, gets rejected, and then breaks out and stays above P12 High. Low of Day likely already established during overnight session.',
+                'hod_lod_implication': 'Low of Day likely already in (18:00-06:00). High of Day expected during RTH.',
+                'directional_bias': 'bullish',
+                'alert_criteria': 'Watch for rejection at P12 Mid from below',
+                'confirmation_criteria': 'Breakout and hold above P12 High',
+                'entry_strategy': 'Enter long on breakout above P12 High after mid rejection',
+                'typical_targets': 'Daily high targets, previous session highs',
+                'stop_loss_guidance': 'Below P12 Mid or P12 High retest',
+                'risk_percentage': 0.35,
+                'models_to_activate': ['Captain Backtest', '0930 Opening Range'],
+                'models_to_avoid': ['HOD/LOD Reversal'],
+                'risk_guidance': '0.35% risk - Strong bullish setup, LOD likely in',
+                'preferred_timeframes': ['1-minute', '5-minute', '15-minute'],
+                'key_considerations': 'LOD likely already established, focus on upside targets',
+                'is_active': True
+            },
+
+            # Scenario 1B - Bearish (High of Day likely already in)
+            {
+                'scenario_number': '1B',
+                'scenario_name': 'Scenario 1B: P12 Mid Rejection, Stay Below (Bearish)',
+                'short_description': 'Price tests P12 Mid from above, rejects, stays below P12 Low',
+                'detailed_description': 'Price approaches P12 Mid from above during 06:00-08:30 EST, gets rejected, and then breaks down and stays below P12 Low. High of Day likely already established during overnight session.',
+                'hod_lod_implication': 'High of Day likely already in (18:00-06:00). Low of Day expected during RTH.',
+                'directional_bias': 'bearish',
+                'alert_criteria': 'Watch for rejection at P12 Mid from above',
+                'confirmation_criteria': 'Breakdown and hold below P12 Low',
+                'entry_strategy': 'Enter short on breakdown below P12 Low after mid rejection',
+                'typical_targets': 'Daily low targets, previous session lows',
+                'stop_loss_guidance': 'Above P12 Mid or P12 Low retest',
+                'risk_percentage': 0.35,
+                'models_to_activate': ['Captain Backtest', '0930 Opening Range'],
+                'models_to_avoid': ['HOD/LOD Reversal'],
+                'risk_guidance': '0.35% risk - Strong bearish setup, HOD likely in',
+                'preferred_timeframes': ['1-minute', '5-minute', '15-minute'],
+                'key_considerations': 'HOD likely already established, focus on downside targets',
+                'is_active': True
+            },
+
+            # Scenario 2A - Bullish (Look above and fail, expect reversal up)
+            {
+                'scenario_number': '2A',
+                'scenario_name': 'Scenario 2A: Look Above P12 High and Fail (Bullish Reversal)',
+                'short_description': 'Price looks above P12 High then fails, expect low in and reversal up',
+                'detailed_description': 'Price initially moves above P12 High but fails to hold and gets sucked back into the P12 range. Low of Day likely set by this false breakout, expect reversal to upside.',
+                'hod_lod_implication': 'Low of Day likely set by the failed breakout above. Reversal higher expected.',
+                'directional_bias': 'bullish reversal',
+                'alert_criteria': 'Price moves above P12 High then gets sucked back into range',
+                'confirmation_criteria': 'Price closes back inside P12 range and breaks above P12 Mid',
+                'entry_strategy': 'Enter long on return inside P12 range, target P12 High and beyond',
+                'typical_targets': 'P12 High, then extended upside targets',
+                'stop_loss_guidance': 'Below the failed breakout low',
+                'risk_percentage': 0.50,
+                'models_to_activate': ['HOD/LOD Reversal', 'P12 Scenario-Based'],
+                'models_to_avoid': ['Captain Backtest'],
+                'risk_guidance': '0.50% risk - Reversal setup after failed breakout',
+                'preferred_timeframes': ['5-minute', '15-minute'],
+                'key_considerations': 'Wait for clear failure confirmation, LOD likely in',
+                'is_active': True
+            },
+
+            # Scenario 2B - Bearish (Look below and fail, expect reversal down)
+            {
+                'scenario_number': '2B',
+                'scenario_name': 'Scenario 2B: Look Below P12 Low and Fail (Bearish Reversal)',
+                'short_description': 'Price looks below P12 Low then fails, expect high in and reversal down',
+                'detailed_description': 'Price initially moves below P12 Low but fails to hold and gets sucked back into the P12 range. High of Day likely set by this false breakdown, expect reversal to downside.',
+                'hod_lod_implication': 'High of Day likely set by the failed breakdown below. Reversal lower expected.',
+                'directional_bias': 'bearish reversal',
+                'alert_criteria': 'Price moves below P12 Low then gets sucked back into range',
+                'confirmation_criteria': 'Price closes back inside P12 range and breaks below P12 Mid',
+                'entry_strategy': 'Enter short on return inside P12 range, target P12 Low and beyond',
+                'typical_targets': 'P12 Low, then extended downside targets',
+                'stop_loss_guidance': 'Above the failed breakdown high',
+                'risk_percentage': 0.50,
+                'models_to_activate': ['HOD/LOD Reversal', 'P12 Scenario-Based'],
+                'models_to_avoid': ['Captain Backtest'],
+                'risk_guidance': '0.50% risk - Reversal setup after failed breakdown',
+                'preferred_timeframes': ['5-minute', '15-minute'],
+                'key_considerations': 'Wait for clear failure confirmation, HOD likely in',
+                'is_active': True
+            },
+
+            # Scenario 3A - Bullish (Range between Mid and High, then break up)
+            {
+                'scenario_number': '3A',
+                'scenario_name': 'Scenario 3A: Range Mid to High, Break Up (Bullish)',
+                'short_description': 'Price ranges between P12 Mid and High, then breaks above High',
+                'detailed_description': 'Price consolidates between P12 Mid and P12 High during analysis window, then breaks above P12 High with conviction. Low of Day likely already established.',
+                'hod_lod_implication': 'Low of Day likely already in. Breakout suggests bullish continuation.',
+                'directional_bias': 'bullish trending',
+                'alert_criteria': 'Price ping-ponging between P12 Mid and P12 High',
+                'confirmation_criteria': 'Clean breakout above P12 High',
+                'entry_strategy': 'Enter long on breakout above consolidation range',
+                'typical_targets': 'Extended targets above P12 range, daily highs',
+                'stop_loss_guidance': 'Back inside the P12 Mid-High range',
+                'risk_percentage': 0.25,
+                'models_to_activate': ['Captain Backtest', 'P12 Scenario-Based'],
+                'models_to_avoid': ['HOD/LOD Reversal'],
+                'risk_guidance': '0.25% risk - Clear bullish breakout setup',
+                'preferred_timeframes': ['5-minute', '10-minute'],
+                'key_considerations': 'Ensure clean break of consolidation, LOD likely in',
+                'is_active': True
+            },
+
+            # Scenario 3B - Bearish (Range between Mid and Low, then break down)
+            {
+                'scenario_number': '3B',
+                'scenario_name': 'Scenario 3B: Range Mid to Low, Break Down (Bearish)',
+                'short_description': 'Price ranges between P12 Mid and Low, then breaks below Low',
+                'detailed_description': 'Price consolidates between P12 Mid and P12 Low during analysis window, then breaks below P12 Low with conviction. High of Day likely already established.',
+                'hod_lod_implication': 'High of Day likely already in. Breakdown suggests bearish continuation.',
+                'directional_bias': 'bearish trending',
+                'alert_criteria': 'Price ping-ponging between P12 Mid and P12 Low',
+                'confirmation_criteria': 'Clean breakdown below P12 Low',
+                'entry_strategy': 'Enter short on breakdown below consolidation range',
+                'typical_targets': 'Extended targets below P12 range, daily lows',
+                'stop_loss_guidance': 'Back inside the P12 Mid-Low range',
+                'risk_percentage': 0.25,
+                'models_to_activate': ['Captain Backtest', 'P12 Scenario-Based'],
+                'models_to_avoid': ['HOD/LOD Reversal'],
+                'risk_guidance': '0.25% risk - Clear bearish breakdown setup',
+                'preferred_timeframes': ['5-minute', '10-minute'],
+                'key_considerations': 'Ensure clean break of consolidation, HOD likely in',
+                'is_active': True
+            },
+
+            # Scenario 4A - Bullish (Breakout and hold above P12 High)
+            {
+                'scenario_number': '4A',
+                'scenario_name': 'Scenario 4A: Stay Outside Above P12 High (Bullish)',
+                'short_description': 'Clean breakout above P12 High, level acts as support',
+                'detailed_description': 'Price breaks cleanly above P12 High and holds, with P12 High acting as dynamic support on any retests. Strong bullish momentum with Low of Day likely already established.',
+                'hod_lod_implication': 'Low of Day likely already in overnight. Strong bullish continuation expected.',
+                'directional_bias': 'strongly bullish',
+                'alert_criteria': 'Price steps outside and holds above P12 High',
+                'confirmation_criteria': 'P12 High acting as support on retests',
+                'entry_strategy': 'Enter long on retests of P12 High acting as support',
+                'typical_targets': 'Daily extremes, extended bullish targets',
+                'stop_loss_guidance': 'Below P12 High with structural confirmation',
+                'risk_percentage': 0.25,
+                'models_to_activate': ['Captain Backtest', '0930 Opening Range', 'P12 Scenario-Based'],
+                'models_to_avoid': ['HOD/LOD Reversal'],
+                'risk_guidance': '0.25% risk - High probability bullish continuation',
+                'preferred_timeframes': ['1-minute', '5-minute'],
+                'key_considerations': 'Strong momentum setup, LOD likely in - size appropriately',
+                'is_active': True
+            },
+
+            # Scenario 4B - Bearish (Breakout and hold below P12 Low)
+            {
+                'scenario_number': '4B',
+                'scenario_name': 'Scenario 4B: Stay Outside Below P12 Low (Bearish)',
+                'short_description': 'Clean breakdown below P12 Low, level acts as resistance',
+                'detailed_description': 'Price breaks cleanly below P12 Low and holds, with P12 Low acting as dynamic resistance on any retests. Strong bearish momentum with High of Day likely already established.',
+                'hod_lod_implication': 'High of Day likely already in overnight. Strong bearish continuation expected.',
+                'directional_bias': 'strongly bearish',
+                'alert_criteria': 'Price steps outside and holds below P12 Low',
+                'confirmation_criteria': 'P12 Low acting as resistance on retests',
+                'entry_strategy': 'Enter short on retests of P12 Low acting as resistance',
+                'typical_targets': 'Daily extremes, extended bearish targets',
+                'stop_loss_guidance': 'Above P12 Low with structural confirmation',
+                'risk_percentage': 0.25,
+                'models_to_activate': ['Captain Backtest', '0930 Opening Range', 'P12 Scenario-Based'],
+                'models_to_avoid': ['HOD/LOD Reversal'],
+                'risk_guidance': '0.25% risk - High probability bearish continuation',
+                'preferred_timeframes': ['1-minute', '5-minute'],
+                'key_considerations': 'Strong momentum setup, HOD likely in - size appropriately',
+                'is_active': True
+            },
+
+            # Scenario 5 - Choppy (Swiping the Mid)
+            {
+                'scenario_number': '5',
+                'scenario_name': 'Scenario 5: Swiping the Mid - Expect HOD/LOD in RTH',
+                'short_description': 'Price disrespects P12 Mid, choppy action, both extremes likely in RTH',
+                'detailed_description': 'Price shows no respect for P12 Mid during 06:00-08:30 EST, repeatedly crossing it without clear direction. This suggests an indecisive overnight market and indicates both HOD and LOD will likely be formed during RTH session.',
+                'hod_lod_implication': 'Both HOD and LOD expected during RTH session. High probability of Range day.',
+                'directional_bias': 'choppy',
+                'alert_criteria': 'Price choppy around P12 Mid with multiple crosses',
+                'confirmation_criteria': 'Continued choppy action itself is the confirmation',
+                'entry_strategy': 'Avoid P12-based trades. Focus on post-09:30 setups',
+                'typical_targets': 'Wait for RTH price action to develop clear levels',
+                'stop_loss_guidance': 'Use tighter stops due to choppy conditions',
+                'risk_percentage': 0.25,
+                'models_to_activate': ['Quarterly Theory & 05 Boxes', 'HOD/LOD Reversal'],
+                'models_to_avoid': ['Captain Backtest', 'P12 Scenario-Based'],
+                'risk_guidance': '0.25% risk - Choppy conditions require tight risk management',
+                'preferred_timeframes': ['1-minute', '3-minute'],
+                'key_considerations': 'Focus on RTH setups after 09:30, avoid P12 trades',
+                'is_active': True
+            }
+        ]
+
+        created_scenarios = []
+        for scenario_data in scenarios_data:
+            scenario = P12Scenario(**scenario_data)
+            db.session.add(scenario)
+            created_scenarios.append(scenario)
+
+        db.session.commit()
+        print(f"✅ Created {len(created_scenarios)} P12 scenarios")
+
     def print_statistics(self):
         """Print comprehensive statistics about the generated data."""
         print("\n" + "=" * 80)
@@ -1328,8 +1681,9 @@ class BootstrapManager:
         print("=" * 80)
 
         # User and basic setup
-        print(f"\n👤 Admin User:")
-        print(f"   • Username: {self.admin_user.username}")
+        print(f"\n👤 Users Created:")
+        print(f"   • Admin: {self.admin_user.username} (ID: {self.admin_user.id})")
+        print(f"   • Test User: {self.test_user.username} (ID: {self.test_user.id})")
         print(f"   • Email: {self.admin_user.email}")
         print(f"   • Role: {self.admin_user.role.value}")
 
@@ -1342,6 +1696,25 @@ class BootstrapManager:
         print(f"\n📋 Trading Models Created: {len(self.trading_models)}")
         for model in self.trading_models:
             print(f"   • {model.name} v{model.version}")
+
+        # P12 Scenarios
+        with self.app.app_context():
+            p12_count = P12Scenario.query.count()
+            print(f"\n📊 P12 Scenarios Created: {p12_count}")
+            scenarios = P12Scenario.query.order_by(P12Scenario.scenario_number).all()
+            for scenario in scenarios:
+                scenario_display = f"Scenario {scenario.scenario_number}"
+                if "1A" in scenario.scenario_name or "1B" in scenario.scenario_name:
+                    scenario_display = "1A/1B"
+                elif "2A" in scenario.scenario_name or "2B" in scenario.scenario_name:
+                    scenario_display = "2A/2B"
+                elif "3A" in scenario.scenario_name or "3B" in scenario.scenario_name:
+                    scenario_display = "3A/3B"
+                elif "4A" in scenario.scenario_name or "4B" in scenario.scenario_name:
+                    scenario_display = "4A/4B"
+                elif "Scenario 5" in scenario.scenario_name:
+                    scenario_display = "5"
+                print(f"   • {scenario_display}: {scenario.scenario_name}")
 
         # Tags
         print(f"\n🏷️  Tags Created: {len(self.tags)}")
@@ -1444,9 +1817,11 @@ class BootstrapManager:
 
             with self.app.app_context():
                 self.create_admin_user()
+                self.create_test_user()
                 self.create_default_tags()
                 self.create_instruments()
                 self.create_trading_models()
+                self.create_p12_scenarios()
                 self.create_news_events()
                 self.create_account_settings()
                 self.generate_realistic_trades()

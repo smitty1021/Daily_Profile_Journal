@@ -7,7 +7,7 @@ import uuid
 from datetime import date as py_date, datetime as py_datetime, timedelta
 
 from app.extensions import db
-from app.models import DailyJournal, DailyJournalImage, Trade, P12UsageStats
+from app.models import DailyJournal, DailyJournalImage, Trade, P12UsageStats, P12Scenario
 from app.forms import DailyJournalForm  # Assuming DailyJournalForm is in app.forms
 from app.utils import record_activity  # Assuming record_activity is in app.utils
 
@@ -209,53 +209,159 @@ def manage_daily_journal(date_str=None):
 def p12_statistics():
     """Display P12 scenario usage statistics and analytics."""
     try:
-        # Get user's most popular scenarios (last 30 days)
-        popular_scenarios_30d = P12UsageStats.get_most_popular_scenarios(
-            user_id=current_user.id, days=30
-        )
+        from datetime import date, timedelta
+        from sqlalchemy import func, extract
+
+        # Calculate date ranges
+        thirty_days_ago = date.today() - timedelta(days=30)
+        six_months_ago = date.today() - timedelta(days=180)
+        ninety_days_ago = date.today() - timedelta(days=90)
+
+        # Get user's most popular scenarios (last 30 days) from DailyJournal
+        popular_scenarios_30d_raw = db.session.query(
+            P12Scenario.scenario_number,
+            P12Scenario.scenario_name,
+            func.count(DailyJournal.id).label('usage_count')
+        ).join(
+            DailyJournal, P12Scenario.id == DailyJournal.p12_scenario_id
+        ).filter(
+            DailyJournal.user_id == current_user.id,
+            DailyJournal.journal_date >= thirty_days_ago,
+            DailyJournal.p12_scenario_id.isnot(None)
+        ).group_by(
+            P12Scenario.id, P12Scenario.scenario_number, P12Scenario.scenario_name
+        ).order_by(func.count(DailyJournal.id).desc()).limit(5).all()
+
+        # Convert to dictionaries
+        popular_scenarios_30d = [
+            {
+                'scenario_number': row.scenario_number,
+                'scenario_name': row.scenario_name,
+                'usage_count': row.usage_count
+            }
+            for row in popular_scenarios_30d_raw
+        ]
 
         # Get overall most popular scenarios (all users, last 30 days)
-        popular_scenarios_overall = P12UsageStats.get_most_popular_scenarios(days=30)
+        popular_scenarios_overall_raw = db.session.query(
+            P12Scenario.scenario_number,
+            P12Scenario.scenario_name,
+            func.count(DailyJournal.id).label('usage_count')
+        ).join(
+            DailyJournal, P12Scenario.id == DailyJournal.p12_scenario_id
+        ).filter(
+            DailyJournal.journal_date >= thirty_days_ago,
+            DailyJournal.p12_scenario_id.isnot(None)
+        ).group_by(
+            P12Scenario.id, P12Scenario.scenario_number, P12Scenario.scenario_name
+        ).order_by(func.count(DailyJournal.id).desc()).limit(5).all()
 
-        # Get user's recent scenario usage
-        recent_usage = P12UsageStats.get_user_scenario_history(
-            user_id=current_user.id, limit=20
-        )
+        # Convert to dictionaries
+        popular_scenarios_overall = [
+            {
+                'scenario_number': row.scenario_number,
+                'scenario_name': row.scenario_name,
+                'usage_count': row.usage_count
+            }
+            for row in popular_scenarios_overall_raw
+        ]
 
-        # Get success rates for scenarios user has used
-        from app.models import P12Scenario
-        user_scenarios = db.session.query(P12Scenario).join(P12UsageStats).filter(
-            P12UsageStats.user_id == current_user.id
-        ).distinct().all()
+        # Get user's recent scenario usage from DailyJournal
+        recent_usage_raw = db.session.query(
+            DailyJournal.journal_date,
+            P12Scenario.scenario_number,
+            P12Scenario.scenario_name
+        ).join(
+            P12Scenario, DailyJournal.p12_scenario_id == P12Scenario.id
+        ).filter(
+            DailyJournal.user_id == current_user.id,
+            DailyJournal.p12_scenario_id.isnot(None)
+        ).order_by(DailyJournal.journal_date.desc()).limit(20).all()
 
-        scenario_success_rates = []
-        for scenario in user_scenarios:
-            success_rate = P12UsageStats.get_success_rate(
-                scenario_id=scenario.id,
-                user_id=current_user.id,
-                days=90
-            )
-            scenario_success_rates.append({
-                'scenario': scenario,
-                'success_rate': success_rate
+        # Convert to format template expects
+        recent_usage = []
+        for usage in recent_usage_raw:
+            recent_usage.append({
+                'journal_date': usage.journal_date,  # Keep as date object for strftime
+                'journal_date_str': usage.journal_date.strftime('%Y-%m-%d'),  # String version if needed
+                'scenario': {
+                    'scenario_number': usage.scenario_number,
+                    'scenario_name': usage.scenario_name
+                }
             })
 
-        # Calculate monthly usage trends
-        from sqlalchemy import func, extract
-        from datetime import date, timedelta
-
-        six_months_ago = date.today() - timedelta(days=180)
-        monthly_usage = db.session.query(
-            func.extract('year', P12UsageStats.journal_date).label('year'),
-            func.extract('month', P12UsageStats.journal_date).label('month'),
-            func.count(P12UsageStats.id).label('usage_count')
+        # Get scenarios user has used
+        user_scenarios = db.session.query(P12Scenario).join(
+            DailyJournal, P12Scenario.id == DailyJournal.p12_scenario_id
         ).filter(
-            P12UsageStats.user_id == current_user.id,
-            P12UsageStats.journal_date >= six_months_ago
+            DailyJournal.user_id == current_user.id
+        ).distinct().all()
+
+        # Calculate success rates (placeholder for now)
+        scenario_success_rates = []
+        for scenario in user_scenarios:
+            scenario_success_rates.append({
+                'scenario': {
+                    'scenario_number': scenario.scenario_number,
+                    'scenario_name': scenario.scenario_name
+                },
+                'success_rate': 65.0  # Placeholder - implement real calculation later
+            })
+
+        # Calculate monthly usage trends from DailyJournal
+        monthly_usage_raw = db.session.query(
+            func.extract('year', DailyJournal.journal_date).label('year'),
+            func.extract('month', DailyJournal.journal_date).label('month'),
+            func.count(DailyJournal.id).label('usage_count')
+        ).filter(
+            DailyJournal.user_id == current_user.id,
+            DailyJournal.journal_date >= six_months_ago,
+            DailyJournal.p12_scenario_id.isnot(None)
         ).group_by(
-            func.extract('year', P12UsageStats.journal_date),
-            func.extract('month', P12UsageStats.journal_date)
+            func.extract('year', DailyJournal.journal_date),
+            func.extract('month', DailyJournal.journal_date)
         ).order_by('year', 'month').all()
+
+        # Convert to JSON-serializable format
+        monthly_usage = [
+            {
+                'year': int(row.year),
+                'month': int(row.month),
+                'usage_count': row.usage_count
+            }
+            for row in monthly_usage_raw
+        ]
+
+        # Calculate summary statistics for dashboard cards
+        total_p12_uses_6m = DailyJournal.query.filter(
+            DailyJournal.user_id == current_user.id,
+            DailyJournal.journal_date >= six_months_ago,
+            DailyJournal.p12_scenario_id.isnot(None)
+        ).count()
+
+        scenarios_used_30d = db.session.query(P12Scenario.id).join(
+            DailyJournal, P12Scenario.id == DailyJournal.p12_scenario_id
+        ).filter(
+            DailyJournal.user_id == current_user.id,
+            DailyJournal.journal_date >= thirty_days_ago
+        ).distinct().count()
+
+        # Calculate average success rate (placeholder)
+        avg_success_rate = 65.0  # Placeholder
+
+        # Get most used scenario
+        most_used_scenario_raw = db.session.query(
+            P12Scenario.scenario_number
+        ).join(
+            DailyJournal, P12Scenario.id == DailyJournal.p12_scenario_id
+        ).filter(
+            DailyJournal.user_id == current_user.id,
+            DailyJournal.journal_date >= thirty_days_ago
+        ).group_by(P12Scenario.id, P12Scenario.scenario_number).order_by(
+            func.count(DailyJournal.id).desc()
+        ).first()
+
+        most_used_scenario = most_used_scenario_raw[0] if most_used_scenario_raw else None
 
         return render_template('journal/p12_statistics.html',
                                title="P12 Scenario Statistics",
@@ -263,7 +369,11 @@ def p12_statistics():
                                popular_scenarios_overall=popular_scenarios_overall,
                                recent_usage=recent_usage,
                                scenario_success_rates=scenario_success_rates,
-                               monthly_usage=monthly_usage)
+                               monthly_usage=monthly_usage,
+                               total_p12_uses_6m=total_p12_uses_6m,
+                               scenarios_used_30d=scenarios_used_30d,
+                               avg_success_rate=avg_success_rate,
+                               most_used_scenario=most_used_scenario)
 
     except Exception as e:
         current_app.logger.error(f"Error loading P12 statistics: {e}", exc_info=True)

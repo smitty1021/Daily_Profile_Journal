@@ -845,6 +845,8 @@ class P12ScenarioForm(FlaskForm):
 
             # Create choices list from database models
             models = [(model.name, model.name) for model in trading_models]
+            # Add this temporarily to debug duplicates
+            print(f"DEBUG: Loading {len(models)} unique trading models: {[m[0] for m in models]}")
 
             # If no models in database, provide helpful message
             if not models:
