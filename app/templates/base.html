@@ -169,6 +169,8 @@
                                 <li><a class="dropdown-item" href="/admin/users">Manage Users</a></li>
                                 <li><a class="dropdown-item" href="/admin/files">View All Files</a></li>
                                 <li><a class="dropdown-item" href="/admin/analytics">Analytics</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('p12_scenarios.list_scenarios') }}">Manage P12 Scenarios</a></li>
+
                             </ul>
                         </li>
                         {% endif %}
@@ -221,6 +223,7 @@
                         <a href="#" class="nav-link {{ 'active' if request.blueprint == 'journal' else '' }}"><span class="icon"><i class="fas fa-book-open"></i></span><span class="label">Journal</span><span class="arrow"><i class="fas fa-chevron-right"></i></span></a>
                         <ul class="submenu {{ 'open' if request.blueprint == 'journal' else '' }}">
                             <li><a href="{{ url_for('journal.manage_daily_journal') }}" class="{{ 'active' if request.endpoint and 'daily' in request.endpoint else '' }}">Daily Journal</a></li>
+                            <li><a href="{{ url_for('journal.p12_statistics') }}" class="{{ 'active' if request.endpoint == 'journal.p12_statistics' else '' }}">P12 Statistics</a></li>
                             <li><a href="#">Weekly (Soon)</a></li>
                             <li><a href="#">Monthly (Soon)</a></li>
                             <li><a href="#">Quarterly (Soon)</a></li>

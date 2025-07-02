@@ -668,57 +668,20 @@ class DailyJournalForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Populate trading model choices dynamically from database
-        try:
-            from app.models import TradingModel
-
-            # Get all active trading models from database
-            # Option 1: Only system/admin models
-            #trading_models = TradingModel.query.filter_by(is_active=True, user_id=system_user_id).order_by(
-            #    TradingModel.name).all()
-
-            # Option 2: Models with specific naming pattern
-            #trading_models = TradingModel.query.filter(TradingModel.is_active == True,
-            #                                           TradingModel.name.like('%Core%')).order_by(
-            #    TradingModel.name).all()
-
-            # Option 3: All active models (current approach)
-            trading_models = TradingModel.query.filter_by(is_active=True).order_by(TradingModel.name).all()
-
-            # Create choices list from database models
-            models = [(model.name, model.name) for model in trading_models]
-
-            # If no models in database, provide helpful message
-            if not models:
-                models = [('', 'No trading models available - create models first')]
-
-            self.models_to_activate.choices = models
-            self.models_to_avoid.choices = models
-
-        except Exception as e:
-            # Fallback to empty choices if database query fails
-            from flask import current_app
-            if current_app:
-                current_app.logger.error(f"Error loading trading models for P12 form: {e}")
-
-            fallback_models = [('', 'Error loading models - check database connection')]
-            self.models_to_activate.choices = fallback_models
-            self.models_to_avoid.choices = fallback_models
-
-        # Populate P12 scenario choices (if this form is used in DailyJournalForm)
+        # Only populate P12 scenario choices for this form
         try:
             from app.models import P12Scenario
             scenarios = P12Scenario.query.filter_by(is_active=True).order_by(P12Scenario.scenario_number).all()
 
-            # Only set this if the field exists (in case this is mixed into DailyJournalForm)
+            # Only set this if the field exists (which it should for DailyJournalForm)
             if hasattr(self, 'p12_scenario_id'):
                 self.p12_scenario_id.choices = [(0, 'Select P12 scenario...')] + [
                     (s.id, f"Scenario {s.scenario_number}: {s.scenario_name}") for s in scenarios
                 ]
         except Exception as e:
             # P12 scenario loading is optional for this form
-            pass
-
+            if hasattr(self, 'p12_scenario_id'):
+                self.p12_scenario_id.choices = [(0, 'Select P12 scenario...')]
 
 class P12ScenarioForm(FlaskForm):
     """Form for creating/editing P12 scenarios."""
@@ -868,9 +831,43 @@ class P12ScenarioForm(FlaskForm):
         render_kw={'rows': 4, 'placeholder': 'Important factors traders should consider when this scenario occurs...'}
     )
 
-
-
     submit = SubmitField('Save Scenario')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Populate trading model choices ONLY for P12ScenarioForm
+        try:
+            from app.models import TradingModel
+
+            # Get all active trading models from database
+            trading_models = TradingModel.query.filter_by(is_active=True).order_by(TradingModel.name).all()
+
+            # Create choices list from database models
+            models = [(model.name, model.name) for model in trading_models]
+
+            # If no models in database, provide helpful message
+            if not models:
+                models = [('', 'No trading models available - create models first')]
+
+            # Only set choices if these fields exist (they should for P12ScenarioForm)
+            if hasattr(self, 'models_to_activate'):
+                self.models_to_activate.choices = models
+            if hasattr(self, 'models_to_avoid'):
+                self.models_to_avoid.choices = models
+
+        except Exception as e:
+            # Fallback to empty choices if database query fails
+            from flask import current_app
+            if current_app:
+                current_app.logger.error(f"Error loading trading models for P12 form: {e}")
+
+            fallback_models = [('', 'Error loading models - check database connection')]
+
+            if hasattr(self, 'models_to_activate'):
+                self.models_to_activate.choices = fallback_models
+            if hasattr(self, 'models_to_avoid'):
+                self.models_to_avoid.choices = fallback_models
 
 
 class InstrumentForm(FlaskForm):

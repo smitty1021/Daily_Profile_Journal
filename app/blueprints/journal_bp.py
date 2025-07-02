@@ -1,5 +1,5 @@
 from flask import (Blueprint, render_template, request, redirect,
-                   url_for, flash, current_app, abort)
+                   url_for, flash, current_app, abort, jsonify)
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 import os
@@ -7,7 +7,7 @@ import uuid
 from datetime import date as py_date, datetime as py_datetime, timedelta
 
 from app.extensions import db
-from app.models import DailyJournal, DailyJournalImage, Trade
+from app.models import DailyJournal, DailyJournalImage, Trade, P12UsageStats
 from app.forms import DailyJournalForm  # Assuming DailyJournalForm is in app.forms
 from app.utils import record_activity  # Assuming record_activity is in app.utils
 
@@ -90,21 +90,36 @@ def manage_daily_journal(date_str=None):
         else:  # Update existing
             action_desc = "updated"
 
+        # Store previous scenario ID for comparison
+        previous_scenario_id = daily_journal.p12_scenario_id
+
         # Populate DailyJournal object from form
-        # Basic fields can be populated like this:
         form.populate_obj(daily_journal)
-        # Ensure journal_date is set correctly (it should be from form or target_date)
         daily_journal.journal_date = target_date
 
-        # Handle P12 scenario
+        # Handle P12 scenario selection and track usage
         if form.p12_scenario_id.data and form.p12_scenario_id.data != 0:
             daily_journal.p12_scenario_id = form.p12_scenario_id.data
 
-            # Track usage
-            from app.models import P12Scenario
-            scenario = P12Scenario.query.get(form.p12_scenario_id.data)
-            if scenario:
-                scenario.increment_usage()
+            # Track usage - only if this is a NEW selection or change
+            if form.p12_scenario_id.data != previous_scenario_id:
+                from app.models import P12Scenario
+                scenario = P12Scenario.query.get(form.p12_scenario_id.data)
+                if scenario:
+                    # Increment the basic counter
+                    scenario.increment_usage()
+
+                    # Create detailed usage stats record
+                    usage_stat = P12UsageStats(
+                        user_id=current_user.id,
+                        p12_scenario_id=form.p12_scenario_id.data,
+                        journal_date=target_date,
+                        market_session='pre-market',  # Assuming this is selected during pre-market prep
+                        p12_high=form.p12_high.data,
+                        p12_mid=form.p12_mid.data,
+                        p12_low=form.p12_low.data
+                    )
+                    db.session.add(usage_stat)
         else:
             daily_journal.p12_scenario_id = None
 
@@ -187,3 +202,101 @@ def manage_daily_journal(date_str=None):
                            prev_day_str=prev_day.strftime('%Y-%m-%d'),
                            next_day_str=next_day.strftime('%Y-%m-%d'),
                            today_str=py_date.today().strftime('%Y-%m-%d'))
+
+
+@journal_bp.route('/p12-statistics')
+@login_required
+def p12_statistics():
+    """Display P12 scenario usage statistics and analytics."""
+    try:
+        # Get user's most popular scenarios (last 30 days)
+        popular_scenarios_30d = P12UsageStats.get_most_popular_scenarios(
+            user_id=current_user.id, days=30
+        )
+
+        # Get overall most popular scenarios (all users, last 30 days)
+        popular_scenarios_overall = P12UsageStats.get_most_popular_scenarios(days=30)
+
+        # Get user's recent scenario usage
+        recent_usage = P12UsageStats.get_user_scenario_history(
+            user_id=current_user.id, limit=20
+        )
+
+        # Get success rates for scenarios user has used
+        from app.models import P12Scenario
+        user_scenarios = db.session.query(P12Scenario).join(P12UsageStats).filter(
+            P12UsageStats.user_id == current_user.id
+        ).distinct().all()
+
+        scenario_success_rates = []
+        for scenario in user_scenarios:
+            success_rate = P12UsageStats.get_success_rate(
+                scenario_id=scenario.id,
+                user_id=current_user.id,
+                days=90
+            )
+            scenario_success_rates.append({
+                'scenario': scenario,
+                'success_rate': success_rate
+            })
+
+        # Calculate monthly usage trends
+        from sqlalchemy import func, extract
+        from datetime import date, timedelta
+
+        six_months_ago = date.today() - timedelta(days=180)
+        monthly_usage = db.session.query(
+            func.extract('year', P12UsageStats.journal_date).label('year'),
+            func.extract('month', P12UsageStats.journal_date).label('month'),
+            func.count(P12UsageStats.id).label('usage_count')
+        ).filter(
+            P12UsageStats.user_id == current_user.id,
+            P12UsageStats.journal_date >= six_months_ago
+        ).group_by(
+            func.extract('year', P12UsageStats.journal_date),
+            func.extract('month', P12UsageStats.journal_date)
+        ).order_by('year', 'month').all()
+
+        return render_template('journal/p12_statistics.html',
+                               title="P12 Scenario Statistics",
+                               popular_scenarios_30d=popular_scenarios_30d,
+                               popular_scenarios_overall=popular_scenarios_overall,
+                               recent_usage=recent_usage,
+                               scenario_success_rates=scenario_success_rates,
+                               monthly_usage=monthly_usage)
+
+    except Exception as e:
+        current_app.logger.error(f"Error loading P12 statistics: {e}", exc_info=True)
+        flash('Error loading P12 statistics.', 'danger')
+        return redirect(url_for('journal.manage_daily_journal'))
+
+
+# Add route to update scenario outcome
+@journal_bp.route('/p12-outcome/<int:usage_id>', methods=['POST'])
+@login_required
+def update_p12_outcome(usage_id):
+    """Update the outcome of a P12 scenario usage."""
+    try:
+        usage_stat = P12UsageStats.query.filter_by(
+            id=usage_id,
+            user_id=current_user.id
+        ).first_or_404()
+
+        data = request.get_json()
+        usage_stat.outcome_successful = data.get('successful')
+        usage_stat.outcome_notes = data.get('notes', '')
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Outcome updated successfully'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating P12 outcome: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': 'Error updating outcome'
+        }), 500

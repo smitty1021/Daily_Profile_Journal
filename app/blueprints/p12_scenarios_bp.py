@@ -73,6 +73,8 @@ def list_scenarios():
                            scenarios=scenarios, title="Manage P12 Scenarios")
 
 
+# Replace your create_scenario and edit_scenario routes with these updated versions:
+
 @p12_scenarios_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -93,7 +95,7 @@ def create_scenario():
         if form.scenario_image.data:
             image_filename = save_scenario_image(form.scenario_image.data)
 
-        # Create new scenario
+        # Create new scenario with ALL fields including model recommendations
         scenario = P12Scenario(
             scenario_number=form.scenario_number.data,
             scenario_name=form.scenario_name.data,
@@ -109,7 +111,14 @@ def create_scenario():
             risk_percentage=form.risk_percentage.data,
             image_filename=image_filename,
             image_path=image_filename,
-            is_active=form.is_active.data
+            is_active=form.is_active.data,
+
+            # NEW: Model recommendation fields
+            models_to_activate=form.models_to_activate.data if form.models_to_activate.data else [],
+            models_to_avoid=form.models_to_avoid.data if form.models_to_avoid.data else [],
+            risk_guidance=form.risk_guidance.data or None,
+            preferred_timeframes=form.preferred_timeframes.data if form.preferred_timeframes.data else [],
+            key_considerations=form.key_considerations.data or None
         )
 
         try:
@@ -155,7 +164,7 @@ def edit_scenario(scenario_id):
                 scenario.image_filename = new_image
                 scenario.image_path = new_image
 
-        # Update scenario
+        # Update ALL scenario fields including model recommendations
         scenario.scenario_number = form.scenario_number.data
         scenario.scenario_name = form.scenario_name.data
         scenario.short_description = form.short_description.data
@@ -170,6 +179,13 @@ def edit_scenario(scenario_id):
         scenario.risk_percentage = form.risk_percentage.data
         scenario.is_active = form.is_active.data
         scenario.updated_date = datetime.utcnow()
+
+        # NEW: Update model recommendation fields
+        scenario.models_to_activate = form.models_to_activate.data if form.models_to_activate.data else []
+        scenario.models_to_avoid = form.models_to_avoid.data if form.models_to_avoid.data else []
+        scenario.risk_guidance = form.risk_guidance.data or None
+        scenario.preferred_timeframes = form.preferred_timeframes.data if form.preferred_timeframes.data else []
+        scenario.key_considerations = form.key_considerations.data or None
 
         try:
             db.session.commit()

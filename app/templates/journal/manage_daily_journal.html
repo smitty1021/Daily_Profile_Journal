@@ -112,19 +112,171 @@
     <div class="journal-section">
         <h3><i class="fas fa-chart-line me-2"></i>2. Pre-Market Analysis</h3>
 
-        {# MODIFIED: Re-organized for clarity #}
-        <div class="mb-3">
-            {{ form.p12_scenario_id.label(class="form-label fw-semibold") }}
-            {{ form.p12_scenario_id(class="form-select", id="p12_scenario_select") }}
-            {% if form.p12_scenario_id.errors %}
-                <div class="invalid-feedback">
-                    {% for error in form.p12_scenario_id.errors %}{{ error }}{% endfor %}
+        {# P12 Scenario Selection #}
+        <div class="mb-4">
+            <div class="row">
+                <div class="col-md-8">
+                    {{ form.p12_scenario_id.label(class="form-label fw-semibold") }}
+                    {{ form.p12_scenario_id(class="form-select", id="p12_scenario_select") }}
+                    {% if form.p12_scenario_id.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.p12_scenario_id.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="form-text">{{ form.p12_scenario_id.description }}</div>
                 </div>
-            {% endif %}
-            <div class="form-text">{{ form.p12_scenario_id.description }}</div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Quick Actions</label>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-info btn-sm" id="refreshP12Scenarios">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearP12Selection">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- P12 Levels -->
+        {# P12 Scenario Details Display - Populated via JavaScript #}
+        <div id="p12ScenarioDetails" class="card mb-4" style="display: none;">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <span id="scenarioTitle">Scenario Details</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {# Left Column - Scenario Information #}
+                    <div class="col-md-8">
+                        <div id="scenarioDescription" class="mb-3"></div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary mb-2">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>Alert Criteria
+                                </h6>
+                                <div id="scenarioAlertCriteria" class="mb-3"></div>
+
+                                <h6 class="text-success mb-2">
+                                    <i class="fas fa-check-circle me-1"></i>Confirmation Criteria
+                                </h6>
+                                <div id="scenarioConfirmationCriteria" class="mb-3"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-info mb-2">
+                                    <i class="fas fa-crosshairs me-1"></i>Entry Strategy
+                                </h6>
+                                <div id="scenarioEntryStrategy" class="mb-3"></div>
+
+                                <h6 class="text-warning mb-2">
+                                    <i class="fas fa-bullseye me-1"></i>Typical Targets
+                                </h6>
+                                <div id="scenarioTypicalTargets" class="mb-3"></div>
+                            </div>
+                        </div>
+
+                        {# HOD/LOD Implication #}
+                        <div class="alert alert-secondary mb-3">
+                            <h6 class="alert-heading mb-2">
+                                <i class="fas fa-chart-bar me-1"></i>HOD/LOD Implication
+                            </h6>
+                            <div id="scenarioHodLodImplication"></div>
+                        </div>
+
+                        {# Trading Model Recommendations #}
+                        <div id="modelRecommendations" class="row">
+                            <div class="col-md-6">
+                                <div class="card border-success">
+                                    <div class="card-header bg-light-success">
+                                        <h6 class="card-title mb-0 text-success">
+                                            <i class="fas fa-play me-1"></i>Activate These Models
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="modelsToActivate" class="list-group list-group-flush"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-danger">
+                                    <div class="card-header bg-light-danger">
+                                        <h6 class="card-title mb-0 text-danger">
+                                            <i class="fas fa-stop me-1"></i>Avoid These Models
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="modelsToAvoid" class="list-group list-group-flush"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Risk Guidance & Additional Info #}
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div id="riskGuidanceSection" style="display: none;">
+                                    <h6 class="text-danger mb-2">
+                                        <i class="fas fa-shield-alt me-1"></i>Risk Guidance
+                                    </h6>
+                                    <div id="riskGuidance" class="alert alert-warning"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div id="preferredTimeframesSection" style="display: none;">
+                                    <h6 class="text-info mb-2">
+                                        <i class="fas fa-clock me-1"></i>Preferred Timeframes
+                                    </h6>
+                                    <div id="preferredTimeframes"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="keyConsiderationsSection" class="mt-3" style="display: none;">
+                            <h6 class="text-secondary mb-2">
+                                <i class="fas fa-lightbulb me-1"></i>Key Considerations
+                            </h6>
+                            <div id="keyConsiderations" class="alert alert-info"></div>
+                        </div>
+                    </div>
+
+                    {# Right Column - Scenario Image #}
+                    <div class="col-md-4">
+                        <div id="scenarioImageContainer" style="display: none;">
+                            <h6 class="text-secondary mb-2">
+                                <i class="fas fa-image me-1"></i>Scenario Visual
+                            </h6>
+                            <img id="scenarioImage" class="img-fluid rounded border" alt="Scenario Visual" />
+                        </div>
+
+                        {# Scenario Stats #}
+                        <div class="card border-info mt-3">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-chart-pie me-1"></i>Usage Stats
+                                </h6>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="text-muted small">Times Selected</div>
+                                        <div id="scenarioUsageCount" class="h5 text-primary">-</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="text-muted small">Directional Bias</div>
+                                        <div id="scenarioDirectionalBias" class="h6">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# P12 Levels Input #}
         <div class="row">
             <div class="col-md-4">
                 <div class="mb-3">
@@ -148,10 +300,9 @@
 
         <div class="mb-3">
             {{ form.p12_notes.label(class="form-label") }}
-            {{ form.p12_notes(class="form-control") }}
+            {{ form.p12_notes(class="form-control", rows="3") }}
             <div class="form-text">{{ form.p12_notes.description }}</div>
         </div>
-
         <hr class="my-4">
         <h4>4-Step Process & Variables</h4>
         <p class="text-muted">Enter data from your Daily Profiler tool here.</p>
@@ -385,5 +536,174 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const scenarioSelect = document.getElementById('p12_scenario_select');
+    const scenarioDetails = document.getElementById('p12ScenarioDetails');
+    const refreshBtn = document.getElementById('refreshP12Scenarios');
+    const clearBtn = document.getElementById('clearP12Selection');
+
+    let scenariosData = [];
+
+    // Load P12 scenarios data
+    function loadP12Scenarios() {
+        fetch('/admin/p12-scenarios/api/scenarios')
+            .then(response => response.json())
+            .then(data => {
+                scenariosData = data;
+                console.log('P12 scenarios loaded:', data.length);
+            })
+            .catch(error => {
+                console.error('Error loading P12 scenarios:', error);
+                showNotification('Error loading P12 scenarios', 'error');
+            });
+    }
+
+    // Display scenario details
+    function displayScenarioDetails(scenarioId) {
+        const scenario = scenariosData.find(s => s.id == scenarioId);
+        if (!scenario) {
+            scenarioDetails.style.display = 'none';
+            return;
+        }
+
+        // Update basic info
+        document.getElementById('scenarioTitle').textContent =
+            `Scenario ${scenario.scenario_number}: ${scenario.scenario_name}`;
+        document.getElementById('scenarioDescription').innerHTML =
+            `<p class="lead">${scenario.short_description}</p><p>${scenario.detailed_description}</p>`;
+
+        // Update criteria sections
+        document.getElementById('scenarioAlertCriteria').textContent = scenario.alert_criteria;
+        document.getElementById('scenarioConfirmationCriteria').textContent = scenario.confirmation_criteria;
+        document.getElementById('scenarioEntryStrategy').textContent = scenario.entry_strategy;
+        document.getElementById('scenarioTypicalTargets').textContent = scenario.typical_targets || 'Not specified';
+        document.getElementById('scenarioHodLodImplication').textContent = scenario.hod_lod_implication;
+
+        // Update model recommendations
+        const activateContainer = document.getElementById('modelsToActivate');
+        const avoidContainer = document.getElementById('modelsToAvoid');
+
+        activateContainer.innerHTML = '';
+        avoidContainer.innerHTML = '';
+
+        if (scenario.models_to_activate && scenario.models_to_activate.length > 0) {
+            scenario.models_to_activate.forEach(model => {
+                const item = document.createElement('div');
+                item.className = 'list-group-item list-group-item-success border-0 py-1 px-2';
+                item.innerHTML = `<i class="fas fa-check me-2"></i>${model}`;
+                activateContainer.appendChild(item);
+            });
+        } else {
+            activateContainer.innerHTML = '<div class="text-muted small">No specific recommendations</div>';
+        }
+
+        if (scenario.models_to_avoid && scenario.models_to_avoid.length > 0) {
+            scenario.models_to_avoid.forEach(model => {
+                const item = document.createElement('div');
+                item.className = 'list-group-item list-group-item-danger border-0 py-1 px-2';
+                item.innerHTML = `<i class="fas fa-times me-2"></i>${model}`;
+                avoidContainer.appendChild(item);
+            });
+        } else {
+            avoidContainer.innerHTML = '<div class="text-muted small">No specific restrictions</div>';
+        }
+
+        // Update additional sections
+        const riskGuidanceSection = document.getElementById('riskGuidanceSection');
+        const riskGuidance = document.getElementById('riskGuidance');
+        if (scenario.risk_guidance) {
+            riskGuidance.textContent = scenario.risk_guidance;
+            riskGuidanceSection.style.display = 'block';
+        } else {
+            riskGuidanceSection.style.display = 'none';
+        }
+
+        const timeframesSection = document.getElementById('preferredTimeframesSection');
+        const timeframes = document.getElementById('preferredTimeframes');
+        if (scenario.preferred_timeframes && scenario.preferred_timeframes.length > 0) {
+            timeframes.innerHTML = scenario.preferred_timeframes.map(tf =>
+                `<span class="badge bg-info me-1">${tf}</span>`
+            ).join('');
+            timeframesSection.style.display = 'block';
+        } else {
+            timeframesSection.style.display = 'none';
+        }
+
+        const considerationsSection = document.getElementById('keyConsiderationsSection');
+        const considerations = document.getElementById('keyConsiderations');
+        if (scenario.key_considerations) {
+            considerations.textContent = scenario.key_considerations;
+            considerationsSection.style.display = 'block';
+        } else {
+            considerationsSection.style.display = 'none';
+        }
+
+        // Update image
+        const imageContainer = document.getElementById('scenarioImageContainer');
+        const image = document.getElementById('scenarioImage');
+        if (scenario.image_url) {
+            image.src = scenario.image_url;
+            image.alt = `Scenario ${scenario.scenario_number} Visual`;
+            imageContainer.style.display = 'block';
+        } else {
+            imageContainer.style.display = 'none';
+        }
+
+        // Update stats
+        document.getElementById('scenarioUsageCount').textContent = scenario.times_selected || 0;
+        document.getElementById('scenarioDirectionalBias').textContent =
+            scenario.directional_bias || 'Neutral';
+
+        // Show the details card
+        scenarioDetails.style.display = 'block';
+
+        // Track usage (if scenario is selected)
+        if (scenarioId > 0) {
+            trackScenarioUsage(scenarioId);
+        }
+    }
+
+    // Track scenario usage
+    function trackScenarioUsage(scenarioId) {
+        fetch(`/admin/p12-scenarios/api/scenarios/${scenarioId}/increment`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.getAttribute('content')
+            }
+        }).catch(error => {
+            console.error('Error tracking scenario usage:', error);
+        });
+    }
+
+    // Event listeners
+    scenarioSelect.addEventListener('change', function() {
+        const selectedId = this.value;
+        if (selectedId && selectedId !== '0') {
+            displayScenarioDetails(selectedId);
+        } else {
+            scenarioDetails.style.display = 'none';
+        }
+    });
+
+    refreshBtn.addEventListener('click', loadP12Scenarios);
+
+    clearBtn.addEventListener('click', function() {
+        scenarioSelect.value = '0';
+        scenarioDetails.style.display = 'none';
+    });
+
+    // Initialize
+    loadP12Scenarios();
+
+    // If scenario is pre-selected, display its details
+    if (scenarioSelect.value && scenarioSelect.value !== '0') {
+        setTimeout(() => displayScenarioDetails(scenarioSelect.value), 500);
+    }
+});
+</script>
+
 {% endblock %}

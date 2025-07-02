@@ -1378,3 +1378,95 @@ class P12Scenario(db.Model):
         """Track when this scenario is selected by users."""
         self.times_selected += 1
         db.session.commit()
+
+
+# Add this to app/models.py
+
+class P12UsageStats(db.Model):
+    """
+    Track detailed usage statistics for P12 scenarios.
+    Provides analytics on which scenarios are most popular, when they're used, etc.
+    """
+    __tablename__ = 'p12_usage_stats'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    p12_scenario_id = db.Column(db.Integer, db.ForeignKey('p12_scenario.id'), nullable=False)
+    journal_date = db.Column(db.Date, nullable=False)  # Date scenario was used
+    selection_timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    # Context information
+    market_session = db.Column(db.String(50), nullable=True)  # 'pre-market', 'opening', 'midday', etc.
+    p12_high = db.Column(db.Numeric(10, 2), nullable=True)  # P12 levels when selected
+    p12_mid = db.Column(db.Numeric(10, 2), nullable=True)
+    p12_low = db.Column(db.Numeric(10, 2), nullable=True)
+
+    # Outcome tracking (can be updated later)
+    outcome_successful = db.Column(db.Boolean, nullable=True)  # Did the scenario play out as expected?
+    outcome_notes = db.Column(db.Text, nullable=True)  # User's notes on how it played out
+
+    # Relationships
+    user = db.relationship('User', backref=db.backref('p12_usage_stats', lazy='dynamic'))
+    scenario = db.relationship('P12Scenario', backref=db.backref('usage_stats', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<P12UsageStats User={self.user_id} Scenario={self.p12_scenario_id} Date={self.journal_date}>'
+
+    @staticmethod
+    def get_most_popular_scenarios(user_id=None, days=30):
+        """Get most popular P12 scenarios in the last N days."""
+        from sqlalchemy import func
+        from datetime import date, timedelta
+
+        cutoff_date = date.today() - timedelta(days=days)
+        query = db.session.query(
+            P12UsageStats.p12_scenario_id,
+            func.count(P12UsageStats.id).label('usage_count'),
+            P12Scenario.scenario_number,
+            P12Scenario.scenario_name
+        ).join(P12Scenario).filter(
+            P12UsageStats.journal_date >= cutoff_date
+        )
+
+        if user_id:
+            query = query.filter(P12UsageStats.user_id == user_id)
+
+        return query.group_by(
+            P12UsageStats.p12_scenario_id,
+            P12Scenario.scenario_number,
+            P12Scenario.scenario_name
+        ).order_by(func.count(P12UsageStats.id).desc()).all()
+
+    @staticmethod
+    def get_user_scenario_history(user_id, scenario_id=None, limit=10):
+        """Get recent usage history for a user, optionally filtered by scenario."""
+        query = P12UsageStats.query.filter_by(user_id=user_id)
+
+        if scenario_id:
+            query = query.filter_by(p12_scenario_id=scenario_id)
+
+        return query.order_by(P12UsageStats.selection_timestamp.desc()).limit(limit).all()
+
+    @staticmethod
+    def get_success_rate(scenario_id, user_id=None, days=90):
+        """Calculate success rate for a scenario."""
+        from sqlalchemy import func
+        from datetime import date, timedelta
+
+        cutoff_date = date.today() - timedelta(days=days)
+        query = P12UsageStats.query.filter(
+            P12UsageStats.p12_scenario_id == scenario_id,
+            P12UsageStats.journal_date >= cutoff_date,
+            P12UsageStats.outcome_successful.isnot(None)  # Only count where outcome was recorded
+        )
+
+        if user_id:
+            query = query.filter(P12UsageStats.user_id == user_id)
+
+        total_with_outcome = query.count()
+        successful = query.filter(P12UsageStats.outcome_successful == True).count()
+
+        if total_with_outcome == 0:
+            return None  # No data available
+
+        return (successful / total_with_outcome) * 100  # Return percentage
