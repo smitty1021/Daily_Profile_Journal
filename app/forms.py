@@ -665,13 +665,59 @@ class DailyJournalForm(FlaskForm):
 
     submit = SubmitField('Save Daily Journal')
 
-    def __init__(self, *args, **kwargs):  # <-- Move it here
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Populate P12 scenario choices
-        scenarios = P12Scenario.query.filter_by(is_active=True).order_by(P12Scenario.scenario_number).all()
-        self.p12_scenario_id.choices = [(0, 'Select P12 scenario...')] + [
-            (s.id, f"Scenario {s.scenario_number}: {s.scenario_name}") for s in scenarios
-        ]
+
+        # Populate trading model choices dynamically from database
+        try:
+            from app.models import TradingModel
+
+            # Get all active trading models from database
+            # Option 1: Only system/admin models
+            #trading_models = TradingModel.query.filter_by(is_active=True, user_id=system_user_id).order_by(
+            #    TradingModel.name).all()
+
+            # Option 2: Models with specific naming pattern
+            #trading_models = TradingModel.query.filter(TradingModel.is_active == True,
+            #                                           TradingModel.name.like('%Core%')).order_by(
+            #    TradingModel.name).all()
+
+            # Option 3: All active models (current approach)
+            trading_models = TradingModel.query.filter_by(is_active=True).order_by(TradingModel.name).all()
+
+            # Create choices list from database models
+            models = [(model.name, model.name) for model in trading_models]
+
+            # If no models in database, provide helpful message
+            if not models:
+                models = [('', 'No trading models available - create models first')]
+
+            self.models_to_activate.choices = models
+            self.models_to_avoid.choices = models
+
+        except Exception as e:
+            # Fallback to empty choices if database query fails
+            from flask import current_app
+            if current_app:
+                current_app.logger.error(f"Error loading trading models for P12 form: {e}")
+
+            fallback_models = [('', 'Error loading models - check database connection')]
+            self.models_to_activate.choices = fallback_models
+            self.models_to_avoid.choices = fallback_models
+
+        # Populate P12 scenario choices (if this form is used in DailyJournalForm)
+        try:
+            from app.models import P12Scenario
+            scenarios = P12Scenario.query.filter_by(is_active=True).order_by(P12Scenario.scenario_number).all()
+
+            # Only set this if the field exists (in case this is mixed into DailyJournalForm)
+            if hasattr(self, 'p12_scenario_id'):
+                self.p12_scenario_id.choices = [(0, 'Select P12 scenario...')] + [
+                    (s.id, f"Scenario {s.scenario_number}: {s.scenario_name}") for s in scenarios
+                ]
+        except Exception as e:
+            # P12 scenario loading is optional for this form
+            pass
 
 
 class P12ScenarioForm(FlaskForm):
@@ -775,6 +821,54 @@ class P12ScenarioForm(FlaskForm):
         default=True,
         description='Whether this scenario is available for selection'
     )
+
+    # NEW: Trading Model Recommendations Section
+    models_to_activate = SelectMultipleField(
+        'Trading Models to Activate',
+        choices=[],  # Will be populated dynamically
+        validators=[Optional()],
+        description='Select trading models that should be activated for this scenario',
+        render_kw={'class': 'form-select', 'multiple': True, 'size': '4'}
+    )
+
+    models_to_avoid = SelectMultipleField(
+        'Trading Models to Avoid',
+        choices=[],  # Will be populated dynamically
+        validators=[Optional()],
+        description='Select trading models that should be avoided for this scenario',
+        render_kw={'class': 'form-select', 'multiple': True, 'size': '4'}
+    )
+
+    risk_guidance = TextAreaField(
+        'Risk Management Guidance',
+        validators=[Optional()],
+        description='Guidance on risk percentage and risk management for this scenario',
+        render_kw={'rows': 3, 'placeholder': 'e.g., "2.5% - 5% risk (higher confidence due to clear direction)"'}
+    )
+
+    preferred_timeframes = SelectMultipleField(
+        'Preferred Timeframes',
+        choices=[
+            ('1m', '1 Minute'),
+            ('5m', '5 Minutes'),
+            ('15m', '15 Minutes'),
+            ('1h', '1 Hour'),
+            ('4h', '4 Hours'),
+            ('1d', '1 Day')
+        ],
+        validators=[Optional()],
+        description='Recommended timeframes for analyzing this scenario',
+        render_kw={'class': 'form-select', 'multiple': True, 'size': '3'}
+    )
+
+    key_considerations = TextAreaField(
+        'Key Trading Considerations',
+        validators=[Optional()],
+        description='Additional important notes for trading this scenario',
+        render_kw={'rows': 4, 'placeholder': 'Important factors traders should consider when this scenario occurs...'}
+    )
+
+
 
     submit = SubmitField('Save Scenario')
 

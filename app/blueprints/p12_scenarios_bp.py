@@ -238,11 +238,21 @@ def api_get_scenarios():
             'alert_criteria': scenario.alert_criteria,
             'confirmation_criteria': scenario.confirmation_criteria,
             'entry_strategy': scenario.entry_strategy,
+            'typical_targets': scenario.typical_targets,
+            'stop_loss_guidance': scenario.stop_loss_guidance,
+            'risk_percentage': float(scenario.risk_percentage) if scenario.risk_percentage else None,
+
+            # NEW: Model recommendations from database
+            'models_to_activate': scenario.models_to_activate or [],
+            'models_to_avoid': scenario.models_to_avoid or [],
+            'risk_guidance': scenario.risk_guidance,
+            'preferred_timeframes': scenario.preferred_timeframes or [],
+            'key_considerations': scenario.key_considerations,
+
             'image_url': url_for('p12_scenarios.serve_image', scenario_id=scenario.id) if scenario.image_path else None
         })
 
     return jsonify(scenario_data)
-
 
 @p12_scenarios_bp.route('/image/<int:scenario_id>')
 @login_required

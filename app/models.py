@@ -1349,6 +1349,15 @@ class P12Scenario(db.Model):
     created_date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_date = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
+    # Trading Model Recommendations
+    models_to_activate = db.Column(db.JSON, nullable=True)  # List of model names to activate
+    models_to_avoid = db.Column(db.JSON, nullable=True)  # List of model names to avoid
+    risk_guidance = db.Column(db.Text, nullable=True)  # Risk percentage guidance text
+
+    # Additional trading guidance
+    preferred_timeframes = db.Column(db.JSON, nullable=True)  # List of preferred timeframes
+    key_considerations = db.Column(db.Text, nullable=True)  # Additional trading considerations
+
     # Usage tracking
     times_selected = db.Column(db.Integer, default=0, nullable=False)  # How often users select this
 
