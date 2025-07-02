@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+
+{% block title %}{{ model.name }} - Model Analysis{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Model Header -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-1">{{ model.name }}</h1>
+                    <p class="mb-0">Version {{ model.version or '1.0' }}
+                        {% if model.is_active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-secondary">Inactive</span>
+                        {% endif %}
+                        {% if model.is_default %}
+                            <span class="badge badge-info">System Model</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-right">
+                    <a href="{{ url_for('trading_models.models_list') }}" class="btn btn-light">
+                        <i class="fas fa-arrow-left"></i> Back to Models
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <p>{{ model.overview_logic or "Random's trading methodology model" }}</p>
+        </div>
+    </div>
+
+    {% if not has_trades %}
+    <!-- No Trades State -->
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chart-line fa-4x text-muted mb-4"></i>
+                    <h4>No Trading Data Available</h4>
+                    <p class="text-muted">This model doesn't have any trades yet. Start trading with this model to see performance analytics.</p>
+                    <a href="{{ url_for('trades.add_trade') }}?model_id={{ model.id }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add First Trade
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+    <!-- Performance Overview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3>Performance Overview</h3>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card {{ 'bg-success' if analytics.net_pnl > 0 else 'bg-danger' }} text-white">
+                <div class="card-body text-center">
+                    <h2>${{ '{:,.2f}'.format(analytics.net_pnl) }}</h2>
+                    <p class="mb-0">Net P&L</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h2>{{ analytics.strike_rate }}%</h2>
+                    <p class="mb-0">Strike Rate</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h2>{{ analytics.profit_factor }}</h2>
+                    <p class="mb-0">Profit Factor</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-secondary text-white">
+                <div class="card-body text-center">
+                    <h2>${{ '{:.2f}'.format(analytics.expected_value) }}</h2>
+                    <p class="mb-0">Expected Value</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Risk Metrics</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <td><strong>Kelly Fraction:</strong></td>
+                            <td>{{ analytics.kelly_fraction }}%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Max Drawdown:</strong></td>
+                            <td>${{ '{:,.0f}'.format(analytics.max_drawdown) }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>MFE of Equity:</strong></td>
+                            <td>${{ '{:,.2f}'.format(analytics.mfe_equity) }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ROR (Rate of Return):</strong></td>
+                            <td>{{ analytics.ror }}%</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Trading Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr>
+                            <td><strong>Total Trades:</strong></td>
+                            <td>{{ analytics.total_moves }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Trades/Day:</strong></td>
+                            <td>{{ '{:.1f}'.format(analytics.trade_frequency) }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>% Days Green:</strong></td>
+                            <td>{{ analytics.pct_days_positive }}%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Weekly Consistency:</strong></td>
+                            <td>{{ analytics.weekly_consistency }}%</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Insights -->
+    {% if model_insights %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3>Random's Methodology Insights</h3>
+        </div>
+
+        {% if model_insights.strengths %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-check-circle"></i> Strengths</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        {% for strength in model_insights.strengths %}
+                        <li>{{ strength }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if model_insights.areas_for_improvement %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Areas for Improvement</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        {% for improvement in model_insights.areas_for_improvement %}
+                        <li>{{ improvement }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if model_insights.random_methodology_notes %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-lightbulb"></i> Random's Methodology Notes</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        {% for note in model_insights.random_methodology_notes %}
+                        <li>{{ note }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if model_insights.recommended_actions %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="fas fa-tasks"></i> Recommended Actions</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        {% for action in model_insights.recommended_actions %}
+                        <li>{{ action }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Equity Curve Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Equity Curve</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="equityChart" style="height: 400px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Trades -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3>Recent Trades (Last 10)</h3>
+        </div>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Instrument</th>
+                                    <th>Direction</th>
+                                    <th>Contracts</th>
+                                    <th>P&L</th>
+                                    <th>Duration</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trade in trades %}
+                                <tr>
+                                    <td>{{ trade.trade_date.strftime('%m/%d/%Y') if trade.trade_date else 'N/A' }}</td>
+                                    <td>{{ trade.instrument if trade.instrument else 'N/A' }}</td>
+                                    <td>
+                                        <span class="badge badge-{{ 'success' if trade.direction == 'Long' else 'danger' }}">
+                                            {{ trade.direction if trade.direction else 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td>{{ trade.total_contracts_entered or 'N/A' }}</td>
+                                    <td>
+                                        {% set pnl = trade.pnl or 0 %}
+                                        <span class="text-{{ 'success' if pnl > 0 else 'danger' if pnl < 0 else 'muted' }}">
+                                            ${{ '{:,.2f}'.format(pnl) }}
+                                        </span>
+                                    </td>
+                                    <td>{{ trade.time_in_trade or 'N/A' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('trades.view_trade_detail', trade_id=trade.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if total_trades > 10 %}
+                    <div class="text-center mt-3">
+                        <p class="text-muted">Showing last 10 of {{ total_trades }} total trades for this model.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Model Configuration -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Model Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Instruments:</strong></td>
+                            <td>{{ model.instrument_applicability or "Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sessions:</strong></td>
+                            <td>{{ model.session_applicability or "Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Primary Timeframe:</strong></td>
+                            <td>{{ model.primary_chart_tf or "Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Min R:R Ratio:</strong></td>
+                            <td>{{ model.min_risk_reward_ratio or "Not specified" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Max Risk/Trade:</strong></td>
+                            <td>{{ model.model_max_loss_per_trade or "Not specified" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Entry & Exit Strategy</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Entry Triggers:</strong>
+                        <p class="text-muted small">{{ model.entry_trigger_description or "Not specified" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Stop Loss Strategy:</strong>
+                        <p class="text-muted small">{{ model.stop_loss_strategy or "Not specified" }}</p>
+                    </div>
+                    <div class="mb-0">
+                        <strong>Take Profit Strategy:</strong>
+                        <p class="text-muted small">{{ model.take_profit_strategy or "Not specified" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backtesting Data Placeholder -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Backtesting Analysis</h5>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                    <h5>Backtesting Module</h5>
+                    <p class="text-muted mb-4">
+                        This section will contain comprehensive backtesting analysis based on Random's methodology,
+                        including historical performance across different market conditions, P12 scenarios, and session behaviors.
+                    </p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Coming Soon:</strong> Historical analysis, Monte Carlo simulations, and scenario-based performance projections.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Equity Curve Chart
+    {% if has_trades and equity_data %}
+    const equityData = {{ equity_data|safe }};
+
+    const ctx = document.getElementById('equityChart').getContext('2d');
+    const equityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: equityData.map(d => d.trade_number),
+            datasets: [{
+                label: 'Running P&L',
+                data: equityData.map(d => d.running_pnl),
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: equityData.map(d => d.pnl >= 0 ? '#28a745' : '#dc3545'),
+                pointBorderColor: equityData.map(d => d.pnl >= 0 ? '#28a745' : '#dc3545'),
+                pointRadius: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const idx = context[0].dataIndex;
+                            return `Trade #${equityData[idx].trade_number} - ${equityData[idx].date}`;
+                        },
+                        label: function(context) {
+                            const idx = context.dataIndex;
+                            return [
+                                `Running P&L: $${context.parsed.y.toFixed(2)}`,
+                                `Trade P&L: $${equityData[idx].pnl}`,
+                                `Instrument: ${equityData[idx].instrument}`
+                            ];
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Trade Number'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Cumulative P&L ($)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(0);
+                        }
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}

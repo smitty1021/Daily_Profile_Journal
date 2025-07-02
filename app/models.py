@@ -12,6 +12,7 @@ from sqlalchemy import ForeignKey
 from app.extensions import db
 from enum import Enum
 
+
 user_default_tags = db.Table('user_default_tags',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
@@ -916,6 +917,25 @@ class Trade(db.Model):
 
     def __repr__(self):
         return f"<Trade {self.id} {self.instrument} on {self.trade_date} (User: {self.user_id})>"
+
+    @property
+    def entry_timestamp(self):
+        """
+        Returns the full timestamp of the first entry for a trade.
+        Combines the trade_date with the earliest entry_time.
+        """
+        if not self.entries.first():
+            return None  # Or return a default datetime
+
+        # Get the first entry, ordered by time
+        first_entry = self.entries.order_by(EntryPoint.entry_time).first()
+
+        if not first_entry or not first_entry.entry_time:
+            return None  # Or handle as needed
+
+        # Combine the trade date with the entry time
+        from datetime import datetime
+        return datetime.combine(self.trade_date, first_entry.entry_time)
 
 
 class EntryPoint(db.Model):
