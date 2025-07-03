@@ -56,7 +56,8 @@ def view_model_detail(model_id):
                                model=model,
                                trades=[],
                                analytics={},
-                               has_trades=False)
+                               has_trades=False,
+                               equity_data_json='{"labels": [], "data": []}')  # ← FIXED: Always provide JSON
 
     # Calculate comprehensive analytics
     risk_params = get_risk_parameters(current_user.id)
@@ -67,6 +68,14 @@ def view_model_detail(model_id):
     equity_data = prepare_equity_curve_data(trades)
     print(f"Debug: Prepared equity curve data: {equity_data}")
 
+    # ← FIXED: Ensure proper JSON serialization with error handling
+    try:
+        equity_data_json = json.dumps(equity_data, default=str)
+        print(f"Debug: JSON serialized successfully: {len(equity_data_json)} chars")
+    except Exception as e:
+        print(f"Debug: JSON serialization failed: {e}")
+        equity_data_json = '{"labels": [], "data": []}'
+
     # Get model-specific insights based on Random's methodology
     model_insights = generate_model_insights(model, analytics)
 
@@ -75,8 +84,8 @@ def view_model_detail(model_id):
                            trades=[],
                            total_trades=len(trades),
                            analytics=analytics,
-                           equity_data=equity_data,  # ← FIXED: Pass as dict, not JSON string
-                           equity_data_json=json.dumps(equity_data),  # ← NEW: Add JSON version for JavaScript
+                           equity_data=equity_data,  # ← Keep for template access
+                           equity_data_json=equity_data_json,  # ← FIXED: Proper JSON string
                            model_insights=model_insights,
                            has_trades=True)
 
@@ -467,10 +476,12 @@ def prepare_equity_curve_data(trades):
             # Fallback to trade_date if entry_timestamp is None
             entry_ts = datetime.combine(trade.trade_date, datetime.min.time())
 
-        # Get P&L value
-        pnl = float(trade.pnl or 0)
-        if pnl == 0 and hasattr(trade, 'pnl') and trade.pnl is not None:
+        # Get P&L value - FIXED: Better P&L handling
+        pnl = 0.0
+        if hasattr(trade, 'pnl') and trade.pnl is not None:
             pnl = float(trade.pnl)
+        elif hasattr(trade, 'realized_pnl') and trade.realized_pnl is not None:
+            pnl = float(trade.realized_pnl)
 
         print(f"Debug: Trade {i + 1} - ID: {trade.id}, Date: {entry_ts}, P&L: {pnl}")
         sorted_trades.append((trade, entry_ts or datetime.min, pnl))
@@ -481,14 +492,14 @@ def prepare_equity_curve_data(trades):
 
     labels = []
     equity_data = []
-    running_total = 0
+    running_total = 0.0
 
     for i, (trade, timestamp, pnl) in enumerate(sorted_trades):
         running_total += pnl
 
-        # Format date for chart
+        # Format date for chart - FIXED: More robust date formatting
         if timestamp and timestamp != datetime.min:
-            date_str = timestamp.strftime('%m/%d/%Y')  # More readable format
+            date_str = timestamp.strftime('%m/%d/%Y')
         elif trade.trade_date:
             date_str = trade.trade_date.strftime('%m/%d/%Y')
         else:
@@ -504,8 +515,7 @@ def prepare_equity_curve_data(trades):
     }
 
     print(f"Debug: Final equity curve data: {len(labels)} points")
-    print(f"Debug: Labels sample: {labels[:3]} ... {labels[-3:] if len(labels) > 3 else []}")
-    print(f"Debug: Data sample: {equity_data[:3]} ... {equity_data[-3:] if len(equity_data) > 3 else []}")
+    print(f"Debug: Data range: ${min(equity_data):.2f} to ${max(equity_data):.2f}")
 
     return result
 
@@ -712,89 +722,3 @@ def delete_trading_model(model_id):
     return redirect(url_for('trading_models.models_list'))
 
 
-#<!-- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX -->
-#<!-- DELETE THIS DEBUGGIN SCRIPT -->
-
-@bp.route('/debug/<int:model_id>')
-@login_required
-def debug_model_data(model_id):
-    """Debug route to check model data"""
-    model = TradingModel.query.get_or_404(model_id)
-    trades = Trade.query.filter_by(
-        trading_model_id=model_id,
-        user_id=current_user.id
-    ).all()
-
-    debug_data = {
-        'model_name': model.name,
-        'total_trades': len(trades),
-        'trades_data': []
-    }
-
-    for trade in trades[:5]:  # First 5 trades for debugging
-        debug_data['trades_data'].append({
-            'id': trade.id,
-            'trade_date': str(trade.trade_date) if trade.trade_date else None,
-            'entry_timestamp': str(trade.entry_timestamp) if trade.entry_timestamp else None,
-            'realized_pnl': float(trade.pnl) if trade.pnl else None,
-            'pnl': float(trade.pnl) if hasattr(trade, 'pnl') and trade.pnl else None,
-        })
-
-    return jsonify(debug_data)
-
-
-@bp.route('/chart-test')
-@login_required
-def chart_test():
-    """Test route to isolate Chart.js issues"""
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Chart Test</title>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    </head>
-    <body>
-        <h1>Chart.js Test</h1>
-        <div style="width: 600px; height: 400px;">
-            <canvas id="testChart"></canvas>
-        </div>
-
-        <script>
-            console.log('Chart.js version:', Chart.version);
-
-            const ctx = document.getElementById('testChart');
-            console.log('Canvas:', ctx);
-
-            const testData = {
-                labels: ['Aug 2015', 'Sep 2015', 'Jan 2019', 'Dec 2019', 'Aug 2020', 'Feb 2021', 'Sep 2021', 'Sep 2021', 'May 2022', 'Jul 2022', 'Jan 2023', 'Feb 2023', 'Apr 2024', 'Mar 2025', 'Jun 2025'],
-                datasets: [{
-                    label: 'P&L',
-                    data: [-2692.96, -4826.99, -4256.99, -3826.99, -6295.19, -4395.19, -1595.19, 2029.81, 4654.81, 4954.81, 7034.81, 8534.81, 8398.26, 8260.02, 7696.5],
-                    borderColor: '#28a745',
-                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                    borderWidth: 2,
-                    fill: true
-                }]
-            };
-
-            try {
-                const chart = new Chart(ctx, {
-                    type: 'line',
-                    data: testData,
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false
-                    }
-                });
-                console.log('Chart created:', chart);
-            } catch (e) {
-                console.error('Chart error:', e);
-                document.body.innerHTML += '<p style="color: red;">Chart error: ' + e.message + '</p>';
-            }
-        </script>
-    </body>
-    </html>
-    """
-
-#<!-- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX -->

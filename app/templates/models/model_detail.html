@@ -352,64 +352,10 @@
                         style="display: block; box-sizing: border-box; height: 300px; width: 100%;"
                     ></canvas>
                 </div>
-                <!-- Debug info -->
-                <div class="mt-2 small text-muted">
-                    <strong>Status:</strong> <span id="chartStatus">Initializing...</span>
-                    <br><strong>Data points:</strong> {{ analytics.get('total_trades', 0) }} trades
-                    {% if equity_data and equity_data.data %}
-                    <br><strong>P&L Range:</strong> ${{ "%.2f"|format(equity_data.data|min) }} to ${{ "%.2f"|format(equity_data.data|max) }}
-                    {% endif %}
-                </div>
+
             </div>
         </div>
     </div>
-
-
-<!-- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX -->
-<!-- DELETE THIS DEBUGGIN SCRIPT -->
-{% if has_trades %}
-<!-- DEBUG SECTION - Remove after fixing -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card border-warning">
-            <div class="card-header bg-warning text-dark">
-                <h6 class="mb-0"><i class="fas fa-bug me-1"></i>Debug Information (Remove after fixing)</h6>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Equity Data Raw:</h6>
-                        <pre class="bg-light p-2 small">{{ equity_data }}</pre>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Analytics Sample:</h6>
-                        <ul class="small">
-                            <li>Total Trades: {{ analytics.get('total_trades', 'N/A') }}</li>
-                            <li>Net P&L: {{ analytics.get('net_pnl', 'N/A') }}</li>
-                            <li>Has Trades: {{ has_trades }}</li>
-                            <li>Model ID: {{ model.id }}</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <strong>JavaScript Console Check:</strong>
-                    <p class="small text-muted">
-                        Open browser developer tools (F12) → Console tab to see detailed equity curve debug messages.
-                        Look for messages starting with "Debug:" or "Equity Curve:".
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-<!-- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX -->
-
-
-
-
-
-
 
     <!-- Model Insights -->
     {% if model_insights %}
