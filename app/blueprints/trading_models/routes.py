@@ -42,13 +42,13 @@ def view_model_detail(model_id):
     ).first_or_404()
 
     # Get all trades for this model (only user's trades)
-    # Since entry_timestamp is a property, we'll order by trade_date instead
     trades_query = Trade.query.filter_by(
         trading_model_id=model_id,
         user_id=current_user.id
-    ).order_by(Trade.trade_date.desc(), Trade.id.desc())  # Order by trade_date, then by ID
+    ).order_by(Trade.trade_date.desc(), Trade.id.desc())
 
     trades = trades_query.all()
+    print(f"Debug: Found {len(trades)} trades for model {model.name}")
 
     # If no trades, show empty state
     if not trades:
@@ -61,9 +61,11 @@ def view_model_detail(model_id):
     # Calculate comprehensive analytics
     risk_params = get_risk_parameters(current_user.id)
     analytics = calculate_model_analytics(trades, risk_params)
+    print(f"Debug: Calculated analytics with {len(analytics)} metrics")
 
     # Prepare equity curve data
     equity_data = prepare_equity_curve_data(trades)
+    print(f"Debug: Prepared equity curve data: {equity_data}")
 
     # Get model-specific insights based on Random's methodology
     model_insights = generate_model_insights(model, analytics)
@@ -73,7 +75,8 @@ def view_model_detail(model_id):
                            trades=[],
                            total_trades=len(trades),
                            analytics=analytics,
-                           equity_data=json.dumps(equity_data),
+                           equity_data=equity_data,  # ← FIXED: Pass as dict, not JSON string
+                           equity_data_json=json.dumps(equity_data),  # ← NEW: Add JSON version for JavaScript
                            model_insights=model_insights,
                            has_trades=True)
 
@@ -81,6 +84,7 @@ def view_model_detail(model_id):
 def calculate_model_analytics(trades, risk_params=None):
     """
     Calculate comprehensive trading model analytics based on Random's methodology.
+    Includes all requested metrics for complete performance analysis.
 
     Args:
         trades: List of trade objects
@@ -101,10 +105,15 @@ def calculate_model_analytics(trades, risk_params=None):
     win_amounts = []
     loss_amounts = []
     trade_dates = []
+    daily_pnls = defaultdict(float)  # For daily analysis
 
     for trade in trades:
         pnl = float(trade.pnl or 0)
         pnl_values.append(pnl)
+
+        # Track daily P&L
+        if trade.trade_date:
+            daily_pnls[trade.trade_date] += pnl
 
         # Calculate R-multiple (assuming risk_per_trade as 1R)
         risk_amount = risk_params['risk_per_trade']
@@ -118,6 +127,8 @@ def calculate_model_analytics(trades, risk_params=None):
 
         if trade.entry_timestamp:
             trade_dates.append(trade.entry_timestamp)
+        elif trade.trade_date:
+            trade_dates.append(datetime.combine(trade.trade_date, datetime.min.time()))
 
     # Basic Performance Metrics
     total_trades = len(trades)
@@ -129,28 +140,40 @@ def calculate_model_analytics(trades, risk_params=None):
     gross_profit = sum(win_amounts)
     gross_loss = sum(loss_amounts)
 
-    # Strike Rate and Profit Factor
-    strike_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
+    # Win/Loss Rates
+    win_rate = (winning_trades / total_trades) if total_trades > 0 else 0
+    loss_rate = (losing_trades / total_trades) if total_trades > 0 else 0
+    strike_rate = win_rate * 100
+
+    # Profit Factor
     profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else float('inf') if gross_profit > 0 else 0
 
-    # Expected Value and Medians
+    # Expected Value and Averages
     expected_value = statistics.mean(pnl_values) if pnl_values else 0
     median_profit = statistics.median(pnl_values) if pnl_values else 0
     average_profit = expected_value
+
+    # Win/Loss Analysis
+    avg_win = statistics.mean(win_amounts) if win_amounts else 0
+    avg_loss = statistics.mean(loss_amounts) if loss_amounts else 0
+    largest_win = max(win_amounts) if win_amounts else 0
+    largest_loss = max(loss_amounts) if loss_amounts else 0
 
     # R-Multiple Analysis
     total_r = sum(r_multiples)
     avg_r = statistics.mean(r_multiples) if r_multiples else 0
     avg_win_r = statistics.mean([r for r in r_multiples if r > 0]) if any(r > 0 for r in r_multiples) else 0
     avg_loss_r = statistics.mean([r for r in r_multiples if r < 0]) if any(r < 0 for r in r_multiples) else 0
+    largest_win_r = max(r_multiples) if r_multiples else 0
+    largest_loss_r = min(r_multiples) if r_multiples else 0
+
+    # Standard Deviation
+    standard_deviation = statistics.stdev(r_multiples) if len(r_multiples) > 1 else 0
 
     # Kelly Fraction Calculation
-    if gross_loss > 0 and strike_rate > 0:
-        win_rate = strike_rate / 100
-        avg_win = gross_profit / winning_trades if winning_trades > 0 else 0
-        avg_loss = gross_loss / losing_trades if losing_trades > 0 else 0
+    if gross_loss > 0 and win_rate > 0:
         if avg_loss > 0:
-            kelly_fraction = (win_rate * avg_win - (1 - win_rate) * avg_loss) / avg_win * 100
+            kelly_fraction = (win_rate * avg_win - loss_rate * avg_loss) / avg_win * 100
         else:
             kelly_fraction = 0
     else:
@@ -171,6 +194,9 @@ def calculate_model_analytics(trades, risk_params=None):
     peak = 0
     drawdowns = []
     equity_curve = []
+    drawdown_durations = []
+    current_drawdown_duration = 0
+    in_drawdown = False
 
     for pnl in pnl_values:
         running_total += pnl
@@ -178,11 +204,30 @@ def calculate_model_analytics(trades, risk_params=None):
 
         if running_total > peak:
             peak = running_total
+            if in_drawdown:
+                drawdown_durations.append(current_drawdown_duration)
+                current_drawdown_duration = 0
+                in_drawdown = False
 
         drawdown = peak - running_total
         drawdowns.append(drawdown)
 
+        if drawdown > 0:
+            if not in_drawdown:
+                in_drawdown = True
+                current_drawdown_duration = 1
+            else:
+                current_drawdown_duration += 1
+
+    # Add final drawdown duration if still in drawdown
+    if in_drawdown:
+        drawdown_durations.append(current_drawdown_duration)
+
     max_drawdown = max(drawdowns) if drawdowns else 0
+    median_drawdown = statistics.median([d for d in drawdowns if d > 0]) if any(d > 0 for d in drawdowns) else 0
+    avg_drawdown = statistics.mean([d for d in drawdowns if d > 0]) if any(d > 0 for d in drawdowns) else 0
+    longest_drawdown_duration = max(drawdown_durations) if drawdown_durations else 0
+    median_drawdown_duration = statistics.median(drawdown_durations) if drawdown_durations else 0
 
     # Streak Analysis
     current_streak = 0
@@ -232,28 +277,32 @@ def calculate_model_analytics(trades, risk_params=None):
     median_expense_streak = statistics.median(loss_streaks) if loss_streaks else 0
 
     # Time-based metrics
+    trading_period_days = 0
+    daily_ev = 0
+    trades_per_day = 0
+    avg_r_per_day = 0
+    avg_r_per_week = 0
+    avg_r_per_month = 0
+    avg_annual_r = 0
+    percent_days_positive = 0
+
     if trade_dates and len(trade_dates) > 1:
         first_trade = min(trade_dates)
         last_trade = max(trade_dates)
-        trading_period_days = (last_trade - first_trade).days
+        trading_period_days = (last_trade - first_trade).days + 1
 
         if trading_period_days > 0:
-            daily_ev = (net_pnl / trading_period_days) if trading_period_days > 0 else 0
+            daily_ev = net_pnl / trading_period_days
             trades_per_day = total_trades / trading_period_days
+            avg_r_per_day = total_r / trading_period_days
+            avg_r_per_week = avg_r_per_day * 7
+            avg_r_per_month = avg_r_per_day * 30
+            avg_annual_r = avg_r_per_day * 252
 
-            # Monthly and yearly projections
-            avg_r_per_month = avg_r * 30 if trades_per_day > 0 else 0
-            avg_annual_r = avg_r * 252 if trades_per_day > 0 else 0
-        else:
-            daily_ev = 0
-            trades_per_day = 0
-            avg_r_per_month = 0
-            avg_annual_r = 0
-    else:
-        daily_ev = 0
-        trades_per_day = 0
-        avg_r_per_month = 0
-        avg_annual_r = 0
+        # Calculate % days positive
+        positive_days = len([pnl for pnl in daily_pnls.values() if pnl > 0])
+        total_trading_days = len(daily_pnls)
+        percent_days_positive = (positive_days / total_trading_days * 100) if total_trading_days > 0 else 0
 
     # Median EV (Expected Value)
     median_ev = median_profit
@@ -262,12 +311,36 @@ def calculate_model_analytics(trades, risk_params=None):
     if len(pnl_values) > 2:
         skewness = calculate_skewness(pnl_values)
         kurtosis = calculate_kurtosis(pnl_values)
+        skewness_returns = calculate_skewness(r_multiples) if len(r_multiples) > 2 else 0
     else:
         skewness = 0
         kurtosis = 0
+        skewness_returns = 0
 
     # Expectancy (alternative calculation)
-    expectancy = (avg_win_r * strike_rate / 100) - (abs(avg_loss_r) * (1 - strike_rate / 100))
+    expectancy = (avg_win_r * win_rate) - (abs(avg_loss_r) * loss_rate)
+
+    # Return on Investment (ROI)
+    account_size = risk_params.get('account_size', 10000)
+    roi = (net_pnl / account_size * 100) if account_size > 0 else 0
+
+    # Risk-Reward Ratio
+    defined_risk_reward = abs(avg_win_r / avg_loss_r) if avg_loss_r != 0 else 0
+
+    # MFE (Maximum Favorable Excursion) - simplified calculation
+    mfe_equity = max(equity_curve) if equity_curve else 0
+
+    # Calculate weekly MFE (approximation)
+    avg_weekly_mfe = mfe_equity / (trading_period_days / 7) if trading_period_days > 7 else mfe_equity
+
+    # Quarterly RR (approximation)
+    quarterly_rr = avg_annual_r / 4 if avg_annual_r else 0
+
+    # Max losing trades in sequence
+    max_losing_trades = max_loss_streak
+
+    # Average Loss with Constant Risk
+    avg_loss_constant_risk = avg_loss_r * risk_params.get('risk_per_trade', 100)
 
     return {
         # Basic Performance
@@ -279,16 +352,25 @@ def calculate_model_analytics(trades, risk_params=None):
         'gross_profit': gross_profit,
         'gross_loss': gross_loss,
         'strike_rate': round(strike_rate, 1),
+        'win_rate': round(win_rate * 100, 1),
+        'loss_rate': round(loss_rate * 100, 1),
         'profit_factor': round(profit_factor, 2),
         'expected_value': round(expected_value, 2),
         'median_profit': round(median_profit, 2),
         'average_profit': round(average_profit, 2),
+        'avg_win': round(avg_win, 2),
+        'avg_loss': round(avg_loss, 2),
+        'largest_win': round(largest_win, 2),
+        'largest_loss': round(largest_loss, 2),
 
         # R-Multiple Analysis
         'total_r': round(total_r, 2),
         'avg_r': round(avg_r, 2),
         'avg_win_r': round(avg_win_r, 2),
         'avg_loss_r': round(avg_loss_r, 2),
+        'largest_win_r': round(largest_win_r, 2),
+        'largest_loss_r': round(largest_loss_r, 2),
+        'standard_deviation': round(standard_deviation, 2),
 
         # Advanced Analytics
         'sqn': round(sqn, 2),
@@ -297,24 +379,42 @@ def calculate_model_analytics(trades, risk_params=None):
         'expectancy': round(expectancy, 2),
         'skewness': round(skewness, 2),
         'kurtosis': round(kurtosis, 2),
+        'skewness_returns': round(skewness_returns, 2),
+        'roi': round(roi, 2),
+        'defined_risk_reward': round(defined_risk_reward, 2),
 
         # Risk & Drawdown
         'max_drawdown': round(max_drawdown, 2),
+        'median_drawdown': round(median_drawdown, 2),
+        'avg_drawdown': round(avg_drawdown, 2),
+        'longest_drawdown_duration': longest_drawdown_duration,
+        'median_drawdown_duration': median_drawdown_duration,
         'max_consecutive_wins': max_win_streak,
         'max_consecutive_losses': max_loss_streak,
+        'max_losing_trades': max_losing_trades,
         'median_profit_streak': median_profit_streak,
         'median_expense_streak': median_expense_streak,
 
         # Time-based
+        'trading_period_days': trading_period_days,
         'daily_ev': round(daily_ev, 2),
         'median_ev': round(median_ev, 2),
         'trades_per_day': round(trades_per_day, 2),
+        'avg_r_per_day': round(avg_r_per_day, 2),
+        'avg_r_per_week': round(avg_r_per_week, 2),
         'avg_r_per_month': round(avg_r_per_month, 2),
         'avg_annual_r': round(avg_annual_r, 2),
+        'percent_days_positive': round(percent_days_positive, 1),
+        'mfe_equity': round(mfe_equity, 2),
+        'avg_weekly_mfe': round(avg_weekly_mfe, 2),
+        'quarterly_rr': round(quarterly_rr, 2),
 
         # Additional metrics for template compatibility
         'total_profit_moves': winning_trades,
         'total_expense_moves': losing_trades,
+        'total_moves': total_trades,
+        'account_size': account_size,
+        'avg_loss_constant_risk': round(avg_loss_constant_risk, 2),
     }
 
 
@@ -351,43 +451,63 @@ def calculate_kurtosis(data):
 
 
 def prepare_equity_curve_data(trades):
-    """Prepare equity curve data for Chart.js visualization."""
+    """Prepare equity curve data for Chart.js visualization with enhanced debugging."""
+    print(f"Debug: prepare_equity_curve_data called with {len(trades)} trades")
+
     if not trades:
+        print("Debug: No trades provided")
         return {'labels': [], 'data': []}
 
     # Sort trades by entry_timestamp (handling the property correctly)
     sorted_trades = []
-    for trade in trades:
+    for i, trade in enumerate(trades):
         # Get the entry_timestamp property value and add it as a sort key
         entry_ts = trade.entry_timestamp
-        sorted_trades.append((trade, entry_ts or datetime.min))
+        if not entry_ts and trade.trade_date:
+            # Fallback to trade_date if entry_timestamp is None
+            entry_ts = datetime.combine(trade.trade_date, datetime.min.time())
+
+        # Get P&L value
+        pnl = float(trade.pnl or 0)
+        if pnl == 0 and hasattr(trade, 'pnl') and trade.pnl is not None:
+            pnl = float(trade.pnl)
+
+        print(f"Debug: Trade {i + 1} - ID: {trade.id}, Date: {entry_ts}, P&L: {pnl}")
+        sorted_trades.append((trade, entry_ts or datetime.min, pnl))
 
     # Sort by the timestamp
     sorted_trades.sort(key=lambda x: x[1])
+    print(f"Debug: Sorted {len(sorted_trades)} trades")
 
     labels = []
     equity_data = []
     running_total = 0
 
-    for trade, _ in sorted_trades:
-        pnl = float(trade.pnl or 0)
+    for i, (trade, timestamp, pnl) in enumerate(sorted_trades):
         running_total += pnl
 
         # Format date for chart
-        if trade.entry_timestamp:
-            date_str = trade.entry_timestamp.strftime('%Y-%m-%d')
+        if timestamp and timestamp != datetime.min:
+            date_str = timestamp.strftime('%m/%d/%Y')  # More readable format
         elif trade.trade_date:
-            date_str = trade.trade_date.strftime('%Y-%m-%d')
+            date_str = trade.trade_date.strftime('%m/%d/%Y')
         else:
-            date_str = 'Unknown'
+            date_str = f'Trade {i + 1}'
 
         labels.append(date_str)
         equity_data.append(round(running_total, 2))
+        print(f"Debug: Point {i + 1} - {date_str}: ${running_total:.2f}")
 
-    return {
+    result = {
         'labels': labels,
         'data': equity_data
     }
+
+    print(f"Debug: Final equity curve data: {len(labels)} points")
+    print(f"Debug: Labels sample: {labels[:3]} ... {labels[-3:] if len(labels) > 3 else []}")
+    print(f"Debug: Data sample: {equity_data[:3]} ... {equity_data[-3:] if len(equity_data) > 3 else []}")
+
+    return result
 
 
 def generate_model_insights(model, analytics):
@@ -590,3 +710,91 @@ def delete_trading_model(model_id):
         flash(f'Error deleting model: {str(e)}', 'danger')
 
     return redirect(url_for('trading_models.models_list'))
+
+
+#<!-- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX -->
+#<!-- DELETE THIS DEBUGGIN SCRIPT -->
+
+@bp.route('/debug/<int:model_id>')
+@login_required
+def debug_model_data(model_id):
+    """Debug route to check model data"""
+    model = TradingModel.query.get_or_404(model_id)
+    trades = Trade.query.filter_by(
+        trading_model_id=model_id,
+        user_id=current_user.id
+    ).all()
+
+    debug_data = {
+        'model_name': model.name,
+        'total_trades': len(trades),
+        'trades_data': []
+    }
+
+    for trade in trades[:5]:  # First 5 trades for debugging
+        debug_data['trades_data'].append({
+            'id': trade.id,
+            'trade_date': str(trade.trade_date) if trade.trade_date else None,
+            'entry_timestamp': str(trade.entry_timestamp) if trade.entry_timestamp else None,
+            'realized_pnl': float(trade.pnl) if trade.pnl else None,
+            'pnl': float(trade.pnl) if hasattr(trade, 'pnl') and trade.pnl else None,
+        })
+
+    return jsonify(debug_data)
+
+
+@bp.route('/chart-test')
+@login_required
+def chart_test():
+    """Test route to isolate Chart.js issues"""
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Chart Test</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    </head>
+    <body>
+        <h1>Chart.js Test</h1>
+        <div style="width: 600px; height: 400px;">
+            <canvas id="testChart"></canvas>
+        </div>
+
+        <script>
+            console.log('Chart.js version:', Chart.version);
+
+            const ctx = document.getElementById('testChart');
+            console.log('Canvas:', ctx);
+
+            const testData = {
+                labels: ['Aug 2015', 'Sep 2015', 'Jan 2019', 'Dec 2019', 'Aug 2020', 'Feb 2021', 'Sep 2021', 'Sep 2021', 'May 2022', 'Jul 2022', 'Jan 2023', 'Feb 2023', 'Apr 2024', 'Mar 2025', 'Jun 2025'],
+                datasets: [{
+                    label: 'P&L',
+                    data: [-2692.96, -4826.99, -4256.99, -3826.99, -6295.19, -4395.19, -1595.19, 2029.81, 4654.81, 4954.81, 7034.81, 8534.81, 8398.26, 8260.02, 7696.5],
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    borderWidth: 2,
+                    fill: true
+                }]
+            };
+
+            try {
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: testData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+                console.log('Chart created:', chart);
+            } catch (e) {
+                console.error('Chart error:', e);
+                document.body.innerHTML += '<p style="color: red;">Chart error: ' + e.message + '</p>';
+            }
+        </script>
+    </body>
+    </html>
+    """
+
+#<!-- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX -->

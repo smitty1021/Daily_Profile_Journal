@@ -32,6 +32,39 @@
     {% endif %}
 {%- endmacro %}
 
+{% macro metric_card(value, label, type='neutral', format='number', decimals=2) -%}
+    {% if type == 'strike_rate' %}
+        {% set color_class = 'positive' if value > 50 else 'negative' if value < 40 else 'neutral' %}
+    {% elif type == 'profit_factor' %}
+        {% set color_class = 'positive' if value > 1.5 else 'negative' if value < 1.2 else 'neutral' %}
+    {% elif type == 'kelly' %}
+        {% set color_class = 'positive' if value > 0 and value < 25 else 'negative' if value < 0 or value > 30 else 'neutral' %}
+    {% elif type == 'sqn' %}
+        {% set color_class = 'positive' if value > 1.6 else 'negative' if value < 1.0 else 'neutral' %}
+    {% elif type == 'expectancy' %}
+        {% set color_class = 'positive' if value > 0 else 'negative' if value < 0 else 'neutral' %}
+    {% elif type == 'r_multiple' %}
+        {% set color_class = 'positive' if value > 0 else 'negative' if value < 0 else 'neutral' %}
+    {% elif type == 'pnl' %}
+        {% set color_class = 'positive' if value > 0 else 'negative' if value < 0 else 'neutral' %}
+    {% else %}
+        {% set color_class = 'neutral' %}
+    {% endif %}
+
+    <div class="metric-card {{ color_class }}">
+        <div class="metric-value">
+            {% if format == 'currency' %}
+                {{ safe_currency(value) }}
+            {% elif format == 'percent' %}
+                {{ safe_percent(value) }}
+            {% else %}
+                {{ safe_number(value, decimals) }}
+            {% endif %}
+        </div>
+        <div class="metric-label">{{ label }}</div>
+    </div>
+{%- endmacro %}
+
 {% block title %}{{ model.name }} - Model Analytics{% endblock %}
 
 {% block page_header %}
@@ -45,6 +78,9 @@
             </p>
         </div>
         <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#metricsExplanationModal">
+                <i class="fas fa-question-circle me-1"></i> Explain Metrics
+            </button>
             <a href="{{ url_for('trading_models.edit_trading_model', model_id=model.id) }}" class="btn btn-outline-primary">
                 <i class="fas fa-edit me-1"></i> Edit Model
             </a>
@@ -70,8 +106,81 @@
             </div>
         </div>
     </div>
-    {% else %}
+    {% endif %}
 
+    <!-- Model Configuration - Moved to Top -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0"><i class="fas fa-cog me-1"></i>Model Configuration & Strategy</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-brain me-2"></i>Logic & Strategy</h6>
+                            <p class="text-muted mb-2">{{ model.overview_logic or 'No overview logic defined' }}</p>
+
+                            <h6><i class="fas fa-clock me-2"></i>Timeframes</h6>
+                            <ul class="list-unstyled mb-3">
+                                <li><strong>Primary Chart:</strong> {{ model.primary_chart_tf or 'Not specified' }}</li>
+                                <li><strong>Execution Chart:</strong> {{ model.execution_chart_tf or 'Not specified' }}</li>
+                                <li><strong>Context Chart:</strong> {{ model.context_chart_tf or 'Not specified' }}</li>
+                            </ul>
+
+                            <h6><i class="fas fa-chart-line me-2"></i>Technical Analysis</h6>
+                            <ul class="list-unstyled mb-3">
+                                <li><strong>Indicators:</strong> {{ model.technical_indicators_used or 'Not specified' }}</li>
+                                <li><strong>Patterns:</strong> {{ model.chart_patterns_used or 'Not specified' }}</li>
+                                <li><strong>Price Action:</strong> {{ model.price_action_signals or 'Not specified' }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-shield-alt me-2"></i>Risk Management</h6>
+                            <ul class="list-unstyled mb-3">
+                                <li><strong>Min R:R Ratio:</strong> {{ model.min_risk_reward_ratio or 'Not specified' }}</li>
+                                <li><strong>Stop Loss:</strong> {{ model.stop_loss_strategy or 'Not specified' }}</li>
+                                <li><strong>Take Profit:</strong> {{ model.take_profit_strategy or 'Not specified' }}</li>
+                                <li><strong>Position Size:</strong> {{ model.position_sizing_rules or 'Not specified' }}</li>
+                                <li><strong>Max Loss/Trade:</strong> {{ model.model_max_loss_per_trade or 'Not specified' }}</li>
+                                <li><strong>Max Daily Loss:</strong> {{ model.model_max_daily_loss or 'Not specified' }}</li>
+                            </ul>
+
+                            <h6><i class="fas fa-globe me-2"></i>Market Context</h6>
+                            <ul class="list-unstyled mb-3">
+                                <li><strong>Instruments:</strong> {{ model.instrument_applicability or 'Not specified' }}</li>
+                                <li><strong>Sessions:</strong> {{ model.session_applicability or 'Not specified' }}</li>
+                                <li><strong>Optimal Conditions:</strong> {{ model.optimal_market_conditions or 'Not specified' }}</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fas fa-play me-2"></i>Entry/Exit Strategy</h6>
+                            <ul class="list-unstyled mb-3">
+                                <li><strong>Entry Trigger:</strong> {{ model.entry_trigger_description or 'Not specified' }}</li>
+                                <li><strong>Key Levels:</strong> {{ model.key_levels_identification or 'Not specified' }}</li>
+                                <li><strong>Volume Analysis:</strong> {{ model.volume_analysis_notes or 'Not specified' }}</li>
+                            </ul>
+
+                            <h6><i class="fas fa-tools me-2"></i>Trade Management</h6>
+                            <ul class="list-unstyled mb-3">
+                                <li><strong>Breakeven Rules:</strong> {{ model.trade_management_breakeven_rules or 'Not specified' }}</li>
+                                <li><strong>Scaling Rules:</strong> {{ model.scaling_in_out_rules or 'Not specified' }}</li>
+                                <li><strong>Trailing Stop:</strong> {{ model.trade_management_trailing_stop_rules or 'Not specified' }}</li>
+                            </ul>
+
+                            <h6><i class="fas fa-star me-2"></i>Assessment</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Strengths:</strong> {{ model.strengths or 'Not specified' }}</li>
+                                <li><strong>Weaknesses:</strong> {{ model.weaknesses or 'Not specified' }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if has_trades %}
     <!-- Performance Analytics Dashboard -->
     <div class="row mb-4 model-analytics-dashboard">
         <!-- Key Performance Metrics -->
@@ -83,40 +192,22 @@
                 <div class="card-body p-3">
                     <div class="row g-2 text-center">
                         <div class="col-6">
-                            <div class="metric-card {{ 'positive' if analytics.get('net_pnl', 0) > 0 else 'negative' if analytics.get('net_pnl', 0) < 0 else 'neutral' }}">
-                                <div class="metric-value">{{ safe_currency(analytics.get('net_pnl')) }}</div>
-                                <div class="metric-label">Net P&L</div>
-                            </div>
+                            {{ metric_card(analytics.get('net_pnl'), 'Net P&L', 'pnl', 'currency') }}
                         </div>
                         <div class="col-6">
-                            <div class="metric-card">
-                                <div class="metric-value">{{ safe_percent(analytics.get('strike_rate')) }}</div>
-                                <div class="metric-label">Strike Rate</div>
-                            </div>
+                            {{ metric_card(analytics.get('strike_rate'), 'Strike Rate', 'strike_rate', 'percent') }}
                         </div>
                         <div class="col-6">
-                            <div class="metric-card">
-                                <div class="metric-value">{{ safe_number(analytics.get('profit_factor')) }}</div>
-                                <div class="metric-label">Profit Factor</div>
-                            </div>
+                            {{ metric_card(analytics.get('profit_factor'), 'Profit Factor', 'profit_factor') }}
                         </div>
                         <div class="col-6">
-                            <div class="metric-card">
-                                <div class="metric-value">{{ safe_currency(analytics.get('expected_value')) }}</div>
-                                <div class="metric-label">Expected Value</div>
-                            </div>
+                            {{ metric_card(analytics.get('expected_value'), 'Expected Value', 'expectancy', 'currency') }}
                         </div>
                         <div class="col-6">
-                            <div class="metric-card">
-                                <div class="metric-value">{{ safe_currency(analytics.get('median_profit')) }}</div>
-                                <div class="metric-label">Median Profit</div>
-                            </div>
+                            {{ metric_card(analytics.get('median_profit'), 'Median Profit', 'pnl', 'currency') }}
                         </div>
                         <div class="col-6">
-                            <div class="metric-card">
-                                <div class="metric-value">{{ safe_currency(analytics.get('average_profit')) }}</div>
-                                <div class="metric-label">Average Profit</div>
-                            </div>
+                            {{ metric_card(analytics.get('average_profit'), 'Average Profit', 'pnl', 'currency') }}
                         </div>
                     </div>
                 </div>
@@ -126,34 +217,28 @@
         <!-- Risk & Drawdown Metrics -->
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="card h-100">
-                <div class="card-header bg-danger text-white">
+                <div class="card-header bg-dark text-white">
                     <h6 class="mb-0"><i class="fas fa-shield-alt me-1"></i>Risk & Drawdown</h6>
                 </div>
                 <div class="card-body p-3">
-                    <div class="metric-list">
-                        <div class="metric-row">
-                            <span class="metric-label">Kelly Fraction:</span>
-                            <span class="metric-value">{{ safe_percent(analytics.get('kelly_fraction')) }}</span>
+                    <div class="row g-2 text-center">
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('kelly_fraction'), 'Kelly Fraction', 'kelly', 'percent') }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Max Drawdown:</span>
-                            <span class="metric-value">{{ safe_currency(analytics.get('max_drawdown')) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('max_drawdown'), 'Max Drawdown', 'negative', 'currency') }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Max Consecutive Wins:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('max_consecutive_wins'), 0) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('max_consecutive_wins'), 'Max Win Streak', 'positive', 'number', 0) }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Max Consecutive Losses:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('max_consecutive_losses'), 0) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('max_consecutive_losses'), 'Max Loss Streak', 'negative', 'number', 0) }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Skewness:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('skewness')) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('skewness'), 'Skewness', 'neutral') }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Kurtosis:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('kurtosis')) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('kurtosis'), 'Kurtosis', 'neutral') }}
                         </div>
                     </div>
                 </div>
@@ -163,38 +248,28 @@
         <!-- Trading Activity -->
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="card h-100">
-                <div class="card-header bg-info text-white">
+                <div class="card-header bg-dark text-white">
                     <h6 class="mb-0"><i class="fas fa-chart-bar me-1"></i>Trading Activity</h6>
                 </div>
                 <div class="card-body p-3">
-                    <div class="metric-list">
-                        <div class="metric-row">
-                            <span class="metric-label">Total Trades:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('total_trades'), 0) }}</span>
+                    <div class="row g-2 text-center">
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('total_trades'), 'Total Trades', 'neutral', 'number', 0) }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Profit Moves:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('total_profit_moves'), 0) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('total_profit_moves'), 'Profit Moves', 'positive', 'number', 0) }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Expense Moves:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('total_expense_moves'), 0) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('total_expense_moves'), 'Expense Moves', 'negative', 'number', 0) }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Breakevens:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('breakevens'), 0) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('breakevens'), 'Breakevens', 'neutral', 'number', 0) }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Avg Win R:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('avg_win_r')) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('avg_win_r'), 'Avg Win R', 'r_multiple') }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Avg Loss R:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('avg_loss_r')) }}</span>
-                        </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Total R:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('total_r')) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('avg_loss_r'), 'Avg Loss R', 'r_multiple') }}
                         </div>
                     </div>
                 </div>
@@ -204,64 +279,137 @@
         <!-- Advanced Analytics -->
         <div class="col-lg-3 col-md-6 mb-3">
             <div class="card h-100">
-                <div class="card-header bg-success text-white">
+                <div class="card-header bg-dark text-white">
                     <h6 class="mb-0"><i class="fas fa-calculator me-1"></i>Advanced Analytics</h6>
                 </div>
                 <div class="card-body p-3">
-                    <div class="metric-list">
-                        <div class="metric-row">
-                            <span class="metric-label">SQN:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('sqn')) }}</span>
+                    <div class="row g-2 text-center">
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('sqn'), 'SQN', 'sqn') }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">SQN(100):</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('sqn_100')) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('sqn_100'), 'SQN(100)', 'sqn') }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Expectancy:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('expectancy')) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('expectancy'), 'Expectancy', 'expectancy') }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Avg R/Month:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('avg_r_per_month')) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('total_r'), 'Total R', 'r_multiple') }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Avg Annual R:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('avg_annual_r')) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('median_profit_streak'), 'Med Profit Streak', 'positive', 'number', 0) }}
                         </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Median Profit Streak:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('median_profit_streak'), 0) }}</span>
-                        </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Median Expense Streak:</span>
-                            <span class="metric-value">{{ safe_number(analytics.get('median_expense_streak'), 0) }}</span>
-                        </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Daily EV:</span>
-                            <span class="metric-value">{{ safe_currency(analytics.get('daily_ev')) }}</span>
-                        </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Median EV:</span>
-                            <span class="metric-value">{{ safe_currency(analytics.get('median_ev')) }}</span>
+                        <div class="col-6">
+                            {{ metric_card(analytics.get('median_expense_streak'), 'Med Expense Streak', 'negative', 'number', 0) }}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Equity Curve -->
-        <div class="col-lg-4 mb-3">
+    <!-- Time-Based Metrics Row -->
+    <div class="row mb-4">
+        <div class="col-lg-6 mb-3">
             <div class="card h-100">
                 <div class="card-header bg-dark text-white">
-                    <h6 class="mb-0"><i class="fas fa-chart-line me-1"></i>Equity Curve</h6>
+                    <h6 class="mb-0"><i class="fas fa-calendar me-1"></i>Time-Based Performance</h6>
                 </div>
-                <div class="card-body p-2">
-                    <canvas id="equityChart" style="width: 100%; height: 250px;"></canvas>
+                <div class="card-body p-3">
+                    <div class="row g-2 text-center">
+                        <div class="col-4">
+                            {{ metric_card(analytics.get('daily_ev'), 'Daily EV', 'expectancy', 'currency') }}
+                        </div>
+                        <div class="col-4">
+                            {{ metric_card(analytics.get('avg_r_per_month'), 'Avg R/Month', 'r_multiple') }}
+                        </div>
+                        <div class="col-4">
+                            {{ metric_card(analytics.get('avg_annual_r'), 'Avg Annual R', 'r_multiple') }}
+                        </div>
+                        <div class="col-4">
+                            {{ metric_card(analytics.get('median_ev'), 'Median EV', 'expectancy', 'currency') }}
+                        </div>
+                        <div class="col-4">
+                            {{ metric_card(analytics.get('trades_per_day'), 'Trades/Day', 'neutral') }}
+                        </div>
+                        <div class="col-4">
+                            {{ metric_card(analytics.get('trading_period_days', 0), 'Trading Days', 'neutral', 'number', 0) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <!-- Equity Curve - Fixed Version -->
+    <div class="col-lg-6 mb-3">
+        <div class="card h-100">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0"><i class="fas fa-chart-line me-1"></i>Equity Curve</h6>
+            </div>
+            <div class="card-body p-3">
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas
+                        id="equityChart"
+                        style="display: block; box-sizing: border-box; height: 300px; width: 100%;"
+                    ></canvas>
+                </div>
+                <!-- Debug info -->
+                <div class="mt-2 small text-muted">
+                    <strong>Status:</strong> <span id="chartStatus">Initializing...</span>
+                    <br><strong>Data points:</strong> {{ analytics.get('total_trades', 0) }} trades
+                    {% if equity_data and equity_data.data %}
+                    <br><strong>P&L Range:</strong> ${{ "%.2f"|format(equity_data.data|min) }} to ${{ "%.2f"|format(equity_data.data|max) }}
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+
+
+<!-- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX -->
+<!-- DELETE THIS DEBUGGIN SCRIPT -->
+{% if has_trades %}
+<!-- DEBUG SECTION - Remove after fixing -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0"><i class="fas fa-bug me-1"></i>Debug Information (Remove after fixing)</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Equity Data Raw:</h6>
+                        <pre class="bg-light p-2 small">{{ equity_data }}</pre>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Analytics Sample:</h6>
+                        <ul class="small">
+                            <li>Total Trades: {{ analytics.get('total_trades', 'N/A') }}</li>
+                            <li>Net P&L: {{ analytics.get('net_pnl', 'N/A') }}</li>
+                            <li>Has Trades: {{ has_trades }}</li>
+                            <li>Model ID: {{ model.id }}</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <strong>JavaScript Console Check:</strong>
+                    <p class="small text-muted">
+                        Open browser developer tools (F12) → Console tab to see detailed equity curve debug messages.
+                        Look for messages starting with "Debug:" or "Equity Curve:".
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+<!-- XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX -->
+
+
+
+
+
+
 
     <!-- Model Insights -->
     {% if model_insights %}
@@ -321,41 +469,90 @@
         </div>
     </div>
 
-    <!-- Model Configuration -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="fas fa-cog me-1"></i>Model Configuration</h6>
+    <!-- Metrics Explanation Modal -->
+    <div class="modal fade" id="metricsExplanationModal" tabindex="-1" aria-labelledby="metricsExplanationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="metricsExplanationModalLabel">Trading Metrics Explained</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6>Logic & Strategy</h6>
-                            <p class="text-muted mb-2">{{ model.overview_logic or 'No overview logic defined' }}</p>
-
-                            <h6>Timeframes</h6>
-                            <ul class="list-unstyled">
-                                <li><strong>Primary Chart:</strong> {{ model.primary_chart_tf or 'Not specified' }}</li>
-                                <li><strong>Execution Chart:</strong> {{ model.execution_chart_tf or 'Not specified' }}</li>
-                                <li><strong>Context Chart:</strong> {{ model.context_chart_tf or 'Not specified' }}</li>
-                            </ul>
+                <div class="modal-body">
+                    <div class="accordion" id="metricsAccordion">
+                        <!-- Key Performance Metrics -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingPerformance">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePerformance" aria-expanded="true" aria-controls="collapsePerformance">
+                                    Key Performance Metrics
+                                </button>
+                            </h2>
+                            <div id="collapsePerformance" class="accordion-collapse collapse show" aria-labelledby="headingPerformance" data-bs-parent="#metricsAccordion">
+                                <div class="accordion-body">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Net P&L</dt>
+                                        <dd class="col-sm-8">Total profit or loss from all trades</dd>
+                                        <dt class="col-sm-4">Strike Rate</dt>
+                                        <dd class="col-sm-8">Percentage of winning trades (>50% is good)</dd>
+                                        <dt class="col-sm-4">Profit Factor</dt>
+                                        <dd class="col-sm-8">Gross profit divided by gross loss (>1.5 is good)</dd>
+                                        <dt class="col-sm-4">Expected Value</dt>
+                                        <dd class="col-sm-8">Average profit per trade</dd>
+                                        <dt class="col-sm-4">Median Profit</dt>
+                                        <dd class="col-sm-8">Middle value of all trade P&Ls (less affected by outliers)</dd>
+                                    </dl>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <h6>Risk Management</h6>
-                            <ul class="list-unstyled">
-                                <li><strong>Min R:R Ratio:</strong> {{ model.min_risk_reward_ratio or 'Not specified' }}</li>
-                                <li><strong>Stop Loss:</strong> {{ model.stop_loss_strategy or 'Not specified' }}</li>
-                                <li><strong>Take Profit:</strong> {{ model.take_profit_strategy or 'Not specified' }}</li>
-                            </ul>
 
-                            <h6>Market Context</h6>
-                            <p class="text-muted mb-2">
-                                <strong>Instruments:</strong> {{ model.instrument_applicability or 'Not specified' }}<br>
-                                <strong>Sessions:</strong> {{ model.session_applicability or 'Not specified' }}
-                            </p>
+                        <!-- Risk & Drawdown -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingRisk">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRisk" aria-expanded="false" aria-controls="collapseRisk">
+                                    Risk & Drawdown Metrics
+                                </button>
+                            </h2>
+                            <div id="collapseRisk" class="accordion-collapse collapse" aria-labelledby="headingRisk" data-bs-parent="#metricsAccordion">
+                                <div class="accordion-body">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Kelly Fraction</dt>
+                                        <dd class="col-sm-8">Optimal position size percentage (10-25% is typically good)</dd>
+                                        <dt class="col-sm-4">Max Drawdown</dt>
+                                        <dd class="col-sm-8">Largest peak-to-trough decline in account value</dd>
+                                        <dt class="col-sm-4">Skewness</dt>
+                                        <dd class="col-sm-8">Asymmetry of returns (positive = more big wins than big losses)</dd>
+                                        <dt class="col-sm-4">Kurtosis</dt>
+                                        <dd class="col-sm-8">Tail risk measure (higher = more extreme moves)</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Advanced Analytics -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingAdvanced">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvanced" aria-expanded="false" aria-controls="collapseAdvanced">
+                                    Advanced Analytics
+                                </button>
+                            </h2>
+                            <div id="collapseAdvanced" class="accordion-collapse collapse" aria-labelledby="headingAdvanced" data-bs-parent="#metricsAccordion">
+                                <div class="accordion-body">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">SQN</dt>
+                                        <dd class="col-sm-8">System Quality Number (>1.6 is good, >2.5 is excellent)</dd>
+                                        <dt class="col-sm-4">SQN(100)</dt>
+                                        <dd class="col-sm-8">SQN normalized to 100 trades for comparison</dd>
+                                        <dt class="col-sm-4">Expectancy</dt>
+                                        <dd class="col-sm-8">Expected profit per dollar risked</dd>
+                                        <dt class="col-sm-4">R-Multiple</dt>
+                                        <dd class="col-sm-8">Profit/loss expressed as multiples of initial risk</dd>
+                                    </dl>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -368,55 +565,199 @@
     {% if has_trades %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
-        // Equity Curve Chart
-        const equityData = {{ equity_data|safe }};
-        const ctx = document.getElementById('equityChart').getContext('2d');
+        // Fixed equity curve chart
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DOM loaded, initializing equity chart...');
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: equityData.labels || [],
-                datasets: [{
-                    label: 'Cumulative P&L',
-                    data: equityData.data || [],
-                    borderColor: equityData.data && equityData.data.length > 0 && equityData.data[equityData.data.length - 1] >= 0 ? '#28a745' : '#dc3545',
-                    backgroundColor: equityData.data && equityData.data.length > 0 && equityData.data[equityData.data.length - 1] >= 0 ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Trade Date'
-                        }
-                    },
-                    y: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Cumulative P&L ($)'
+            // Update chart status
+            const statusElement = document.getElementById('chartStatus');
+            if (statusElement) statusElement.textContent = 'Loading chart...';
+
+            // Get the actual data from server - FIXED DATA PASSING
+            let equityData;
+            try {
+                // Use the JSON version we're now passing from the server
+                equityData = {{ equity_data_json|safe }};
+                console.log('✅ Successfully parsed equity data:', equityData);
+            } catch (e) {
+                console.error('❌ Failed to parse equity data:', e);
+                equityData = { labels: [], data: [] };
+            }
+
+            const equityLabels = equityData.labels || [];
+            const equityValues = equityData.data || [];
+
+            console.log('📊 Chart data:');
+            console.log('- Labels count:', equityLabels.length);
+            console.log('- Values count:', equityValues.length);
+            console.log('- Sample labels:', equityLabels.slice(0, 3));
+            console.log('- Sample values:', equityValues.slice(0, 3));
+
+            const ctx = document.getElementById('equityChart');
+            console.log('🎯 Canvas element found:', !!ctx);
+
+            if (ctx && equityLabels.length > 0 && equityValues.length > 0) {
+                console.log('🎨 Creating chart with', equityLabels.length, 'data points');
+
+                // Update status
+                if (statusElement) statusElement.textContent = 'Rendering chart...';
+
+                // Determine color based on final value
+                const finalValue = equityValues[equityValues.length - 1];
+                const isPositive = finalValue >= 0;
+                const borderColor = isPositive ? '#28a745' : '#dc3545';
+                const backgroundColor = isPositive ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)';
+
+                console.log('🎨 Chart styling - Final P&L:', finalValue, 'Positive:', isPositive);
+
+                try {
+                    const chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: equityLabels,
+                            datasets: [{
+                                label: 'Cumulative P&L',
+                                data: equityValues,
+                                borderColor: borderColor,
+                                backgroundColor: backgroundColor,
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.1,
+                                pointRadius: 2,
+                                pointHoverRadius: 4,
+                                pointBackgroundColor: borderColor,
+                                pointBorderColor: '#fff',
+                                pointBorderWidth: 1
+                            }]
                         },
-                        grid: {
-                            color: function(context) {
-                                return context.tick.value === 0 ? '#000' : '#e0e0e0';
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: true,
+                                    position: 'top',
+                                    labels: {
+                                        color: '#fff'
+                                    }
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            const value = context.raw;
+                                            return 'P&L: $' + value.toLocaleString(undefined, {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2
+                                            });
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    display: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Trade Date',
+                                        color: '#fff',
+                                        font: {
+                                            weight: 'bold'
+                                        }
+                                    },
+                                    grid: {
+                                        display: true,
+                                        color: 'rgba(255,255,255,0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#fff',
+                                        maxTicksLimit: 8
+                                    }
+                                },
+                                y: {
+                                    display: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Cumulative P&L ($)',
+                                        color: '#fff',
+                                        font: {
+                                            weight: 'bold'
+                                        }
+                                    },
+                                    grid: {
+                                        display: true,
+                                        color: function(context) {
+                                            return context.tick.value === 0 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)';
+                                        }
+                                    },
+                                    ticks: {
+                                        color: '#fff',
+                                        callback: function(value) {
+                                            return '$' + value.toLocaleString();
+                                        }
+                                    }
+                                }
+                            },
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'x',
+                                intersect: false
                             }
                         }
+                    });
+
+                    console.log('🎉 Chart created successfully!', chart);
+
+                    // Update status to success
+                    if (statusElement) {
+                        statusElement.innerHTML = '<span class="text-success">Chart loaded successfully!</span>';
+                    }
+
+                } catch (error) {
+                    console.error('💥 Error creating chart:', error);
+
+                    // Update status to error
+                    if (statusElement) {
+                        statusElement.innerHTML = '<span class="text-danger">Chart error: ' + error.message + '</span>';
+                    }
+
+                    // Show error message in chart area
+                    const container = ctx.parentElement;
+                    container.innerHTML = '<div class="text-center text-danger p-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Error loading chart: ' + error.message + '</div>';
+                }
+            } else {
+                console.warn('⚠️ Chart not created - missing data or canvas');
+                console.log('Canvas exists:', !!ctx);
+                console.log('Labels length:', equityLabels.length);
+                console.log('Values length:', equityValues.length);
+
+                // Update status
+                if (statusElement) {
+                    if (equityLabels.length === 0) {
+                        statusElement.innerHTML = '<span class="text-warning">No data available</span>';
+                    } else {
+                        statusElement.innerHTML = '<span class="text-warning">Canvas or data missing</span>';
+                    }
+                }
+
+                // Show appropriate message
+                if (ctx) {
+                    const container = ctx.parentElement;
+                    if (equityLabels.length === 0) {
+                        container.innerHTML = '<div class="text-center text-muted p-4"><i class="fas fa-chart-line fa-2x mb-2"></i><br>No equity data available</div>';
+                    } else {
+                        container.innerHTML = '<div class="text-center text-warning p-4"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Canvas element missing</div>';
                     }
                 }
             }
+
+            console.log('📝 Chart initialization complete');
         });
+    </script>
+    {% else %}
+    <script>
+        console.log('ℹ️ No trades available for equity chart');
     </script>
     {% endif %}
 {% endblock %}
@@ -424,37 +765,49 @@
 {% block extra_css %}
 <style>
 .model-analytics-dashboard .metric-card {
-    padding: 8px;
-    border-radius: 6px;
+    padding: 12px 8px;
+    border-radius: 8px;
     background: #f8f9fa;
     margin-bottom: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.model-analytics-dashboard .metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .model-analytics-dashboard .metric-card.positive {
     background: rgba(40, 167, 69, 0.1);
-    border-left: 3px solid #28a745;
+    border-left: 4px solid #28a745;
+    color: #155724;
 }
 
 .model-analytics-dashboard .metric-card.negative {
     background: rgba(220, 53, 69, 0.1);
-    border-left: 3px solid #dc3545;
+    border-left: 4px solid #dc3545;
+    color: #721c24;
 }
 
 .model-analytics-dashboard .metric-card.neutral {
-    background: rgba(108, 117, 125, 0.1);
-    border-left: 3px solid #6c757d;
+    background: rgba(0, 123, 255, 0.1);
+    border-left: 4px solid #007bff;
+    color: #004085;
 }
 
 .model-analytics-dashboard .metric-value {
     font-weight: bold;
     font-size: 1.1em;
     line-height: 1.2;
+    margin-bottom: 2px;
 }
 
 .model-analytics-dashboard .metric-label {
-    font-size: 0.85em;
-    color: #6c757d;
+    font-size: 0.8em;
+    font-weight: 500;
     line-height: 1.1;
+    opacity: 0.8;
 }
 
 .metric-list .metric-row {
@@ -481,6 +834,75 @@
 
 .bg-gradient-primary {
     background: linear-gradient(45deg, #007bff, #0056b3);
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+.card-header h6 {
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Configuration section styling */
+.card-body h6 {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.card-body ul {
+    font-size: 0.9em;
+}
+
+.card-body ul li {
+    margin-bottom: 3px;
+}
+
+.card-body ul li strong {
+    color: #495057;
+    font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .model-analytics-dashboard .metric-card {
+        margin-bottom: 10px;
+    }
+
+    .model-analytics-dashboard .metric-value {
+        font-size: 1em;
+    }
+
+    .model-analytics-dashboard .metric-label {
+        font-size: 0.75em;
+    }
+}
+
+/* Modal styling */
+.modal-lg {
+    max-width: 800px;
+}
+
+.accordion-button {
+    font-weight: 600;
+}
+
+.accordion-body dl {
+    margin-bottom: 0;
+}
+
+.accordion-body dt {
+    font-weight: 600;
+    color: #495057;
+}
+
+.accordion-body dd {
+    color: #6c757d;
+    margin-bottom: 8px;
 }
 </style>
 {% endblock %}
