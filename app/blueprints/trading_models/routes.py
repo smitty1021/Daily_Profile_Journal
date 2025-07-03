@@ -48,8 +48,6 @@ def view_model_detail(model_id):
     ).order_by(Trade.trade_date.desc(), Trade.id.desc())
 
     trades = trades_query.all()
-    print(f"Debug: Found {len(trades)} trades for model {model.name}")
-
     # If no trades, show empty state
     if not trades:
         return render_template('model_detail.html',
@@ -62,18 +60,16 @@ def view_model_detail(model_id):
     # Calculate comprehensive analytics
     risk_params = get_risk_parameters(current_user.id)
     analytics = calculate_model_analytics(trades, risk_params)
-    print(f"Debug: Calculated analytics with {len(analytics)} metrics")
 
     # Prepare equity curve data
     equity_data = prepare_equity_curve_data(trades)
-    print(f"Debug: Prepared equity curve data: {equity_data}")
 
     # ← FIXED: Ensure proper JSON serialization with error handling
     try:
         equity_data_json = json.dumps(equity_data, default=str)
-        print(f"Debug: JSON serialized successfully: {len(equity_data_json)} chars")
+
     except Exception as e:
-        print(f"Debug: JSON serialization failed: {e}")
+
         equity_data_json = '{"labels": [], "data": []}'
 
     # Get model-specific insights based on Random's methodology
@@ -461,10 +457,10 @@ def calculate_kurtosis(data):
 
 def prepare_equity_curve_data(trades):
     """Prepare equity curve data for Chart.js visualization with enhanced debugging."""
-    print(f"Debug: prepare_equity_curve_data called with {len(trades)} trades")
+
 
     if not trades:
-        print("Debug: No trades provided")
+
         return {'labels': [], 'data': []}
 
     # Sort trades by entry_timestamp (handling the property correctly)
@@ -483,12 +479,12 @@ def prepare_equity_curve_data(trades):
         elif hasattr(trade, 'realized_pnl') and trade.realized_pnl is not None:
             pnl = float(trade.realized_pnl)
 
-        print(f"Debug: Trade {i + 1} - ID: {trade.id}, Date: {entry_ts}, P&L: {pnl}")
+
         sorted_trades.append((trade, entry_ts or datetime.min, pnl))
 
     # Sort by the timestamp
     sorted_trades.sort(key=lambda x: x[1])
-    print(f"Debug: Sorted {len(sorted_trades)} trades")
+
 
     labels = []
     equity_data = []
@@ -507,16 +503,12 @@ def prepare_equity_curve_data(trades):
 
         labels.append(date_str)
         equity_data.append(round(running_total, 2))
-        print(f"Debug: Point {i + 1} - {date_str}: ${running_total:.2f}")
+
 
     result = {
         'labels': labels,
         'data': equity_data
     }
-
-    print(f"Debug: Final equity curve data: {len(labels)} points")
-    print(f"Debug: Data range: ${min(equity_data):.2f} to ${max(equity_data):.2f}")
-
     return result
 
 
@@ -588,10 +580,7 @@ def debug_blueprint_loading():
     import inspect
 
     current_file = inspect.getfile(inspect.currentframe())
-    print(f"DEBUG: Blueprint loaded from: {current_file}")
-    print(f"DEBUG: File exists: {os.path.exists(current_file)}")
-    print(f"DEBUG: Blueprint name: {bp.name}")
-    print(f"DEBUG: Blueprint url_prefix: {bp.url_prefix}")
+
 
     return {
         'file_path': current_file,
