@@ -233,8 +233,8 @@ def create_app(config_class=None):
         app.register_blueprint(main_bp)
         from .blueprints.auth_bp import auth_bp
         app.register_blueprint(auth_bp, url_prefix='/auth')  # Added prefix for consistency
-        from .blueprints.trading_models_bp import trading_models_bp
-        app.register_blueprint(trading_models_bp, url_prefix='/trading-models')  # Consistent hyphen
+        from .blueprints.trading_models import bp as trading_models_bp
+        app.register_blueprint(trading_models_bp)
         from .blueprints.files_bp import files_bp
         app.register_blueprint(files_bp, url_prefix='/files')  # Added prefix
         from .blueprints.admin_bp import admin_bp
