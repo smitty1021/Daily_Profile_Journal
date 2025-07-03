@@ -1313,7 +1313,7 @@ html[data-bs-theme="dark"] .btn.btn-outline-secondary:hover {
 
 /* Ensure chart canvas is properly sized */
 #equityChart {
-    max-height: 150px !important;
+    max-height: 800px !important;
     width: 100% !important;
 }
 
@@ -1549,7 +1549,7 @@ html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card:hover {
 
 /* Ensure chart container sizing */
 .model-analytics-dashboard #equityChart {
-    height: 250px !important;
+    height: 800px !important;
     width: 100% !important;
 }
 
