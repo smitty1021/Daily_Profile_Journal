@@ -1,455 +1,912 @@
 {% extends "base.html" %}
 
-{% block title %}{{ model.name }} - Model Analysis{% endblock %}
+{% macro safe_format(value, format_str=':.2f', default=0, prefix='', suffix='') -%}
+    {{ prefix }}{{ format_str.format(value or default) }}{{ suffix }}
+{%- endmacro %}
 
-{% block content %}
-<div class="container-fluid py-4">
-    <!-- Model Header -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <div class="row align-items-center">
-                <div class="col-md-8">
-                    <h1 class="mb-1">{{ model.name }}</h1>
-                    <p class="mb-0">Version {{ model.version or '1.0' }}
-                        {% if model.is_active %}
-                            <span class="badge badge-success">Active</span>
-                        {% else %}
-                            <span class="badge badge-secondary">Inactive</span>
-                        {% endif %}
-                        {% if model.is_default %}
-                            <span class="badge badge-info">System Model</span>
-                        {% endif %}
-                    </p>
-                </div>
-                <div class="col-md-4 text-md-right">
-                    <a href="{{ url_for('trading_models.models_list') }}" class="btn btn-light">
-                        <i class="fas fa-arrow-left"></i> Back to Models
-                    </a>
-                </div>
-            </div>
+{% macro safe_currency(value, default=0) -%}
+    ${{ '{:,.0f}'.format(value or default) }}
+{%- endmacro %}
+
+{% macro safe_percent(value, default=0) -%}
+    {{ '{:.1f}'.format(value or default) }}%
+{%- endmacro %}
+
+{% macro safe_number(value, decimals=2, default=0) -%}
+    {{ ('{:.' + decimals|string + 'f}').format(value or default) }}
+{%- endmacro %}
+
+{% block title %}{{ model.name }} - Model Analytics{% endblock %}
+
+{% block page_header %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1>{{ model.name }}</h1>
+            <p class="text-muted mb-0">Version {{ model.version or '1.0' }} | {{ 'Active' if model.is_active else 'Inactive' }} Model</p>
         </div>
-        <div class="card-body">
-            <p>{{ model.overview_logic or "Random's trading methodology model" }}</p>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('trading_models.edit_trading_model', model_id=model.id) }}" class="btn btn-outline-primary">
+                <i class="fas fa-edit me-1"></i> Edit Model
+            </a>
+            <a href="{{ url_for('trading_models.models_list') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Models
+            </a>
         </div>
     </div>
+{% endblock %}
 
+{% block content %}
     {% if not has_trades %}
-    <!-- No Trades State -->
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+    <!-- Empty State -->
+    <div class="row">
+        <div class="col-12">
             <div class="card">
                 <div class="card-body text-center py-5">
-                    <i class="fas fa-chart-line fa-4x text-muted mb-4"></i>
-                    <h4>No Trading Data Available</h4>
-                    <p class="text-muted">This model doesn't have any trades yet. Start trading with this model to see performance analytics.</p>
-                    <a href="{{ url_for('trades.add_trade') }}?model_id={{ model.id }}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add First Trade
-                    </a>
+                    <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                    <h3>No Trading Data Yet</h3>
+                    <p class="text-muted">Start trading with this model to see performance analytics.</p>
                 </div>
             </div>
         </div>
     </div>
     {% else %}
 
-    <!-- Performance Overview -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h3>Performance Overview</h3>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card {{ 'bg-success' if analytics.net_pnl > 0 else 'bg-danger' }} text-white">
-                <div class="card-body text-center">
-                    <h2>${{ '{:,.2f}'.format(analytics.net_pnl) }}</h2>
-                    <p class="mb-0">Net P&L</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-info text-white">
-                <div class="card-body text-center">
-                    <h2>{{ analytics.strike_rate }}%</h2>
-                    <p class="mb-0">Strike Rate</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body text-center">
-                    <h2>{{ analytics.profit_factor }}</h2>
-                    <p class="mb-0">Profit Factor</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card bg-secondary text-white">
-                <div class="card-body text-center">
-                    <h2>${{ '{:.2f}'.format(analytics.expected_value) }}</h2>
-                    <p class="mb-0">Expected Value</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Risk Metrics -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Risk Metrics</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table">
-                        <tr>
-                            <td><strong>Kelly Fraction:</strong></td>
-                            <td>{{ analytics.kelly_fraction }}%</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Max Drawdown:</strong></td>
-                            <td>${{ '{:,.0f}'.format(analytics.max_drawdown) }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>MFE of Equity:</strong></td>
-                            <td>${{ '{:,.2f}'.format(analytics.mfe_equity) }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>ROR (Rate of Return):</strong></td>
-                            <td>{{ analytics.ror }}%</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Trading Statistics</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table">
-                        <tr>
-                            <td><strong>Total Trades:</strong></td>
-                            <td>{{ analytics.total_moves }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Trades/Day:</strong></td>
-                            <td>{{ '{:.1f}'.format(analytics.trade_frequency) }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>% Days Green:</strong></td>
-                            <td>{{ analytics.pct_days_positive }}%</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Weekly Consistency:</strong></td>
-                            <td>{{ analytics.weekly_consistency }}%</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Model Insights -->
-    {% if model_insights %}
-    <div class="row mb-4">
-        <div class="col-12">
-            <h3>Random's Methodology Insights</h3>
-        </div>
-
-        {% if model_insights.strengths %}
-        <div class="col-md-6 mb-3">
-            <div class="card border-success">
-                <div class="card-header bg-success text-white">
-                    <h6 class="mb-0"><i class="fas fa-check-circle"></i> Strengths</h6>
-                </div>
-                <div class="card-body">
-                    <ul class="mb-0">
-                        {% for strength in model_insights.strengths %}
-                        <li>{{ strength }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if model_insights.areas_for_improvement %}
-        <div class="col-md-6 mb-3">
-            <div class="card border-warning">
-                <div class="card-header bg-warning text-dark">
-                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Areas for Improvement</h6>
-                </div>
-                <div class="card-body">
-                    <ul class="mb-0">
-                        {% for improvement in model_insights.areas_for_improvement %}
-                        <li>{{ improvement }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if model_insights.random_methodology_notes %}
-        <div class="col-md-6 mb-3">
-            <div class="card border-info">
-                <div class="card-header bg-info text-white">
-                    <h6 class="mb-0"><i class="fas fa-lightbulb"></i> Random's Methodology Notes</h6>
-                </div>
-                <div class="card-body">
-                    <ul class="mb-0">
-                        {% for note in model_insights.random_methodology_notes %}
-                        <li>{{ note }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if model_insights.recommended_actions %}
-        <div class="col-md-6 mb-3">
-            <div class="card border-primary">
+    <!-- Performance Analytics Dashboard -->
+    <div class="row mb-4 model-analytics-dashboard">
+        <!-- Key Performance Metrics -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100">
                 <div class="card-header bg-primary text-white">
-                    <h6 class="mb-0"><i class="fas fa-tasks"></i> Recommended Actions</h6>
+                    <h6 class="mb-0"><i class="fas fa-trophy me-1"></i>Key Performance</h6>
                 </div>
-                <div class="card-body">
-                    <ul class="mb-0">
-                        {% for action in model_insights.recommended_actions %}
-                        <li>{{ action }}</li>
-                        {% endfor %}
-                    </ul>
+                <div class="card-body p-3">
+                    <div class="row g-2 text-center">
+                        <div class="col-6">
+                            <div class="metric-card {{ 'positive' if analytics.net_pnl > 0 else 'negative' if analytics.net_pnl < 0 else 'neutral' }}">
+                                <div class="metric-value">${{ '{:,.0f}'.format(analytics.net_pnl) }}</div>
+                                <div class="metric-label">Net P&L</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-card">
+                                <div class="metric-value">{{ analytics.strike_rate }}%</div>
+                                <div class="metric-label">Strike Rate</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-card">
+                                <div class="metric-value">{{ analytics.profit_factor }}</div>
+                                <div class="metric-label">Profit Factor</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-card">
+                                <div class="metric-value">${{ '{:.0f}'.format(analytics.expected_value) }}</div>
+                                <div class="metric-label">Expected Value</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-card">
+                                <div class="metric-value">${{ '{:.0f}'.format(analytics.median_profit) }}</div>
+                                <div class="metric-label">Median Profit</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="metric-card">
+                                <div class="metric-value">${{ '{:.0f}'.format(analytics.average_profit) }}</div>
+                                <div class="metric-label">Average Profit</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        {% endif %}
+
+        <!-- Risk & Drawdown Metrics -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0"><i class="fas fa-shield-alt me-1"></i>Risk & Drawdown</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div class="metric-list">
+                        <div class="metric-row">
+                            <span class="metric-label">Kelly Fraction:</span>
+                            <span class="metric-value">{{ analytics.kelly_fraction }}%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Max Drawdown:</span>
+                            <span class="metric-value">${{ '{:,.0f}'.format(analytics.max_drawdown) }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Median DD:</span>
+                            <span class="metric-value">${{ '{:,.0f}'.format(analytics.median_drawdown) }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Max Rel DD:</span>
+                            <span class="metric-value">{{ analytics.max_rel_drawdown }}%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">DD Duration:</span>
+                            <span class="metric-value">{{ analytics.longest_drawdown_duration }} days</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Median DD Duration:</span>
+                            <span class="metric-value">{{ analytics.median_drawdown_duration }} days</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Standard Deviation:</span>
+                            <span class="metric-value">{{ analytics.standard_deviation }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trading Statistics -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-chart-bar me-1"></i>Trading Statistics</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div class="metric-list">
+                        <div class="metric-row">
+                            <span class="metric-label">Total Moves:</span>
+                            <span class="metric-value">{{ analytics.total_moves }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Wins:</span>
+                            <span class="metric-value">{{ analytics.total_profitable_moves }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Losses:</span>
+                            <span class="metric-value">{{ analytics.total_expense_moves }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Breakevens:</span>
+                            <span class="metric-value">{{ analytics.breakevens }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Max Consecutive Losses:</span>
+                            <span class="metric-value">{{ analytics.max_consecutive_losses }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Avg Win R:</span>
+                            <span class="metric-value">{{ analytics.avg_win_r }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Avg Loss R:</span>
+                            <span class="metric-value">{{ analytics.avg_loss_r }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Total R:</span>
+                            <span class="metric-value">{{ analytics.total_r }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Analytics -->
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fas fa-calculator me-1"></i>Advanced Analytics</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div class="metric-list">
+                        <div class="metric-row">
+                            <span class="metric-label">SQN:</span>
+                            <span class="metric-value">{{ analytics.sqn }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">SQN(100):</span>
+                            <span class="metric-value">{{ analytics.sqn_100 }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Expectancy:</span>
+                            <span class="metric-value">{{ analytics.expectancy }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Skewness:</span>
+                            <span class="metric-value">{{ analytics.skewness_of_returns }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">ROI:</span>
+                            <span class="metric-value">{{ analytics.return_on_investment }}%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">ROR:</span>
+                            <span class="metric-value">{{ analytics.ror }}%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">MFE of Equity:</span>
+                            <span class="metric-value">${{ '{:,.0f}'.format(analytics.mfe_equity) }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">% Days Green:</span>
+                            <span class="metric-value">{{ analytics.pct_days_positive }}%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Extended Analytics Row -->
+    <div class="row mb-4">
+        <!-- Performance Details -->
+        <div class="col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0"><i class="fas fa-coins me-1"></i>Performance Details</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div class="metric-list">
+                        <div class="metric-row">
+                            <span class="metric-label">Largest Win R:</span>
+                            <span class="metric-value">{{ analytics.largest_win_r }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Largest Loss R:</span>
+                            <span class="metric-value">{{ analytics.largest_loss_r }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Average Loss (Constant Risk):</span>
+                            <span class="metric-value">${{ '{:,.0f}'.format(analytics.average_loss_constant_risk) }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Loss Rate:</span>
+                            <span class="metric-value">{{ analytics.loss_rate }}%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">R in $:</span>
+                            <span class="metric-value">${{ '{:,.0f}'.format(analytics.r_in_dollars) }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Account Size:</span>
+                            <span class="metric-value">${{ '{:,.0f}'.format(analytics.account_size) }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Defined Risk:Reward:</span>
+                            <span class="metric-value">{{ analytics.defined_risk_reward }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time-Based Analytics -->
+        <div class="col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0"><i class="fas fa-clock me-1"></i>Time-Based Analytics</h6>
+                </div>
+                <div class="card-body p-3">
+                    <div class="metric-list">
+                        <div class="metric-row">
+                            <span class="metric-label">Total Trading Days:</span>
+                            <span class="metric-value">{{ analytics.total_trading_days }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Avg R Per Day:</span>
+                            <span class="metric-value">{{ analytics.avg_r_per_day }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Avg R Per Week:</span>
+                            <span class="metric-value">{{ analytics.avg_r_per_week }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Avg R Per Month:</span>
+                            <span class="metric-value">{{ analytics.avg_r_per_month }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Avg Annual R:</span>
+                            <span class="metric-value">{{ analytics.avg_annual_r }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Median Profit Streak:</span>
+                            <span class="metric-value">{{ analytics.median_profit_streak }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Median Expense Streak:</span>
+                            <span class="metric-value">{{ analytics.median_expense_streak }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Daily EV:</span>
+                            <span class="metric-value">${{ '{:.0f}'.format(analytics.daily_ev) }}</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Median EV:</span>
+                            <span class="metric-value">${{ '{:.0f}'.format(analytics.median_ev) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equity Curve -->
+        <div class="col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0"><i class="fas fa-chart-line me-1"></i>Equity Curve</h6>
+                </div>
+                <div class="card-body p-2">
+                    <canvas id="equityChart" style="width: 100%; height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backtesting Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-flask me-2"></i>Backtesting & Analysis</h5>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chart-area fa-4x text-muted mb-3"></i>
+                    <h4>Backtesting Module</h4>
+                    <p class="text-muted lead">Advanced backtesting capabilities coming soon. This will include:</p>
+                    <div class="row mt-4">
+                        <div class="col-md-3">
+                            <div class="feature-preview">
+                                <i class="fas fa-history fa-2x text-primary mb-2"></i>
+                                <h6>Historical Analysis</h6>
+                                <p class="small text-muted">Multi-year backtesting with historical data</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="feature-preview">
+                                <i class="fas fa-chart-line fa-2x text-success mb-2"></i>
+                                <h6>Performance Metrics</h6>
+                                <p class="small text-muted">Comprehensive risk-adjusted returns</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="feature-preview">
+                                <i class="fas fa-random fa-2x text-warning mb-2"></i>
+                                <h6>Monte Carlo</h6>
+                                <p class="small text-muted">Statistical simulation and stress testing</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="feature-preview">
+                                <i class="fas fa-cogs fa-2x text-info mb-2"></i>
+                                <h6>Optimization</h6>
+                                <p class="small text-muted">Parameter optimization and walk-forward analysis</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button class="btn btn-outline-primary btn-lg" disabled>
+                            <i class="fas fa-play me-2"></i>Launch Backtesting (Coming Soon)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% endif %}
 
-    <!-- Equity Curve Chart -->
+    <!-- Complete Model Details -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0">Equity Curve</h5>
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Complete Model Details</h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="equityChart" style="height: 400px;"></canvas>
+                    <div class="row">
+                        <!-- Basic Information -->
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-primary">Basic Information</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Name:</strong></td>
+                                    <td>{{ model.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Version:</strong></td>
+                                    <td>{{ model.version or 'N/A' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td><span class="badge bg-{{ 'success' if model.is_active else 'secondary' }}">{{ 'Active' if model.is_active else 'Inactive' }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Description:</strong></td>
+                                    <td>{{ model.overview_logic or "Not specified" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Market Context -->
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-primary">Market Context</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Instruments:</strong></td>
+                                    <td>{{ model.instrument_applicability or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sessions:</strong></td>
+                                    <td>{{ model.session_applicability or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Market Conditions:</strong></td>
+                                    <td>{{ model.market_conditions or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Key News Events:</strong></td>
+                                    <td>{{ model.key_news_events or "Not specified" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Timeframes -->
+                        <div class="col-md-4 mb-4">
+                            <h6 class="text-primary">Timeframes</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Primary Chart:</strong></td>
+                                    <td>{{ model.primary_chart_tf or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Execution Chart:</strong></td>
+                                    <td>{{ model.execution_chart_tf or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Context Chart:</strong></td>
+                                    <td>{{ model.context_chart_tf or "Not specified" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Analytical Approach -->
+                        <div class="col-md-8 mb-4">
+                            <h6 class="text-primary">Analytical Approach</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Technical Indicators:</strong></td>
+                                    <td>{{ model.technical_indicators_used or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Chart Patterns:</strong></td>
+                                    <td>{{ model.chart_patterns_used or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Price Action Signals:</strong></td>
+                                    <td>{{ model.price_action_signals or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Key Levels:</strong></td>
+                                    <td>{{ model.key_levels_identification or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Volume Analysis:</strong></td>
+                                    <td>{{ model.volume_analysis_notes or "Not specified" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Setup Criteria -->
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-primary">Setup Criteria</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Primary Setup:</strong></td>
+                                    <td>{{ model.primary_setup_criteria or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Secondary Setup:</strong></td>
+                                    <td>{{ model.secondary_setup_criteria or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Confluence Requirements:</strong></td>
+                                    <td>{{ model.confluence_requirements or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Invalidation:</strong></td>
+                                    <td>{{ model.invalidation_criteria or "Not specified" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Entry & Exit -->
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-primary">Entry & Exit Rules</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Entry Triggers:</strong></td>
+                                    <td>{{ model.entry_triggers or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Entry Method:</strong></td>
+                                    <td>{{ model.entry_method or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Initial SL Placement:</strong></td>
+                                    <td>{{ model.initial_sl_placement or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>TP Strategy:</strong></td>
+                                    <td>{{ model.tp_strategy or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Scale Out Strategy:</strong></td>
+                                    <td>{{ model.scale_out_strategy or "Not specified" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Risk Management -->
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-primary">Risk Management</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Max Loss/Trade:</strong></td>
+                                    <td>{{ model.model_max_loss_per_trade or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Max Daily Loss:</strong></td>
+                                    <td>{{ model.model_max_daily_loss or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Max Weekly Loss:</strong></td>
+                                    <td>{{ model.model_max_weekly_loss or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Consecutive Loss Limit:</strong></td>
+                                    <td>{{ model.model_consecutive_loss_limit or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Drawdown Action:</strong></td>
+                                    <td>{{ model.model_action_on_max_drawdown or "Not specified" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Execution -->
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-primary">Execution</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Pre-trade Checklist:</strong></td>
+                                    <td>{{ model.pre_trade_checklist or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Order Types:</strong></td>
+                                    <td>{{ model.order_types_used or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Broker/Platform Notes:</strong></td>
+                                    <td>{{ model.broker_platform_notes or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Execution Confirmation:</strong></td>
+                                    <td>{{ model.execution_confirmation_notes or "Not specified" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Post-trade Routine:</strong></td>
+                                    <td>{{ model.post_trade_routine_model or "Not specified" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Review & Assessment -->
+                        <div class="col-md-12 mb-4">
+                            <h6 class="text-primary">Review & Assessment</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Strengths:</strong></td>
+                                            <td>{{ model.strengths or "Not specified" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Weaknesses:</strong></td>
+                                            <td>{{ model.weaknesses or "Not specified" }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Backtesting Notes:</strong></td>
+                                            <td>{{ model.backtesting_forwardtesting_notes or "Not specified" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Refinements & Learnings:</strong></td>
+                                            <td>{{ model.refinements_learnings or "Not specified" }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Recent Trades -->
+    <!-- Enhanced Insights Section (if available) -->
+    {% if model_insights and has_trades %}
     <div class="row mb-4">
         <div class="col-12">
-            <h3>Recent Trades (Last 10)</h3>
-        </div>
-        <div class="col-12">
             <div class="card">
+                <div class="card-header bg-gradient-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Random's Methodology Insights</h5>
+                </div>
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Instrument</th>
-                                    <th>Direction</th>
-                                    <th>Contracts</th>
-                                    <th>P&L</th>
-                                    <th>Duration</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for trade in trades %}
-                                <tr>
-                                    <td>{{ trade.trade_date.strftime('%m/%d/%Y') if trade.trade_date else 'N/A' }}</td>
-                                    <td>{{ trade.instrument if trade.instrument else 'N/A' }}</td>
-                                    <td>
-                                        <span class="badge badge-{{ 'success' if trade.direction == 'Long' else 'danger' }}">
-                                            {{ trade.direction if trade.direction else 'N/A' }}
-                                        </span>
-                                    </td>
-                                    <td>{{ trade.total_contracts_entered or 'N/A' }}</td>
-                                    <td>
-                                        {% set pnl = trade.pnl or 0 %}
-                                        <span class="text-{{ 'success' if pnl > 0 else 'danger' if pnl < 0 else 'muted' }}">
-                                            ${{ '{:,.2f}'.format(pnl) }}
-                                        </span>
-                                    </td>
-                                    <td>{{ trade.time_in_trade or 'N/A' }}</td>
-                                    <td>
-                                        <a href="{{ url_for('trades.view_trade_detail', trade_id=trade.id) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i> View
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="row">
+                        {% if model_insights.strengths %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-check-circle me-1"></i>Strengths</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="mb-0">
+                                        {% for strength in model_insights.strengths %}
+                                        <li>{{ strength }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if model_insights.areas_for_improvement %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-1"></i>Areas for Improvement</h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="mb-0">
+                                        {% for improvement in model_insights.areas_for_improvement %}
+                                        <li>{{ improvement }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% if total_trades > 10 %}
-                    <div class="text-center mt-3">
-                        <p class="text-muted">Showing last 10 of {{ total_trades }} total trades for this model.</p>
+
+                    {% if model_insights.random_methodology_notes %}
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-info-circle me-1"></i>Random's Methodology Notes</h6>
+                        <ul class="mb-0">
+                            {% for note in model_insights.random_methodology_notes %}
+                            <li>{{ note }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if model_insights.recommended_actions %}
+                    <div class="alert alert-primary mt-3">
+                        <h6><i class="fas fa-tasks me-1"></i>Recommended Actions</h6>
+                        <ul class="mb-0">
+                            {% for action in model_insights.recommended_actions %}
+                            <li>{{ action }}</li>
+                            {% endfor %}
+                        </ul>
                     </div>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Model Configuration -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Model Configuration</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-sm">
-                        <tr>
-                            <td><strong>Instruments:</strong></td>
-                            <td>{{ model.instrument_applicability or "Not specified" }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Sessions:</strong></td>
-                            <td>{{ model.session_applicability or "Not specified" }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Primary Timeframe:</strong></td>
-                            <td>{{ model.primary_chart_tf or "Not specified" }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Min R:R Ratio:</strong></td>
-                            <td>{{ model.min_risk_reward_ratio or "Not specified" }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Max Risk/Trade:</strong></td>
-                            <td>{{ model.model_max_loss_per_trade or "Not specified" }}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Entry & Exit Strategy</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <strong>Entry Triggers:</strong>
-                        <p class="text-muted small">{{ model.entry_trigger_description or "Not specified" }}</p>
-                    </div>
-                    <div class="mb-3">
-                        <strong>Stop Loss Strategy:</strong>
-                        <p class="text-muted small">{{ model.stop_loss_strategy or "Not specified" }}</p>
-                    </div>
-                    <div class="mb-0">
-                        <strong>Take Profit Strategy:</strong>
-                        <p class="text-muted small">{{ model.take_profit_strategy or "Not specified" }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Backtesting Data Placeholder -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Backtesting Analysis</h5>
-                </div>
-                <div class="card-body text-center py-5">
-                    <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
-                    <h5>Backtesting Module</h5>
-                    <p class="text-muted mb-4">
-                        This section will contain comprehensive backtesting analysis based on Random's methodology,
-                        including historical performance across different market conditions, P12 scenarios, and session behaviors.
-                    </p>
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i>
-                        <strong>Coming Soon:</strong> Historical analysis, Monte Carlo simulations, and scenario-based performance projections.
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     {% endif %}
-</div>
-{% endblock %}
 
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Equity Curve Chart
-    {% if has_trades and equity_data %}
-    const equityData = {{ equity_data|safe }};
+    <!-- Equity Chart Script -->
+    {% if analytics and has_trades %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('equityChart');
+        if (ctx) {
+            const equityData = {{ equity_data|safe }};
 
-    const ctx = document.getElementById('equityChart').getContext('2d');
-    const equityChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: equityData.map(d => d.trade_number),
-            datasets: [{
-                label: 'Running P&L',
-                data: equityData.map(d => d.running_pnl),
-                borderColor: '#007bff',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: equityData.map(d => d.pnl >= 0 ? '#28a745' : '#dc3545'),
-                pointBorderColor: equityData.map(d => d.pnl >= 0 ? '#28a745' : '#dc3545'),
-                pointRadius: 3
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: equityData.labels || [],
+                    datasets: [{
+                        label: 'Cumulative P&L',
+                        data: equityData.values || [],
+                        borderColor: (equityData.values && equityData.values[equityData.values.length - 1] >= 0) ? '#198754' : '#dc3545',
+                        backgroundColor: (equityData.values && equityData.values[equityData.values.length - 1] >= 0) ? 'rgba(25, 135, 84, 0.1)' : 'rgba(220, 53, 69, 0.1)',
+                        tension: 0.1,
+                        fill: true,
+                        borderWidth: 2,
+                        pointRadius: 1,
+                        pointHoverRadius: 5
+                    }]
                 },
-                tooltip: {
-                    callbacks: {
-                        title: function(context) {
-                            const idx = context[0].dataIndex;
-                            return `Trade #${equityData[idx].trade_number} - ${equityData[idx].date}`;
-                        },
-                        label: function(context) {
-                            const idx = context.dataIndex;
-                            return [
-                                `Running P&L: $${context.parsed.y.toFixed(2)}`,
-                                `Trade P&L: $${equityData[idx].pnl}`,
-                                `Instrument: ${equityData[idx].instrument}`
-                            ];
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Trade Number'
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Cumulative P&L ($)'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
                     },
-                    ticks: {
-                        callback: function(value) {
-                            return '$' + value.toFixed(0);
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                maxTicksLimit: 8,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            display: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return ' + value.toLocaleString();
+                                },
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            callbacks: {
+                                label: function(context) {
+                                    return 'P&L:  + context.parsed.y.toLocaleString();
+                                }
+                            }
                         }
                     }
                 }
-            }
+            });
         }
     });
+    </script>
     {% endif %}
-</script>
+
+    <style>
+    .metric-card {
+        background: rgba(var(--bs-primary-rgb), 0.1);
+        border-radius: 0.5rem;
+        padding: 0.75rem 0.5rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .metric-card:hover {
+        background: rgba(var(--bs-primary-rgb), 0.15);
+        transform: translateY(-1px);
+    }
+
+    .metric-card.positive {
+        background: rgba(25, 135, 84, 0.1);
+        border-left: 3px solid #198754;
+    }
+
+    .metric-card.negative {
+        background: rgba(220, 53, 69, 0.1);
+        border-left: 3px solid #dc3545;
+    }
+
+    .metric-card.neutral {
+        background: rgba(108, 117, 125, 0.1);
+        border-left: 3px solid #6c757d;
+    }
+
+    .metric-value {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: var(--bs-body-color);
+    }
+
+    .metric-label {
+        font-size: 0.75rem;
+        color: var(--bs-secondary-color);
+        text-transform: uppercase;
+    }
+
+    .metric-list {
+        font-size: 0.875rem;
+    }
+
+    .metric-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.375rem 0;
+        border-bottom: 1px solid rgba(var(--bs-border-color-rgb), 0.2);
+    }
+
+    .metric-row:last-child {
+        border-bottom: none;
+    }
+
+    .metric-row .metric-label {
+        font-weight: 500;
+        color: var(--bs-body-color);
+        text-transform: none;
+    }
+
+    .metric-row .metric-value {
+        font-weight: 600;
+        color: var(--bs-primary);
+        font-size: 0.875rem;
+    }
+
+    .feature-preview {
+        text-align: center;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background: rgba(var(--bs-light-rgb), 0.05);
+        margin-bottom: 1rem;
+    }
+
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, var(--bs-primary), var(--bs-primary-rgb));
+    }
+
+    .bg-gradient-info {
+        background: linear-gradient(135deg, var(--bs-info), rgba(13, 202, 240, 0.8));
+    }
+
+    .card-header.bg-primary,
+    .card-header.bg-danger,
+    .card-header.bg-info,
+    .card-header.bg-success,
+    .card-header.bg-warning,
+    .card-header.bg-secondary,
+    .card-header.bg-dark {
+        border-bottom: none;
+    }
+
+    #equityChart {
+        height: 250px !important;
+    }
+
+    @media (max-width: 768px) {
+        .metric-card {
+            padding: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 1rem;
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+        }
+
+        #equityChart {
+            height: 200px !important;
+        }
+
+        .feature-preview {
+            padding: 0.75rem;
+        }
+    }
+    </style>
 {% endblock %}
