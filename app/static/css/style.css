@@ -15,7 +15,7 @@ a { text-decoration: none; }
 
 /* Theme Variables */
 :root, html[data-bs-theme="dark"] {
-    --primary-color: #7f5af0; --primary-light: #9d8bf5; --secondary-color: #2cb67d;
+    --primary-color: #FFFF00; --primary-light: #9d8bf5; --secondary-color: #2cb67d;
     --main-bg: #16161a; --content-bg: #242629;
     --sidebar-bg: #1f2029;
     --text-color: #c3c3c3; --text-secondary: #94a1b2; --border-color: #43454b;
@@ -83,8 +83,28 @@ html[data-bs-theme="light"] {
 html[data-bs-theme="dark"] .sidebar-nav li a:hover,
 html[data-bs-theme="dark"] .sidebar-nav li a.active {
     color: #fff; background-color: rgba(255, 255, 255, 0.05);
-    border-left-color: var(--secondary-color);
+    border-left-color: #FFFF00;
 }
+
+html[data-bs-theme="dark"] .sidebar-nav .submenu li a:hover,
+html[data-bs-theme="dark"] .sidebar-nav .submenu li a.active {
+    color: #fff; background-color: rgba(0,0,0,0.3);
+    border-left-color: #FFFF00;
+}
+
+/* Light theme sidebar navigation */
+html[data-bs-theme="light"] .sidebar-nav li a:hover,
+html[data-bs-theme="light"] .sidebar-nav li a.active {
+    color: #212529; background-color: rgba(0, 0, 0, 0.05);
+    border-left-color: #ffc107;
+}
+
+html[data-bs-theme="light"] .sidebar-nav .submenu li a:hover,
+html[data-bs-theme="light"] .sidebar-nav .submenu li a.active {
+    color: #212529; background-color: rgba(0,0,0,0.1);
+    border-left-color: #ffc107;
+}
+
 .sidebar-nav li a .icon { width: 20px; text-align: center; font-size: 1.1em; transition: margin-right 0.25s ease-in-out; }
 .sidebar.desktop-full-open .sidebar-nav li a .icon,
 .sidebar.desktop-icon-only:hover .sidebar-nav li a .icon {
@@ -98,7 +118,23 @@ html[data-bs-theme="dark"] .sidebar-nav li a.active {
 .sidebar-nav .submenu { list-style: none; padding-left: 0; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; background-color: rgba(0,0,0,0.2); }
 .sidebar-nav .submenu.open { max-height: 500px; }
 .sidebar-nav .submenu li a { padding-left: 25px; font-size: 0.9em; border-left: 4px solid transparent; }
-.sidebar-nav .submenu li a:hover, .sidebar-nav .submenu li a.active { color: #fff; background-color: rgba(0,0,0,0.3); border-left-color: var(--secondary-color); }
+.sidebar-nav .submenu li a:hover, .sidebar-nav .submenu li a.active { color: #fff; background-color: rgba(0,0,0,0.3); border-left-color: #FFFF00; }
+
+/* Ensure all submenu items get bright yellow on hover/active */
+html[data-bs-theme="dark"] .sidebar-nav .submenu li a:hover,
+html[data-bs-theme="dark"] .sidebar-nav .submenu li a.active {
+    color: #fff;
+    background-color: rgba(0,0,0,0.3);
+    border-left-color: #FFFF00 !important;
+}
+
+/* Force bright yellow for all sidebar hover states */
+.sidebar-nav li a:hover,
+.sidebar-nav li a.active,
+.sidebar-nav .submenu li a:hover,
+.sidebar-nav .submenu li a.active {
+    border-left-color: #FFFF00 !important;
+}
 
 /* Hide submenu when sidebar is icon-only, but show it on hover */
 .sidebar.desktop-icon-only .submenu.open { max-height: 0; }

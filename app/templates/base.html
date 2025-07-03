@@ -182,6 +182,7 @@
                                 {% endif %}
                                 <span class="d-none d-md-inline">{{ current_user.username }}</span>
                             </a>
+
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
                                 <li><a class="dropdown-item" href="{{ url_for('auth.user_profile') }}">Profile</a></li>
                                 <a class="dropdown-item" href="{{ url_for('settings.view_settings') }}">Settings</a>
