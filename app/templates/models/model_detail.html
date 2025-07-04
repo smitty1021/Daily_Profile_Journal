@@ -112,136 +112,189 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header bg-secondary text-white">
+                <div class="card-header">
                     <h6 class="mb-0"><i class="fas fa-cog me-1"></i>Model Details, Configuration & Strategy</h6>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <!-- 1. Logic & Strategy Card -->
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="card nested-card">
-                                <div class="card-header bg-dark text-white">
-                                    <h6 class="mb-0"><i class="fas fa-brain me-1"></i>Logic & Strategy</h6>
+                    <!-- Option 1: Clean List Layout with Sections -->
+                    <div class="model-details-clean">
+                        <div class="row">
+                            <!-- Left Column -->
+                            <div class="col-lg-6">
+                                <!-- Logic & Strategy Section -->
+                                <div class="detail-section mb-4">
+                                    <div class="section-header">
+                                        <i class="fas fa-brain text-primary me-2"></i>
+                                        <h6>Logic & Strategy</h6>
+                                    </div>
+                                    <div class="section-content">
+                                        <p>{{ model.overview_logic or 'No overview logic defined' }}</p>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <p class="text-muted mb-0">{{ model.overview_logic or 'No overview logic defined' }}</p>
+
+                                <!-- Timeframes Section -->
+                                <div class="detail-section mb-4">
+                                    <div class="section-header">
+                                        <i class="fas fa-clock text-info me-2"></i>
+                                        <h6>Timeframes</h6>
+                                    </div>
+                                    <div class="section-content">
+                                        <div class="detail-row">
+                                            <span class="label">Primary Chart:</span>
+                                            <span class="value">{{ model.primary_chart_tf or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Execution Chart:</span>
+                                            <span class="value">{{ model.execution_chart_tf or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Context Chart:</span>
+                                            <span class="value">{{ model.context_chart_tf or 'Not specified' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Technical Analysis Section -->
+                                <div class="detail-section mb-4">
+                                    <div class="section-header">
+                                        <i class="fas fa-chart-line text-success me-2"></i>
+                                        <h6>Technical Analysis</h6>
+                                    </div>
+                                    <div class="section-content">
+                                        <div class="detail-row">
+                                            <span class="label">Indicators:</span>
+                                            <span class="value">{{ model.technical_indicators_used or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Patterns:</span>
+                                            <span class="value">{{ model.chart_patterns_used or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Price Action:</span>
+                                            <span class="value">{{ model.price_action_signals or 'Not specified' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Market Context Section -->
+                                <div class="detail-section mb-4">
+                                    <div class="section-header">
+                                        <i class="fas fa-globe text-warning me-2"></i>
+                                        <h6>Market Context</h6>
+                                    </div>
+                                    <div class="section-content">
+                                        <div class="detail-row">
+                                            <span class="label">Instruments:</span>
+                                            <span class="value">{{ model.instrument_applicability or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Sessions:</span>
+                                            <span class="value">{{ model.session_applicability or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Optimal Conditions:</span>
+                                            <span class="value">{{ model.optimal_market_conditions or 'Not specified' }}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- 2. Timeframes Card -->
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="card nested-card">
-                                <div class="card-header bg-dark text-white">
-                                    <h6 class="mb-0"><i class="fas fa-clock me-1"></i>Timeframes</h6>
+                            <!-- Right Column -->
+                            <div class="col-lg-6">
+                                <!-- Risk Management Section -->
+                                <div class="detail-section mb-4">
+                                    <div class="section-header">
+                                        <i class="fas fa-shield-alt text-danger me-2"></i>
+                                        <h6>Risk Management</h6>
+                                    </div>
+                                    <div class="section-content">
+                                        <div class="detail-row">
+                                            <span class="label">Min R:R Ratio:</span>
+                                            <span class="value">{{ model.min_risk_reward_ratio or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Stop Loss:</span>
+                                            <span class="value">{{ model.stop_loss_strategy or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Take Profit:</span>
+                                            <span class="value">{{ model.take_profit_strategy or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Position Size:</span>
+                                            <span class="value">{{ model.position_sizing_rules or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Max Loss/Trade:</span>
+                                            <span class="value">{{ model.model_max_loss_per_trade or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Max Daily Loss:</span>
+                                            <span class="value">{{ model.model_max_daily_loss or 'Not specified' }}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <ul class="list-unstyled mb-0">
-                                        <li><strong>Primary Chart:</strong> {{ model.primary_chart_tf or 'Not specified' }}</li>
-                                        <li><strong>Execution Chart:</strong> {{ model.execution_chart_tf or 'Not specified' }}</li>
-                                        <li><strong>Context Chart:</strong> {{ model.context_chart_tf or 'Not specified' }}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- 3. Technical Analysis Card -->
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="card nested-card">
-                                <div class="card-header bg-dark text-white">
-                                    <h6 class="mb-0"><i class="fas fa-chart-line me-1"></i>Technical Analysis</h6>
+                                <!-- Entry/Exit Strategy Section -->
+                                <div class="detail-section mb-4">
+                                    <div class="section-header">
+                                        <i class="fas fa-play text-primary me-2"></i>
+                                        <h6>Entry/Exit Strategy</h6>
+                                    </div>
+                                    <div class="section-content">
+                                        <div class="detail-row">
+                                            <span class="label">Entry Trigger:</span>
+                                            <span class="value">{{ model.entry_trigger_description or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Key Levels:</span>
+                                            <span class="value">{{ model.key_levels_identification or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Volume Analysis:</span>
+                                            <span class="value">{{ model.volume_analysis_notes or 'Not specified' }}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <ul class="list-unstyled mb-0">
-                                        <li><strong>Indicators:</strong> {{ model.technical_indicators_used or 'Not specified' }}</li>
-                                        <li><strong>Patterns:</strong> {{ model.chart_patterns_used or 'Not specified' }}</li>
-                                        <li><strong>Price Action:</strong> {{ model.price_action_signals or 'Not specified' }}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- 4. Risk Management Card -->
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="card nested-card">
-                                <div class="card-header bg-dark text-white">
-                                    <h6 class="mb-0"><i class="fas fa-shield-alt me-1"></i>Risk Management</h6>
+                                <!-- Trade Management Section -->
+                                <div class="detail-section mb-4">
+                                    <div class="section-header">
+                                        <i class="fas fa-tools text-info me-2"></i>
+                                        <h6>Trade Management</h6>
+                                    </div>
+                                    <div class="section-content">
+                                        <div class="detail-row">
+                                            <span class="label">Breakeven Rules:</span>
+                                            <span class="value">{{ model.trade_management_breakeven_rules or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Scaling Rules:</span>
+                                            <span class="value">{{ model.scaling_in_out_rules or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Trailing Stop:</span>
+                                            <span class="value">{{ model.trade_management_trailing_stop_rules or 'Not specified' }}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <ul class="list-unstyled mb-0">
-                                        <li><strong>Min R:R Ratio:</strong> {{ model.min_risk_reward_ratio or 'Not specified' }}</li>
-                                        <li><strong>Stop Loss:</strong> {{ model.stop_loss_strategy or 'Not specified' }}</li>
-                                        <li><strong>Take Profit:</strong> {{ model.take_profit_strategy or 'Not specified' }}</li>
-                                        <li><strong>Position Size:</strong> {{ model.position_sizing_rules or 'Not specified' }}</li>
-                                        <li><strong>Max Loss/Trade:</strong> {{ model.model_max_loss_per_trade or 'Not specified' }}</li>
-                                        <li><strong>Max Daily Loss:</strong> {{ model.model_max_daily_loss or 'Not specified' }}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Second Row -->
-                    <div class="row">
-                        <!-- 5. Market Context Card -->
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="card nested-card">
-                                <div class="card-header bg-dark text-white">
-                                    <h6 class="mb-0"><i class="fas fa-globe me-1"></i>Market Context</h6>
-                                </div>
-                                <div class="card-body">
-                                    <ul class="list-unstyled mb-0">
-                                        <li><strong>Instruments:</strong> {{ model.instrument_applicability or 'Not specified' }}</li>
-                                        <li><strong>Sessions:</strong> {{ model.session_applicability or 'Not specified' }}</li>
-                                        <li><strong>Optimal Conditions:</strong> {{ model.optimal_market_conditions or 'Not specified' }}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 6. Entry/Exit Strategy Card -->
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="card nested-card">
-                                <div class="card-header bg-dark text-white">
-                                    <h6 class="mb-0"><i class="fas fa-play me-1"></i>Entry/Exit Strategy</h6>
-                                </div>
-                                <div class="card-body">
-                                    <ul class="list-unstyled mb-0">
-                                        <li><strong>Entry Trigger:</strong> {{ model.entry_trigger_description or 'Not specified' }}</li>
-                                        <li><strong>Key Levels:</strong> {{ model.key_levels_identification or 'Not specified' }}</li>
-                                        <li><strong>Volume Analysis:</strong> {{ model.volume_analysis_notes or 'Not specified' }}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 7. Trade Management Card -->
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="card nested-card">
-                                <div class="card-header bg-dark text-white">
-                                    <h6 class="mb-0"><i class="fas fa-tools me-1"></i>Trade Management</h6>
-                                </div>
-                                <div class="card-body">
-                                    <ul class="list-unstyled mb-0">
-                                        <li><strong>Breakeven Rules:</strong> {{ model.trade_management_breakeven_rules or 'Not specified' }}</li>
-                                        <li><strong>Scaling Rules:</strong> {{ model.scaling_in_out_rules or 'Not specified' }}</li>
-                                        <li><strong>Trailing Stop:</strong> {{ model.trade_management_trailing_stop_rules or 'Not specified' }}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 8. Assessment Card -->
-                        <div class="col-lg-3 col-md-6 mb-3">
-                            <div class="card nested-card">
-                                <div class="card-header bg-dark text-white">
-                                    <h6 class="mb-0"><i class="fas fa-star me-1"></i>Assessment</h6>
-                                </div>
-                                <div class="card-body">
-                                    <ul class="list-unstyled mb-0">
-                                        <li><strong>Strengths:</strong> {{ model.strengths or 'Not specified' }}</li>
-                                        <li><strong>Weaknesses:</strong> {{ model.weaknesses or 'Not specified' }}</li>
-                                    </ul>
+                                <!-- Assessment Section -->
+                                <div class="detail-section mb-4">
+                                    <div class="section-header">
+                                        <i class="fas fa-star text-warning me-2"></i>
+                                        <h6>Assessment</h6>
+                                    </div>
+                                    <div class="section-content">
+                                        <div class="detail-row">
+                                            <span class="label">Strengths:</span>
+                                            <span class="value">{{ model.strengths or 'Not specified' }}</span>
+                                        </div>
+                                        <div class="detail-row">
+                                            <span class="label">Weaknesses:</span>
+                                            <span class="value">{{ model.weaknesses or 'Not specified' }}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -601,16 +654,15 @@
     <script>
         // Fixed equity curve chart
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 DOM loaded, initializing equity chart...');
+            console.log('🚀 DOM loaded, initializing enhanced equity chart...');
 
             // Update chart status
             const statusElement = document.getElementById('chartStatus');
             if (statusElement) statusElement.textContent = 'Loading chart...';
 
-            // Get the actual data from server - FIXED DATA PASSING
+            // Get the actual data from server
             let equityData;
             try {
-                // Use the JSON version we're now passing from the server
                 equityData = {{ equity_data_json|safe }};
                 console.log('✅ Successfully parsed equity data:', equityData);
             } catch (e) {
@@ -631,61 +683,127 @@
             console.log('🎯 Canvas element found:', !!ctx);
 
             if (ctx && equityLabels.length > 0 && equityValues.length > 0) {
-                console.log('🎨 Creating chart with', equityLabels.length, 'data points');
+                console.log('🎨 Creating enhanced chart with', equityLabels.length, 'data points');
 
                 // Update status
                 if (statusElement) statusElement.textContent = 'Rendering chart...';
 
-                // Determine color based on final value
-                const finalValue = equityValues[equityValues.length - 1];
-                const isPositive = finalValue >= 0;
-                const borderColor = isPositive ? '#28a745' : '#dc3545';
-                const backgroundColor = isPositive ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)';
+                // Create segments for dynamic coloring
+                function createColorSegments(data) {
+                    const segments = [];
+                    let currentSegment = {
+                        start: 0,
+                        end: 0,
+                        color: data[0] >= 0 ? '#28a745' : '#dc3545', // Green for positive, red for negative
+                        backgroundColor: data[0] >= 0 ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)'
+                    };
 
-                console.log('🎨 Chart styling - Final P&L:', finalValue, 'Positive:', isPositive);
+                    for (let i = 1; i < data.length; i++) {
+                        const currentValue = data[i];
+                        const previousValue = data[i - 1];
+                        const currentColor = currentValue >= 0 ? '#28a745' : '#dc3545';
+
+                        // If color should change (crossing zero line)
+                        if ((currentValue >= 0 && previousValue < 0) || (currentValue < 0 && previousValue >= 0)) {
+                            // End current segment
+                            currentSegment.end = i - 1;
+                            segments.push(currentSegment);
+
+                            // Start new segment
+                            currentSegment = {
+                                start: i - 1,
+                                end: i,
+                                color: currentColor,
+                                backgroundColor: currentColor === '#28a745' ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)'
+                            };
+                        }
+
+                        // Update segment end
+                        currentSegment.end = i;
+                        currentSegment.color = currentColor;
+                        currentSegment.backgroundColor = currentColor === '#28a745' ? 'rgba(40, 167, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)';
+                    }
+
+                    // Add final segment
+                    if (currentSegment.start <= currentSegment.end) {
+                        segments.push(currentSegment);
+                    }
+
+                    return segments;
+                }
+
+                // Create datasets for each color segment
+                const colorSegments = createColorSegments(equityValues);
+                console.log('🎨 Created', colorSegments.length, 'color segments');
+
+                const datasets = colorSegments.map((segment, index) => {
+                    const segmentData = new Array(equityValues.length).fill(null);
+
+                    // Fill only the segment range with data
+                    for (let i = segment.start; i <= segment.end; i++) {
+                        segmentData[i] = equityValues[i];
+                    }
+
+                    return {
+                        label: `Segment ${index + 1}`,
+                        data: segmentData,
+                        borderColor: segment.color,
+                        backgroundColor: segment.backgroundColor,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        pointBackgroundColor: segment.color,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1
+                    };
+                });
+
+                console.log('🎨 Chart styling - Using', datasets.length, 'datasets for dynamic coloring');
 
                 try {
                     const chart = new Chart(ctx, {
                         type: 'line',
                         data: {
                             labels: equityLabels,
-                            datasets: [{
-                                label: 'Cumulative P&L',
-                                data: equityValues,
-                                borderColor: borderColor,
-                                backgroundColor: backgroundColor,
-                                borderWidth: 2,
-                                fill: true,
-                                tension: 0.1,
-                                pointRadius: 0,
-                                pointHoverRadius: 4,
-                                pointBackgroundColor: borderColor,
-                                pointBorderColor: '#fff',
-                                pointBorderWidth: 1
-                            }]
+                            datasets: datasets
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
                             plugins: {
                                 legend: {
-                                    display: false,
-                                    position: 'top',
-                                    labels: {
-                                        color: '#fff'
-                                    }
+                                    display: false // Hide legend since we have multiple datasets
                                 },
                                 tooltip: {
                                     mode: 'index',
                                     intersect: false,
                                     callbacks: {
                                         label: function(context) {
-                                            const value = context.raw;
-                                            return 'P&L: $' + value.toLocaleString(undefined, {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2
-                                            });
+                                            // Only show tooltip for non-null values
+                                            if (context.raw !== null) {
+                                                return 'P&L: $' + context.raw.toLocaleString(undefined, {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2
+                                                });
+                                            }
+                                            return '';
+                                        },
+                                        // Remove the dataset label from tooltip
+                                        labelColor: function(context) {
+                                            return {
+                                                borderColor: context.dataset.borderColor,
+                                                backgroundColor: context.dataset.borderColor,
+                                                borderWidth: 2,
+                                                borderDash: [],
+                                                borderRadius: 2,
+                                            };
                                         }
+                                    },
+                                    // Filter out null values from tooltip
+                                    filter: function(tooltipItem) {
+                                        return tooltipItem.raw !== null;
                                     }
                                 }
                             },
@@ -722,7 +840,11 @@
                                     grid: {
                                         display: true,
                                         color: function(context) {
-                                            return context.tick.value === 0 ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)';
+                                            // Highlight the zero line
+                                            return context.tick.value === 0 ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.1)';
+                                        },
+                                        lineWidth: function(context) {
+                                            return context.tick.value === 0 ? 2 : 1;
                                         }
                                     },
                                     ticks: {
@@ -741,15 +863,15 @@
                         }
                     });
 
-                    console.log('🎉 Chart created successfully!', chart);
+                    console.log('🎉 Enhanced chart created successfully!', chart);
 
                     // Update status to success
                     if (statusElement) {
-                        statusElement.innerHTML = '<span class="text-success">Chart loaded successfully!</span>';
+                        statusElement.innerHTML = '<span class="text-success">Enhanced chart loaded successfully!</span>';
                     }
 
                 } catch (error) {
-                    console.error('💥 Error creating chart:', error);
+                    console.error('💥 Error creating enhanced chart:', error);
 
                     // Update status to error
                     if (statusElement) {
@@ -786,7 +908,7 @@
                 }
             }
 
-            console.log('📝 Chart initialization complete');
+            console.log('📝 Enhanced chart initialization complete');
         });
     chart.resize()
     </script>

@@ -1,19 +1,40 @@
-/* General Base Styles */
+/*
+================================================
+TRADING JOURNAL MASTER STYLESHEET
+================================================
+For Flask trading journal application following Random's (Matt Mickey) methodology
+Supports model analytics, trade management, and comprehensive performance tracking
+================================================
+*/
+
+/*
+================================================
+1. THEME VARIABLES & BASE SETUP
+================================================
+*/
+
+/* Base font and reset */
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    margin: 0; padding: 0; line-height: 1.6;
+    margin: 0; 
+    padding: 0; 
+    line-height: 1.6;
     background-color: var(--main-bg);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
-a { text-decoration: none; }
 
+a { 
+    text-decoration: none; 
+}
+
+/* Brand icon */
 .navbar-brand-icon {
     height: 45px;
     width: auto;
     object-fit: contain;
 }
 
-/* Theme Variables */
+/* Theme color variables */
 :root, html[data-bs-theme="dark"] {
     --primary-color: #FFFF00;
     --primary-light: #9d8bf5;
@@ -27,6 +48,7 @@ a { text-decoration: none; }
     --bs-body-color: var(--text-color);
     --bs-body-bg: var(--main-bg);
 }
+
 html[data-bs-theme="light"] {
     --primary-color: #6200ea;
     --primary-light: #7e3ff2;
@@ -41,105 +63,625 @@ html[data-bs-theme="light"] {
     --bs-body-bg: var(--main-bg);
 }
 
-/* --- Core Layout --- */
-.app-body-container { display: flex; flex-grow: 1; }
+/*
+================================================
+2. LAYOUT STRUCTURE
+================================================
+*/
+
+/* Main application layout */
+.app-body-container { 
+    display: flex; 
+    flex-grow: 1; 
+}
+
 .content-wrapper {
-    display: flex; flex-direction: column; flex-grow: 1;
+    display: flex; 
+    flex-direction: column; 
+    flex-grow: 1;
     transition: margin-left 0.25s ease-in-out;
     margin-left: 75px;
 }
+
 .content-wrapper.full-width {
     margin-left: 260px;
 }
 
-/* --- Sidebar Styles --- */
+.main-content { 
+    flex-grow: 1; 
+}
+
+/*
+================================================
+3. SIDEBAR NAVIGATION
+================================================
+*/
+
+/* Sidebar container */
 .sidebar {
     width: 75px;
     background-color: var(--sidebar-bg);
-    display: flex; flex-direction: column;
-    position: fixed; top: 56px; left: 0; height: calc(100vh - 56px);
-    z-index: 1020; border-right: 1px solid var(--border-color);
+    display: flex; 
+    flex-direction: column;
+    position: fixed; 
+    top: 56px; 
+    left: 0; 
+    height: calc(100vh - 56px);
+    z-index: 1020; 
+    border-right: 1px solid var(--border-color);
     overflow-x: hidden;
     transition: width 0.25s ease-in-out, transform 0.25s ease-in-out;
 }
 
-/* Sidebar States */
-.sidebar.desktop-full-open { width: 260px; }
+/* Sidebar states */
+.sidebar.desktop-full-open { 
+    width: 260px; 
+}
+
 .sidebar.desktop-icon-only .sidebar-nav .label,
 .sidebar.desktop-icon-only .sidebar-nav .arrow,
-.sidebar.desktop-icon-only .sidebar-footer { opacity: 0; visibility: hidden; width: 0; }
-.sidebar.desktop-icon-only .sidebar-nav li a { justify-content: center; }
+.sidebar.desktop-icon-only .sidebar-footer { 
+    opacity: 0; 
+    visibility: hidden; 
+    width: 0; 
+}
 
-/* Hover-to-expand state */
+.sidebar.desktop-icon-only .sidebar-nav li a { 
+    justify-content: center; 
+}
+
+/* Hover-to-expand functionality */
 .sidebar.desktop-icon-only:hover {
     width: 260px;
-    box-shadow: 3px 0 10px rgba(0,0,0,0.1); z-index: 1025;
+    box-shadow: 3px 0 10px rgba(0,0,0,0.1); 
+    z-index: 1025;
 }
+
 .sidebar.desktop-icon-only:hover .sidebar-nav .label,
 .sidebar.desktop-icon-only:hover .sidebar-nav .arrow,
 .sidebar.desktop-icon-only:hover .sidebar-footer {
-    opacity: 1; visibility: visible; width: auto;
+    opacity: 1; 
+    visibility: visible; 
+    width: auto;
     transition: opacity 0.2s ease-in 0.1s;
 }
-.sidebar.desktop-icon-only:hover .sidebar-nav li a { justify-content: flex-start; }
 
-/* --- Sidebar Navigation Items --- */
-.sidebar-nav { overflow-y: auto; flex-grow: 1; padding-top: 0.75rem; }
-.sidebar-nav ul { list-style: none; padding: 0; margin: 0; }
+.sidebar.desktop-icon-only:hover .sidebar-nav li a { 
+    justify-content: flex-start; 
+}
+
+/* Sidebar navigation */
+.sidebar-nav { 
+    overflow-y: auto; 
+    flex-grow: 1; 
+    padding-top: 0.75rem; 
+}
+
+.sidebar-nav ul { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+}
+
 .sidebar-nav li a {
-    display: flex; align-items: center; padding: 12px 25px;
-    color: var(--text-secondary); white-space: nowrap; overflow: hidden;
+    display: flex; 
+    align-items: center; 
+    padding: 12px 25px;
+    color: var(--text-secondary); 
+    white-space: nowrap; 
+    overflow: hidden;
     transition: background-color 0.2s, color 0.2s, justify-content 0.25s;
     border-left: 4px solid transparent;
 }
+
+/* Sidebar link hover states */
 html[data-bs-theme="dark"] .sidebar-nav li a:hover,
 html[data-bs-theme="dark"] .sidebar-nav li a.active {
-    color: #fff; background-color: rgba(255, 255, 255, 0.05);
+    color: #fff; 
+    background-color: rgba(255, 255, 255, 0.05);
     border-left-color: #FFFF00;
 }
 
 html[data-bs-theme="dark"] .sidebar-nav .submenu li a:hover,
 html[data-bs-theme="dark"] .sidebar-nav .submenu li a.active {
-    color: #fff; background-color: rgba(0,0,0,0.3);
+    color: #fff; 
+    background-color: rgba(0,0,0,0.3);
     border-left-color: #FFFF00;
 }
 
-/* Light theme sidebar navigation */
 html[data-bs-theme="light"] .sidebar-nav li a:hover,
 html[data-bs-theme="light"] .sidebar-nav li a.active {
-    color: #212529; background-color: rgba(0, 0, 0, 0.05);
+    color: #212529; 
+    background-color: rgba(0, 0, 0, 0.05);
     border-left-color: #ffc107;
 }
 
 html[data-bs-theme="light"] .sidebar-nav .submenu li a:hover,
 html[data-bs-theme="light"] .sidebar-nav .submenu li a.active {
-    color: #212529; background-color: rgba(0,0,0,0.1);
+    color: #212529; 
+    background-color: rgba(0,0,0,0.1);
     border-left-color: #ffc107;
 }
 
-.sidebar-nav li a .icon { width: 20px; text-align: center; font-size: 1.1em; transition: margin-right 0.25s ease-in-out; }
+/* Sidebar icons and labels */
+.sidebar-nav li a .icon { 
+    width: 20px; 
+    text-align: center; 
+    font-size: 1.1em; 
+    transition: margin-right 0.25s ease-in-out; 
+}
+
 .sidebar.desktop-full-open .sidebar-nav li a .icon,
 .sidebar.desktop-icon-only:hover .sidebar-nav li a .icon {
     margin-right: 15px;
 }
-.sidebar.desktop-icon-only .sidebar-nav li a .icon { margin-right: 0; }
-.sidebar-nav li a .label { flex-grow: 1; }
-.sidebar-nav li a .arrow { margin-left: auto; transition: transform 0.3s ease; }
 
-/* Submenu Styles */
-.sidebar-nav .submenu { list-style: none; padding-left: 0; max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; background-color: rgba(0,0,0,0.2); }
-.sidebar-nav .submenu.open { max-height: 500px; }
-.sidebar-nav .submenu li a { padding-left: 25px; font-size: 0.9em; border-left: 4px solid transparent; }
-.sidebar-nav .submenu li a:hover, .sidebar-nav .submenu li a.active { color: #fff; background-color: rgba(0,0,0,0.3); border-left-color: #FFFF00; }
+.sidebar.desktop-icon-only .sidebar-nav li a .icon { 
+    margin-right: 0; 
+}
 
-/* Hide submenu when sidebar is icon-only, but show it on hover */
-.sidebar.desktop-icon-only .submenu.open { max-height: 0; }
-.sidebar.desktop-icon-only:hover .submenu.open { max-height: 500px; }
+.sidebar-nav li a .label { 
+    flex-grow: 1; 
+}
 
-.sidebar-footer { padding: 15px 25px; text-align: center; margin-top: auto; border-top: 1px solid var(--border-color); white-space: nowrap; overflow: hidden; }
-.main-content { flex-grow: 1; }
+.sidebar-nav li a .arrow { 
+    margin-left: auto; 
+    transition: transform 0.3s ease; 
+}
 
-/* --- Action Button Styles --- */
+/* Submenu styling */
+.sidebar-nav .submenu { 
+    list-style: none; 
+    padding-left: 0; 
+    max-height: 0; 
+    overflow: hidden; 
+    transition: max-height 0.3s ease-in-out; 
+    background-color: rgba(0,0,0,0.2); 
+}
+
+.sidebar-nav .submenu.open { 
+    max-height: 500px; 
+}
+
+.sidebar-nav .submenu li a { 
+    padding-left: 25px; 
+    font-size: 0.9em; 
+    border-left: 4px solid transparent; 
+}
+
+.sidebar-nav .submenu li a:hover, 
+.sidebar-nav .submenu li a.active { 
+    color: #fff; 
+    background-color: rgba(0,0,0,0.3); 
+    border-left-color: #FFFF00; 
+}
+
+/* Hide submenu when sidebar is collapsed */
+.sidebar.desktop-icon-only .submenu.open { 
+    max-height: 0; 
+}
+
+.sidebar.desktop-icon-only:hover .submenu.open { 
+    max-height: 500px; 
+}
+
+/* Sidebar footer */
+.sidebar-footer { 
+    padding: 15px 25px; 
+    text-align: center; 
+    margin-top: auto; 
+    border-top: 1px solid var(--border-color); 
+    white-space: nowrap; 
+    overflow: hidden; 
+}
+
+/*
+================================================
+4. CARD SYSTEM (GLOBAL)
+================================================
+*/
+
+/* Base card styling */
+.card {
+    border: 1px solid var(--border-color);
+    background-color: var(--content-bg);
+    transition: all 0.2s ease;
+    border-radius: 8px;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* CONSOLIDATED CARD HEADERS - Enhanced styling with differentiation */
+.card-header {
+    background: linear-gradient(135deg, #2d3748, #4a5568); /* Main section headers */
+    border-bottom: none;
+    font-weight: 600;
+    color: #ffffff;
+    padding: 0.75rem 1rem;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Nested card headers - Slightly different gradient */
+.nested-card .card-header {
+    background: linear-gradient(135deg, #374151, #4b5563); /* Slightly lighter gradient */
+    border-bottom: none;
+    font-weight: 600;
+    color: #ffffff;
+    padding: 0.75rem 1rem;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Analytics dashboard headers - Dark gray gradient to match project theme */
+.model-analytics-dashboard .card-header {
+    background: linear-gradient(135deg, #1f2937, #374151); /* Dark gray gradient */
+    border-bottom: none;
+    font-weight: 600;
+    color: #ffffff;
+    padding: 0.75rem 1rem;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Main section headers - Larger sizing for prominence */
+.card-header h6 {
+    font-size: 1.1em; /* Main headers like "Model Details, Configuration & Strategy" */
+    margin: 0;
+    line-height: 1.2;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+/* Nested card headers - Larger font size */
+.nested-card .card-header h6 {
+    font-size: 1.0em; /* Increased from 0.95em */
+    margin: 0;
+    line-height: 1.2;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Analytics dashboard headers - Match main headers */
+.model-analytics-dashboard .card-header h6 {
+    font-size: 1.0em;
+    margin: 0;
+    line-height: 1.2;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* Light theme header adjustments */
+html[data-bs-theme="light"] .card-header {
+    background: linear-gradient(135deg, #495057, #6c757d); /* Main headers for light theme */
+    color: #ffffff;
+}
+
+html[data-bs-theme="light"] .nested-card .card-header {
+    background: linear-gradient(135deg, #5a6268, #6f7479); /* Slightly different for nested */
+    color: #ffffff;
+}
+
+html[data-bs-theme="light"] .model-analytics-dashboard .card-header {
+    background: linear-gradient(135deg, #495057, #6c757d); /* Same as main for analytics */
+    color: #ffffff;
+}
+
+html[data-bs-theme="light"] .card-header h6,
+html[data-bs-theme="light"] .nested-card .card-header h6,
+html[data-bs-theme="light"] .model-analytics-dashboard .card-header h6 {
+    color: #ffffff;
+}
+
+/* Card body */
+.card-body {
+    background-color: var(--content-bg);
+    color: var(--text-color);
+    padding: 1rem;
+}
+
+/*
+================================================
+5. TRADING MODEL CARDS (NESTED & ANALYTICS)
+================================================
+*/
+
+/* Model details nested cards - Enhanced formatting */
+.nested-card {
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    height: 100%;
+    min-height: 140px;
+    background-color: var(--content-bg);
+    border-radius: 8px;
+}
+
+.nested-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.nested-card .card-body {
+    padding: 0.75rem;
+    background-color: var(--content-bg);
+}
+
+/* Enhanced list formatting with line breaks and indentation */
+.nested-card .card-body ul {
+    font-size: 0.85em; /* Slightly larger for better readability */
+    margin-bottom: 0;
+    line-height: 1.4;
+    list-style: none;
+    padding-left: 0;
+}
+
+.nested-card .card-body ul li {
+    margin-bottom: 8px; /* Increased spacing between items */
+    display: block; /* Ensure block display for line breaks */
+}
+
+.nested-card .card-body ul li strong {
+    color: var(--text-color);
+    font-weight: 800; /* Made even bolder - increased from 600 to 800 */
+    display: block; /* Put labels on their own line */
+    margin-bottom: 3px; /* Space between label and content */
+    font-size: 0.9em; /* Slightly larger for better visibility */
+}
+
+/* Content after strong tags - indented and on new line */
+.nested-card .card-body ul li strong + * {
+    margin-left: 1rem; /* Indent the content */
+    display: block;
+    color: var(--text-color);
+}
+
+/* Fix Logic & Strategy paragraph text - ensure consistent color */
+.nested-card .card-body p {
+    font-size: 0.85em; /* Match list font size */
+    margin-bottom: 0;
+    line-height: 1.4;
+    color: var(--text-color); /* Consistent with other cards */
+    font-weight: normal; /* Ensure normal weight */
+}
+
+/* Ensure all nested card text is consistent */
+.nested-card .card-body,
+.nested-card .card-body * {
+    color: var(--text-color) !important; /* Force consistent color */
+}
+
+/* Make sure the strong tags in nested cards are extra bold */
+.nested-card .card-body strong {
+    font-weight: 800 !important; /* Extra bold with !important */
+    color: var(--text-color) !important;
+}
+
+/*
+================================================
+6. ANALYTICS DASHBOARD CARDS
+================================================
+*/
+
+/* Analytics dashboard container */
+.model-analytics-dashboard .card {
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background-color: var(--content-bg);
+}
+
+.model-analytics-dashboard .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.model-analytics-dashboard .card-body {
+    background-color: var(--content-bg);
+    padding: 1rem;
+}
+
+/* Metric cards - colored based on performance */
+.model-analytics-dashboard .metric-card {
+    padding: 12px 8px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.model-analytics-dashboard .metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Metric card color themes - Enhanced borders */
+.model-analytics-dashboard .metric-card.positive {
+    background: rgba(25, 135, 84, 0.1);
+    color: #155724;
+    border: 1px solid rgba(25, 135, 84, 0.4) !important; /* Brighter green border */
+}
+
+.model-analytics-dashboard .metric-card.negative {
+    background: rgba(220, 53, 69, 0.1);
+    color: #721c24;
+    border: 1px solid rgba(220, 53, 69, 0.4) !important; /* Brighter red border */
+}
+
+.model-analytics-dashboard .metric-card.neutral {
+    background: rgba(0, 123, 255, 0.1);
+    color: #004085;
+    border: 1px solid rgba(0, 123, 255, 0.4) !important; /* Brighter blue border */
+}
+
+/* Dark theme metric cards - Enhanced borders */
+html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card.positive {
+    background: rgba(25, 135, 84, 0.2);
+    color: #75b798;
+    border: 1px solid rgba(25, 135, 84, 0.6) !important; /* Even brighter for dark theme */
+}
+
+html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card.negative {
+    background: rgba(220, 53, 69, 0.2);
+    color: #f1919c;
+    border: 1px solid rgba(220, 53, 69, 0.6) !important; /* Even brighter for dark theme */
+}
+
+html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card.neutral {
+    background: rgba(0, 123, 255, 0.2);
+    color: #9ec5fe;
+    border: 1px solid rgba(0, 123, 255, 0.6) !important; /* Even brighter for dark theme */
+}
+
+/* Metric text styling */
+.model-analytics-dashboard .metric-value {
+    font-weight: bold;
+    font-size: 1.1em;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    color: inherit;
+}
+
+.model-analytics-dashboard .metric-label {
+    font-size: 0.8em;
+    font-weight: 500;
+    line-height: 1.1;
+    opacity: 0.8;
+    color: inherit;
+}
+
+/* Metric rows for detailed analytics */
+.model-analytics-dashboard .metric-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.375rem 0;
+    border-bottom: 1px solid rgba(var(--bs-border-color-rgb), 0.2);
+}
+
+.model-analytics-dashboard .metric-row:last-child {
+    border-bottom: none;
+}
+
+.model-analytics-dashboard .metric-row .metric-label {
+    font-weight: 500;
+    color: var(--bs-body-color);
+    text-transform: none;
+    flex: 1;
+}
+
+.model-analytics-dashboard .metric-row .metric-value {
+    font-weight: 600;
+    color: var(--bs-primary);
+    font-size: 0.875rem;
+    text-align: right;
+    flex: 0 0 auto;
+}
+
+/*
+================================================
+7. INSIGHTS & SYSTEM QUALITY
+================================================
+*/
+
+/* Insight items for system quality analysis - EXACT match to metric cards */
+.insight-item {
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 1.1em; /* Matches metric card font size */
+    line-height: 1.3;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+/* Good insights - EXACT match to positive metric cards */
+.insight-item.good,
+.insight-item {
+    background: rgba(25, 135, 84, 0.1); /* EXACT match to positive cards */
+    color: #155724; /* EXACT match to positive cards */
+    border: 1px solid rgba(25, 135, 84, 0.4) !important; /* EXACT match to positive cards */
+}
+
+/* Bad insights - EXACT match to negative metric cards */
+.insight-item.bad {
+    background: rgba(220, 53, 69, 0.1); /* EXACT match to negative cards */
+    color: #721c24; /* EXACT match to negative cards */
+    border: 1px solid rgba(220, 53, 69, 0.4) !important; /* EXACT match to negative cards */
+}
+
+/* Warning insights - EXACT match to neutral metric cards */
+.insight-item.warning {
+    background: rgba(0, 123, 255, 0.1); /* EXACT match to neutral cards */
+    color: #004085; /* EXACT match to neutral cards */
+    border: 1px solid rgba(0, 123, 255, 0.4) !important; /* EXACT match to neutral cards */
+}
+
+.insight-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+.insight-item i {
+    margin-right: 8px;
+}
+
+/* Icons for different insight types */
+.insight-item.good i,
+.insight-item i {
+    color: #28a745; /* Green check icon */
+}
+
+.insight-item.bad i {
+    color: #dc3545; /* Red warning icon */
+}
+
+.insight-item.warning i {
+    color: #007bff; /* Blue caution icon */
+}
+
+/* Dark theme insights - EXACT match to metric cards */
+html[data-bs-theme="dark"] .insight-item.good,
+html[data-bs-theme="dark"] .insight-item {
+    background: rgba(25, 135, 84, 0.2); /* EXACT match to positive cards */
+    color: #75b798; /* EXACT match to positive cards */
+    border: 1px solid rgba(25, 135, 84, 0.6) !important; /* EXACT match to positive cards */
+}
+
+html[data-bs-theme="dark"] .insight-item.bad {
+    background: rgba(220, 53, 69, 0.2); /* EXACT match to negative cards */
+    color: #f1919c; /* EXACT match to negative cards */
+    border: 1px solid rgba(220, 53, 69, 0.6) !important; /* EXACT match to negative cards */
+}
+
+html[data-bs-theme="dark"] .insight-item.warning {
+    background: rgba(0, 123, 255, 0.2); /* EXACT match to neutral cards */
+    color: #9ec5fe; /* EXACT match to neutral cards */
+    border: 1px solid rgba(0, 123, 255, 0.6) !important; /* EXACT match to neutral cards */
+}
+
+html[data-bs-theme="dark"] .insight-item.good i,
+html[data-bs-theme="dark"] .insight-item i {
+    color: #75b798;
+}
+
+html[data-bs-theme="dark"] .insight-item.bad i {
+    color: #f1919c;
+}
+
+html[data-bs-theme="dark"] .insight-item.warning i {
+    color: #9ec5fe;
+}
+
+/*
+================================================
+8. BUTTON SYSTEM
+================================================
+*/
+
+/* Action buttons with hover effects */
 .action-btn {
     border-radius: 8px !important;
     padding: 0.5rem 1rem !important;
@@ -159,358 +701,170 @@ html[data-bs-theme="light"] .sidebar-nav .submenu li a.active {
     box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
 }
 
-/* Light theme action button styles */
+/* Button color schemes - Light theme */
 html[data-bs-theme="light"] .action-btn.btn-outline-primary {
     color: #6200ea !important;
     border-color: #6200ea !important;
 }
+
 html[data-bs-theme="light"] .action-btn.btn-outline-primary:hover {
     color: #fff !important;
     background-color: #6200ea !important;
-    border-color: #6200ea !important;
 }
 
 html[data-bs-theme="light"] .action-btn.btn-outline-success {
     color: #198754 !important;
     border-color: #198754 !important;
 }
+
 html[data-bs-theme="light"] .action-btn.btn-outline-success:hover {
     color: #fff !important;
     background-color: #198754 !important;
-    border-color: #198754 !important;
 }
 
 html[data-bs-theme="light"] .action-btn.btn-outline-info {
     color: #0dcaf0 !important;
     border-color: #0dcaf0 !important;
 }
+
 html[data-bs-theme="light"] .action-btn.btn-outline-info:hover {
     color: #000 !important;
     background-color: #0dcaf0 !important;
-    border-color: #0dcaf0 !important;
 }
 
 html[data-bs-theme="light"] .action-btn.btn-outline-warning {
     color: #ffc107 !important;
     border-color: #ffc107 !important;
 }
+
 html[data-bs-theme="light"] .action-btn.btn-outline-warning:hover {
     color: #000 !important;
     background-color: #ffc107 !important;
-    border-color: #ffc107 !important;
 }
 
 html[data-bs-theme="light"] .action-btn.btn-outline-danger {
     color: #dc3545 !important;
     border-color: #dc3545 !important;
 }
+
 html[data-bs-theme="light"] .action-btn.btn-outline-danger:hover {
     color: #fff !important;
     background-color: #dc3545 !important;
-    border-color: #dc3545 !important;
 }
 
-/* Dark theme action button styles */
+/* Button color schemes - Dark theme */
 html[data-bs-theme="dark"] .action-btn.btn-outline-primary {
     color: #9d8bf5 !important;
     border-color: #9d8bf5 !important;
 }
+
 html[data-bs-theme="dark"] .action-btn.btn-outline-primary:hover {
     color: #000 !important;
     background-color: #9d8bf5 !important;
-    border-color: #9d8bf5 !important;
 }
 
 html[data-bs-theme="dark"] .action-btn.btn-outline-success {
     color: #75b798 !important;
     border-color: #75b798 !important;
 }
+
 html[data-bs-theme="dark"] .action-btn.btn-outline-success:hover {
     color: #000 !important;
     background-color: #75b798 !important;
-    border-color: #75b798 !important;
 }
 
 html[data-bs-theme="dark"] .action-btn.btn-outline-info {
     color: #6edff6 !important;
     border-color: #6edff6 !important;
 }
+
 html[data-bs-theme="dark"] .action-btn.btn-outline-info:hover {
     color: #000 !important;
     background-color: #6edff6 !important;
-    border-color: #6edff6 !important;
 }
 
 html[data-bs-theme="dark"] .action-btn.btn-outline-warning {
     color: #ffda6a !important;
     border-color: #ffda6a !important;
 }
+
 html[data-bs-theme="dark"] .action-btn.btn-outline-warning:hover {
     color: #000 !important;
     background-color: #ffda6a !important;
-    border-color: #ffda6a !important;
 }
 
 html[data-bs-theme="dark"] .action-btn.btn-outline-danger {
     color: #ea868f !important;
     border-color: #ea868f !important;
 }
+
 html[data-bs-theme="dark"] .action-btn.btn-outline-danger:hover {
     color: #000 !important;
     background-color: #ea868f !important;
-    border-color: #ea868f !important;
 }
 
-/* Active filter indicator styling */
-.active-filters-indicator {
-    background-color: transparent !important;
-    cursor: default !important;
+/* Standard outline buttons */
+.btn-outline-secondary {
+    color: var(--text-color);
+    border-color: var(--border-color);
+    background-color: transparent;
+    transition: all 0.2s ease;
 }
 
-.active-filters-indicator:hover {
-    transform: none !important;
-}
-
-/* Table styling improvements */
-.table-success-subtle {
-    background-color: rgba(25, 135, 84, 0.05);
-}
-
-.table-danger-subtle {
-    background-color: rgba(220, 53, 69, 0.05);
-}
-
-/* Dark theme specific table header styling */
-html[data-bs-theme="dark"] .table-dark {
-    --bs-table-bg: #2d3748;
-    --bs-table-border-color: #4a5568;
-    --bs-table-color: #e2e8f0;
-}
-
-/* Light theme table header styling */
-html[data-bs-theme="light"] .table-dark {
-    --bs-table-bg: #343a40;
-    --bs-table-border-color: #495057;
-    --bs-table-color: #ffffff;
-}
-
-/* Form and checkbox improvements */
-.form-check-input:checked {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-}
-
-/* Smooth transitions for collapsible elements */
-.collapse {
-    transition: all 0.3s ease;
-}
-
-/* --- Mobile-Specific Overrides --- */
-@media (max-width: 991.98px) {
-    .content-wrapper, .content-wrapper.full-width { margin-left: 0; }
-    .sidebar { transform: translateX(-100%); width: 260px; z-index: 1040; }
-    .sidebar.mobile-open { transform: translateX(0); }
-
-    /* THIS IS THE FIX for showing text on the mobile sidebar */
-    .sidebar.mobile-open .sidebar-nav .label,
-    .sidebar.mobile-open .sidebar-nav .arrow {
-        opacity: 1;
-        visibility: visible;
-        width: auto;
-    }
-    .sidebar.mobile-open .sidebar-nav li a {
-        justify-content: flex-start;
-    }
-    .sidebar.mobile-open .sidebar-nav li a .icon {
-        margin-right: 15px;
-    }
-
-    /* Mobile action button adjustments */
-    .action-btn {
-        min-width: 120px !important;
-        max-width: 160px !important;
-        flex: 1 !important;
-    }
-}
-
-/* Additional responsive improvements for action buttons */
-@media (max-width: 768px) {
-    .d-flex.justify-content-between.flex-wrap {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .d-flex.justify-content-between.flex-wrap > div {
-        justify-content: center;
-    }
-
-    .action-btn {
-        font-size: 0.8rem !important;
-        padding: 0.3rem 0.6rem !important;
-        min-height: 2rem !important;
-    }
+.btn-outline-secondary:hover {
+    color: var(--text-color);
+    background-color: rgba(108, 117, 125, 0.1);
+    border-color: var(--text-secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 /*
 ================================================
-Custom Flash Message (Notification) Styles
+9. TAG SYSTEM
 ================================================
 */
-/* UPDATED: Bottom-right notification container */
-.flash-message-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 9999;
-    max-width: 400px;
-    width: auto;
-    pointer-events: none;
+
+/* Tag base styling */
+.tag-good,
+.tag-bad,
+.tag-neutral {
+    border-radius: 1rem !important;
+    padding: 0.25rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    border: 1px solid !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    position: relative !important;
+    transition: opacity 0.2s ease;
 }
 
-.flash-message-container .alert {
-    pointer-events: auto;
-    margin-bottom: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    border: none;
-    animation: slideUpFromBottom 0.4s ease-out;
-}
-
-/* UPDATED: Bottom-right animations */
-@keyframes slideUpFromBottom {
-    from {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@keyframes slideDownToBottom {
-    from {
-        transform: translateY(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-}
-
-/* Keep existing alert styles but remove the old slideInFromRight animation */
-.flash-message {
-    position: relative;
-    margin-bottom: 1rem;
-    border-radius: 8px;
-    border: 1px solid;
-    /* REMOVED: animation: slideInFromRight 0.3s ease-out; */
-}
-
-.flash-message.alert-success {
-    background-color: rgba(25, 135, 84, 0.1);
-    border-color: rgba(25, 135, 84, 0.3);
-    color: #0f5132;
-}
-
-.flash-message.alert-danger {
-    background-color: rgba(220, 53, 69, 0.1);
-    border-color: rgba(220, 53, 69, 0.3);
-    color: #721c24;
-}
-
-.flash-message.alert-warning {
-    background-color: rgba(255, 193, 7, 0.1);
-    border-color: rgba(255, 193, 7, 0.3);
-    color: #664d03;
-}
-
-.flash-message.alert-info {
-    background-color: rgba(13, 202, 240, 0.1);
-    border-color: rgba(13, 202, 240, 0.3);
-    color: #055160;
-}
-
-/* Dark theme flash messages - keep these */
-html[data-bs-theme="dark"] .flash-message.alert-success {
-    background-color: rgba(25, 135, 84, 0.2);
-    border-color: rgba(25, 135, 84, 0.4);
-    color: #75b798;
-}
-
-html[data-bs-theme="dark"] .flash-message.alert-danger {
-    background-color: rgba(220, 53, 69, 0.2);
-    border-color: rgba(220, 53, 69, 0.4);
-    color: #f1919c;
-}
-
-html[data-bs-theme="dark"] .flash-message.alert-warning {
-    background-color: rgba(255, 193, 7, 0.2);
-    border-color: rgba(255, 193, 7, 0.4);
-    color: #ffda6a;
-}
-
-html[data-bs-theme="dark"] .flash-message.alert-info {
-    background-color: rgba(13, 202, 240, 0.2);
-    border-color: rgba(13, 202, 240, 0.4);
-    color: #6edff6;
-}
-
-/*
-================================================
-Tag Styling System
-================================================
-*/
 .tag-good {
     background-color: var(--bs-success-bg-subtle) !important;
     border-color: var(--bs-success-border-subtle) !important;
     color: var(--bs-success-text-emphasis) !important;
-    border-radius: 1rem !important;
-    padding: 0.25rem 0.75rem !important;
-    font-size: 0.875rem !important;
-    border: 1px solid var(--bs-success-border-subtle) !important;
 }
 
 .tag-bad {
     background-color: var(--bs-danger-bg-subtle) !important;
     border-color: var(--bs-danger-border-subtle) !important;
     color: var(--bs-danger-text-emphasis) !important;
-    border-radius: 1rem !important;
-    padding: 0.25rem 0.75rem !important;
-    font-size: 0.875rem !important;
-    border: 1px solid var(--bs-danger-border-subtle) !important;
 }
 
 .tag-neutral {
     background-color: var(--bs-primary-bg-subtle) !important;
     border-color: var(--bs-primary-border-subtle) !important;
     color: var(--bs-primary-text-emphasis) !important;
-    border-radius: 1rem !important;
-    padding: 0.25rem 0.75rem !important;
-    font-size: 0.875rem !important;
-    border: 1px solid var(--bs-primary-border-subtle) !important;
 }
 
-/* Hover effects */
-.tag-good:hover {
-    background-color: var(--bs-success-bg-subtle) !important;
-    opacity: 0.8;
-    transition: opacity 0.2s ease;
-}
-
-.tag-bad:hover {
-    background-color: var(--bs-danger-bg-subtle) !important;
-    opacity: 0.8;
-    transition: opacity 0.2s ease;
-}
-
+/* Tag hover effects */
+.tag-good:hover,
+.tag-bad:hover,
 .tag-neutral:hover {
-    background-color: var(--bs-primary-bg-subtle) !important;
     opacity: 0.8;
-    transition: opacity 0.2s ease;
 }
 
-/* Badge variants for different contexts */
+/* Badge variants */
 .badge.tag-good {
     background-color: var(--bs-success-bg-subtle) !important;
     color: var(--bs-success-text-emphasis) !important;
@@ -529,53 +883,13 @@ Tag Styling System
     border: 1px solid var(--bs-primary-border-subtle) !important;
 }
 
-/* Tag items in admin and other interfaces */
-.tag-item.tag-good {
-    background-color: var(--bs-success-bg-subtle) !important;
-    border-color: var(--bs-success-border-subtle) !important;
-    color: var(--bs-success-text-emphasis) !important;
-}
-
-.tag-item.tag-bad {
-    background-color: var(--bs-danger-bg-subtle) !important;
-    border-color: var(--bs-danger-border-subtle) !important;
-    color: var(--bs-danger-text-emphasis) !important;
-}
-
-.tag-item.tag-neutral {
-    background-color: var(--bs-primary-bg-subtle) !important;
-    border-color: var(--bs-primary-border-subtle) !important;
-    color: var(--bs-primary-text-emphasis) !important;
-}
-
-/* Ensure consistent styling across all tag displays */
-.tag-good, .tag-bad, .tag-neutral {
-    display: inline-flex !important;
-    align-items: center !important;
-    position: relative !important;
-}
-
 /*
 ================================================
-TomSelect Enhanced Styling for Tags
+10. TOMSELECT CUSTOMIZATION
 ================================================
 */
 
-
-/* Quick filters uniform spacing */
-.quick-filter-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    align-items: center;
-}
-
-.quick-filter-container .btn-group {
-    margin-bottom: 0;
-}
-
-
-/* Enhanced TomSelect control for multi-line tags */
+/* Enhanced TomSelect control */
 .ts-control.multi {
     min-height: 2.5rem !important;
     max-height: none !important;
@@ -597,7 +911,6 @@ TomSelect Enhanced Styling for Tags
     max-width: none !important;
 }
 
-/* Ensure proper wrapping and overflow handling */
 .ts-control .item {
     display: inline-flex !important;
     align-items: center !important;
@@ -605,7 +918,6 @@ TomSelect Enhanced Styling for Tags
     overflow: visible !important;
 }
 
-/* Remove button styling within tags */
 .ts-control .item .remove {
     margin-left: 0.5rem !important;
     opacity: 0.7 !important;
@@ -617,27 +929,14 @@ TomSelect Enhanced Styling for Tags
     color: inherit !important;
 }
 
-/* Responsive TomSelect adjustments */
-@media (max-width: 768px) {
-    .ts-control.multi {
-        min-height: 3rem !important;
-        padding: 0.5rem !important;
-    }
-
-    .ts-control.multi .item {
-        margin: 0.1rem !important;
-        padding: 0.2rem 0.4rem !important;
-        font-size: 0.8rem !important;
-    }
+/* Filter modal TomSelect styling */
+#tags-filter-select + .ts-wrapper .ts-dropdown {
+    background-color: var(--bs-body-bg) !important;
+    border-color: var(--bs-border-color) !important;
+    color: var(--bs-body-color) !important;
+    border-radius: 0.5rem !important;
 }
 
-/*
-================================================
-TomSelect Filter Modal Tag Styling
-================================================
-*/
-
-/* Make filter modal tags match the add_trade styling */
 #tags-filter-select + .ts-wrapper .ts-dropdown .option {
     padding: 0.25rem 0.75rem !important;
     border-radius: 1rem !important;
@@ -656,7 +955,7 @@ TomSelect Filter Modal Tag Styling
     font-weight: 500 !important;
 }
 
-/* Apply proper colors to filter modal TomSelect */
+/* Apply tag colors to filter modal */
 #tags-filter-select + .ts-wrapper .ts-dropdown .option.tag-good,
 #tags-filter-select + .ts-wrapper .ts-control .item.tag-good {
     background-color: var(--bs-success-bg-subtle) !important;
@@ -678,37 +977,7 @@ TomSelect Filter Modal Tag Styling
     color: var(--bs-primary-text-emphasis) !important;
 }
 
-/* Hover effects for filter modal */
-#tags-filter-select + .ts-wrapper .ts-dropdown .option.tag-good:hover {
-    background-color: var(--bs-success) !important;
-    color: white !important;
-}
-
-#tags-filter-select + .ts-wrapper .ts-dropdown .option.tag-bad:hover {
-    background-color: var(--bs-danger) !important;
-    color: white !important;
-}
-
-#tags-filter-select + .ts-wrapper .ts-dropdown .option.tag-neutral:hover {
-    background-color: var(--bs-primary) !important;
-    color: white !important;
-}
-
-/*
-================================================
-TomSelect Filter Modal Dark Theme Background Fix
-================================================
-*/
-
-/* Fix dropdown background to match add_trade styling */
-#tags-filter-select + .ts-wrapper .ts-dropdown {
-    background-color: var(--bs-body-bg) !important;
-    border-color: var(--bs-border-color) !important;
-    color: var(--bs-body-color) !important;
-    border-radius: 0.5rem !important;
-}
-
-/* Fix category group headers to match add_trade */
+/* Category headers */
 #tags-filter-select + .ts-wrapper .ts-dropdown .optgroup-header {
     background-color: var(--bs-body-bg) !important;
     color: var(--bs-secondary-color) !important;
@@ -719,36 +988,9 @@ TomSelect Filter Modal Dark Theme Background Fix
     font-size: 0.9rem !important;
 }
 
-/* Fix dropdown container background */
-#tags-filter-select + .ts-wrapper .ts-dropdown .ts-dropdown-content {
-    background-color: var(--bs-body-bg) !important;
-}
-
-/* Ensure all option backgrounds match */
-#tags-filter-select + .ts-wrapper .ts-dropdown .option {
-    background-color: transparent !important;
-}
-
-#tags-filter-select + .ts-wrapper .ts-dropdown .option:not(.tag-good):not(.tag-bad):not(.tag-neutral) {
-    background-color: var(--bs-body-bg) !important;
-    color: var(--bs-body-color) !important;
-}
-
-/* Light theme support - now using CSS variables that auto-adjust */
-[data-bs-theme="light"] #tags-filter-select + .ts-wrapper .ts-dropdown {
-    background-color: var(--bs-body-bg) !important;
-    border-color: var(--bs-border-color) !important;
-    color: var(--bs-body-color) !important;
-}
-
-[data-bs-theme="light"] #tags-filter-select + .ts-wrapper .ts-dropdown .optgroup-header {
-    background-color: var(--bs-secondary-bg) !important;
-    color: var(--bs-secondary-color) !important;
-    border-bottom-color: var(--bs-border-color) !important;
-}
 /*
 ================================================
-Trade Details and Cards Styling
+11. TRADE DETAILS & CARDS
 ================================================
 */
 
@@ -760,7 +1002,7 @@ Trade Details and Cards Styling
     margin-top: 1rem;
 }
 
-/* Individual card styling */
+/* Individual trade card */
 .trade-detail-card {
     background-color: var(--content-bg);
     border: 1px solid var(--border-color);
@@ -774,7 +1016,6 @@ Trade Details and Cards Styling
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-/* Card headers */
 .trade-detail-card h6 {
     color: var(--primary-color);
     margin-bottom: 0.75rem;
@@ -804,7 +1045,7 @@ Trade Details and Cards Styling
     color: var(--bs-danger);
 }
 
-/* Rating dots */
+/* Rating dots system */
 .rating-dots {
     display: flex;
     gap: 0.35rem;
@@ -818,42 +1059,41 @@ Trade Details and Cards Styling
     background-color: #40444b;
     border: 1px solid #6c757d;
     transition: all 0.2s ease;
-    opacity: 0.3; /* Muted unfilled dots */
+    opacity: 0.3;
 }
 
-/* Override for filled dots - make them vibrant */
+/* Filled rating dots */
 .rating-dot[class*="filled-"] {
     opacity: 1;
     box-shadow: 0 0 6px rgba(0,0,0,0.4);
 }
 
-/* Vibrant colors for numbered ratings */
 .rating-dot.filled-1 {
     background: #dc3545;
     border-color: #dc3545;
-} /* Bright Red */
+}
 
 .rating-dot.filled-2 {
     background: #fd7e14;
     border-color: #fd7e14;
-} /* Bright Orange */
+}
 
 .rating-dot.filled-3 {
     background: #ffc107;
     border-color: #ffc107;
-} /* Bright Yellow */
+}
 
 .rating-dot.filled-4 {
     background: #20c997;
     border-color: #20c997;
-} /* Bright Teal */
+}
 
 .rating-dot.filled-5 {
     background: #28a745;
     border-color: #28a745;
-} /* Bright Green */
+}
 
-/* Legacy support for old filled class pattern */
+/* Legacy rating dot support */
 .rating-dot.filled {
     opacity: 1;
 }
@@ -874,25 +1114,13 @@ Trade Details and Cards Styling
     background: linear-gradient(135deg, #dc3545, #e83e8c);
 }
 
-/* Responsive trade details */
-@media (max-width: 768px) {
-    .trade-details-cards {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-    }
-
-    .trade-detail-card {
-        padding: 0.75rem;
-    }
-}
-
 /*
 ================================================
-Enhanced Table Styling
+12. TABLE SYSTEM
 ================================================
 */
 
-/* Trade list table enhancements */
+/* Enhanced table styling */
 .trade-list-table {
     background-color: var(--content-bg);
     border-radius: 8px;
@@ -926,7 +1154,7 @@ Enhanced Table Styling
     border: none;
 }
 
-/* Expandable row styling */
+/* Expandable rows */
 .expandable-row {
     cursor: pointer;
 }
@@ -940,9 +1168,308 @@ Enhanced Table Styling
     border-top: 1px solid var(--border-color);
 }
 
+/* Table success/danger subtle backgrounds */
+.table-success-subtle {
+    background-color: rgba(25, 135, 84, 0.05);
+}
+
+.table-danger-subtle {
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+/* Dark theme table headers */
+html[data-bs-theme="dark"] .table-dark {
+    --bs-table-bg: #2d3748;
+    --bs-table-border-color: #4a5568;
+    --bs-table-color: #e2e8f0;
+}
+
+html[data-bs-theme="light"] .table-dark {
+    --bs-table-bg: #343a40;
+    --bs-table-border-color: #495057;
+    --bs-table-color: #ffffff;
+}
+
 /*
 ================================================
-Utility Classes
+13. MODAL SYSTEM
+================================================
+*/
+
+/* Enhanced modal styling */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    background-color: var(--content-bg);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--sidebar-bg);
+    border-radius: 12px 12px 0 0;
+    padding: 1.25rem;
+    color: var(--text-color);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    color: var(--text-color);
+    background-color: var(--content-bg);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+    background-color: var(--main-bg);
+    border-radius: 0 0 12px 12px;
+    padding: 1rem 1.5rem;
+}
+
+.modal-backdrop {
+    background-color: rgba(0,0,0,0.6);
+}
+
+/* Modal accordion styling */
+.accordion-button {
+    font-weight: 600;
+    background-color: var(--content-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: var(--sidebar-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+.accordion-body {
+    background-color: var(--content-bg);
+    color: var(--text-color);
+}
+
+.accordion-body dl {
+    margin-bottom: 0;
+}
+
+.accordion-body dt {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.accordion-body dd {
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+/*
+================================================
+14. FLASH MESSAGES & NOTIFICATIONS
+================================================
+*/
+
+/* Flash message container - bottom right */
+.flash-message-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+    width: auto;
+    pointer-events: none;
+}
+
+.flash-message-container .alert {
+    pointer-events: auto;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border: none;
+    animation: slideUpFromBottom 0.4s ease-out;
+}
+
+/* Flash message animations */
+@keyframes slideUpFromBottom {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideDownToBottom {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+}
+
+/* Flash message types */
+.flash-message {
+    position: relative;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    border: 1px solid;
+}
+
+.flash-message.alert-success {
+    background-color: rgba(25, 135, 84, 0.1);
+    border-color: rgba(25, 135, 84, 0.3);
+    color: #0f5132;
+}
+
+.flash-message.alert-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #721c24;
+}
+
+.flash-message.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: rgba(255, 193, 7, 0.3);
+    color: #664d03;
+}
+
+.flash-message.alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: rgba(13, 202, 240, 0.3);
+    color: #055160;
+}
+
+/* Dark theme flash messages */
+html[data-bs-theme="dark"] .flash-message.alert-success {
+    background-color: rgba(25, 135, 84, 0.2);
+    border-color: rgba(25, 135, 84, 0.4);
+    color: #75b798;
+}
+
+html[data-bs-theme="dark"] .flash-message.alert-danger {
+    background-color: rgba(220, 53, 69, 0.2);
+    border-color: rgba(220, 53, 69, 0.4);
+    color: #f1919c;
+}
+
+html[data-bs-theme="dark"] .flash-message.alert-warning {
+    background-color: rgba(255, 193, 7, 0.2);
+    border-color: rgba(255, 193, 7, 0.4);
+    color: #ffda6a;
+}
+
+html[data-bs-theme="dark"] .flash-message.alert-info {
+    background-color: rgba(13, 202, 240, 0.2);
+    border-color: rgba(13, 202, 240, 0.4);
+    color: #6edff6;
+}
+
+/*
+================================================
+15. FORMS & INPUTS
+================================================
+*/
+
+/* Enhanced form controls */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25);
+}
+
+.form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25);
+}
+
+/* Custom checkbox styling */
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.form-check-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25);
+}
+
+/* Form groups */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Button groups */
+.btn-group .btn {
+    border-radius: 0;
+}
+
+.btn-group .btn:first-child {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.btn-group .btn:last-child {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+/* Quick filter container */
+.quick-filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.quick-filter-container .btn-group {
+    margin-bottom: 0;
+}
+
+/*
+================================================
+16. CHART SYSTEM
+================================================
+*/
+
+/* Chart containers */
+canvas {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+#equityChart {
+    width: 100% !important;
+}
+
+.chart-container {
+    position: relative;
+    background-color: var(--content-bg);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.chart-container:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Specific chart sizing - Fixed to fit within card */
+.model-analytics-dashboard #equityChart {
+    height: 250px !important;
+    width: 100% !important;
+    max-height: 250px !important;
+}
+
+/*
+================================================
+17. UTILITY CLASSES
 ================================================
 */
 
@@ -959,6 +1486,39 @@ Utility Classes
 
 .text-neutral {
     color: var(--text-secondary) !important;
+}
+
+.text-success-custom {
+    color: #28a745 !important;
+}
+
+.text-danger-custom {
+    color: #dc3545 !important;
+}
+
+.text-warning-custom {
+    color: #ffc107 !important;
+}
+
+.text-info-custom {
+    color: #17a2b8 !important;
+}
+
+/* Dark theme text utilities */
+html[data-bs-theme="dark"] .text-success-custom {
+    color: #75b798 !important;
+}
+
+html[data-bs-theme="dark"] .text-danger-custom {
+    color: #f1919c !important;
+}
+
+html[data-bs-theme="dark"] .text-warning-custom {
+    color: #ffda6a !important;
+}
+
+html[data-bs-theme="dark"] .text-info-custom {
+    color: #6edff6 !important;
 }
 
 /* Background utilities */
@@ -995,7 +1555,26 @@ Utility Classes
     border-color: rgba(13, 202, 240, 0.3) !important;
 }
 
-/* Loading and animation utilities */
+/* Gradient utilities */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--bs-primary), #9d8bf5) !important;
+}
+
+.bg-gradient-secondary {
+    background: linear-gradient(135deg, var(--bs-secondary), #5a6268) !important;
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, var(--bs-info), rgba(13, 202, 240, 0.8)) !important;
+}
+
+/*
+================================================
+18. ANIMATION SYSTEM
+================================================
+*/
+
+/* Loading spinner */
 .loading-spinner {
     display: inline-block;
     width: 1rem;
@@ -1038,99 +1617,44 @@ Utility Classes
     }
 }
 
+/* Collapse transitions */
+.collapse {
+    transition: all 0.3s ease;
+}
+
 /*
 ================================================
-Form Enhancements
+19. FEATURE PREVIEW SECTIONS
 ================================================
 */
 
-/* Enhanced form controls */
-.form-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25);
-}
-
-.form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25);
-}
-
-/* Custom checkbox styling */
-.form-check-input:checked {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-.form-check-input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25);
-}
-
-/* Form group spacing */
-.form-group {
+/* Feature preview styling for backtesting */
+.feature-preview {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: rgba(var(--bs-light-rgb), 0.05);
     margin-bottom: 1rem;
+    transition: all 0.2s ease;
 }
 
-.form-group:last-child {
-    margin-bottom: 0;
+.feature-preview:hover {
+    background: rgba(var(--bs-light-rgb), 0.1);
+    transform: translateY(-2px);
 }
 
-/* Enhanced button groups */
-.btn-group .btn {
-    border-radius: 0;
+/* Dark theme feature preview */
+html[data-bs-theme="dark"] .feature-preview {
+    background: rgba(255, 255, 255, 0.05);
 }
 
-.btn-group .btn:first-child {
-    border-top-left-radius: 6px;
-    border-bottom-left-radius: 6px;
-}
-
-.btn-group .btn:last-child {
-    border-top-right-radius: 6px;
-    border-bottom-right-radius: 6px;
+html[data-bs-theme="dark"] .feature-preview:hover {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 /*
 ================================================
-Modal Enhancements
-================================================
-*/
-
-/* Enhanced modal styling */
-.modal-content {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    background-color: var(--content-bg);
-}
-
-.modal-header {
-    border-bottom: 1px solid var(--border-color);
-    background-color: var(--sidebar-bg);
-    border-radius: 12px 12px 0 0;
-    padding: 1.25rem;
-}
-
-.modal-body {
-    padding: 1.5rem;
-    color: var(--text-color);
-}
-
-.modal-footer {
-    border-top: 1px solid var(--border-color);
-    background-color: var(--main-bg);
-    border-radius: 0 0 12px 12px;
-    padding: 1rem 1.5rem;
-}
-
-/* Modal backdrop enhancement */
-.modal-backdrop {
-    background-color: rgba(0,0,0,0.6);
-}
-
-/*
-================================================
-Scrollbar Styling
+20. SCROLLBAR CUSTOMIZATION
 ================================================
 */
 
@@ -1161,41 +1685,166 @@ Scrollbar Styling
 
 /*
 ================================================
-Print Styles
+21. RESPONSIVE DESIGN
 ================================================
 */
 
-@media print {
-    /* Hide non-essential elements when printing */
-    .sidebar,
-    .navbar,
-    .action-btn,
-    .modal,
-    .flash-message {
-        display: none !important;
+/* Mobile sidebar adjustments */
+@media (max-width: 991.98px) {
+    .content-wrapper, 
+    .content-wrapper.full-width { 
+        margin-left: 0; 
+    }
+    
+    .sidebar { 
+        transform: translateX(-100%); 
+        width: 260px; 
+        z-index: 1040; 
+    }
+    
+    .sidebar.mobile-open { 
+        transform: translateX(0); 
     }
 
-    /* Adjust layout for print */
-    .content-wrapper {
-        margin-left: 0 !important;
+    /* Mobile sidebar text visibility */
+    .sidebar.mobile-open .sidebar-nav .label,
+    .sidebar.mobile-open .sidebar-nav .arrow {
+        opacity: 1;
+        visibility: visible;
+        width: auto;
+    }
+    
+    .sidebar.mobile-open .sidebar-nav li a {
+        justify-content: flex-start;
+    }
+    
+    .sidebar.mobile-open .sidebar-nav li a .icon {
+        margin-right: 15px;
     }
 
-    /* Ensure good contrast for print */
-    body {
-        background: white !important;
-        color: black !important;
+    /* Mobile action buttons */
+    .action-btn {
+        min-width: 120px !important;
+        max-width: 160px !important;
+        flex: 1 !important;
+    }
+}
+
+/* Tablet and desktop responsive adjustments */
+@media (max-width: 1200px) {
+    .col-lg-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .nested-card {
+        margin-bottom: 1rem;
+    }
+
+    .model-analytics-dashboard .col-lg-3 {
+        margin-bottom: 1rem;
+    }
+
+    .model-analytics-dashboard .col-lg-4 {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    /* Card adjustments */
+    .nested-card {
+        margin-bottom: 1rem;
+        min-height: auto;
+    }
+
+    .nested-card .card-body {
+        padding: 0.5rem;
+    }
+
+    .nested-card .card-body ul {
+        font-size: 0.75em;
+    }
+
+    .nested-card .card-body p {
+        font-size: 0.75em;
+    }
+
+    .trade-details-cards {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
     }
 
     .trade-detail-card {
-        border: 1px solid #ccc !important;
-        break-inside: avoid;
-        margin-bottom: 1rem;
+        padding: 0.75rem;
+    }
+
+    /* Layout adjustments */
+    .col-lg-3 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    /* Analytics dashboard mobile */
+    .model-analytics-dashboard .metric-card {
+        margin-bottom: 10px;
+        padding: 0.5rem;
+    }
+
+    .model-analytics-dashboard .metric-value {
+        font-size: 1em;
+    }
+
+    .model-analytics-dashboard .metric-label {
+        font-size: 0.75em;
+    }
+
+    .model-analytics-dashboard .metric-row {
+        padding: 0.25rem 0;
+    }
+
+    /* Chart sizing */
+    .model-analytics-dashboard #equityChart {
+        height: 200px !important;
+    }
+
+    /* Button adjustments */
+    .d-flex.justify-content-between.flex-wrap {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .d-flex.justify-content-between.flex-wrap > div {
+        justify-content: center;
+    }
+
+    .action-btn {
+        font-size: 0.8rem !important;
+        padding: 0.3rem 0.6rem !important;
+        min-height: 2rem !important;
+    }
+
+    /* TomSelect mobile */
+    .ts-control.multi {
+        min-height: 3rem !important;
+        padding: 0.5rem !important;
+    }
+
+    .ts-control.multi .item {
+        margin: 0.1rem !important;
+        padding: 0.2rem 0.4rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    /* Feature preview mobile */
+    .feature-preview {
+        padding: 0.75rem;
     }
 }
 
 /*
 ================================================
-Accessibility Enhancements
+22. ACCESSIBILITY FEATURES
 ================================================
 */
 
@@ -1243,836 +1892,63 @@ Accessibility Enhancements
     }
 }
 
-/* Trading Models back button styling to match trades list */
-.btn.btn-outline-secondary {
+/*
+================================================
+23. PRINT STYLES
+================================================
+*/
+
+@media print {
+    /* Hide non-essential elements */
+    .sidebar,
+    .navbar,
+    .action-btn,
+    .modal,
+    .flash-message {
+        display: none !important;
+    }
+
+    /* Print layout adjustments */
+    .content-wrapper {
+        margin-left: 0 !important;
+    }
+
+    /* Print colors */
+    body {
+        background: white !important;
+        color: black !important;
+    }
+
+    .trade-detail-card {
+        border: 1px solid #ccc !important;
+        break-inside: avoid;
+        margin-bottom: 1rem;
+    }
+}
+
+/*
+================================================
+24. ACTIVE FILTER INDICATORS
+================================================
+*/
+
+/* Active filters indicator */
+.active-filters-indicator {
     background-color: transparent !important;
-    color: var(--text-color) !important;
-    border-color: var(--border-color) !important;
-    font-weight: 500 !important;
-    transition: all 0.2s ease !important;
+    cursor: default !important;
 }
 
-.btn.btn-outline-secondary:hover {
-    background-color: rgba(108, 117, 125, 0.1) !important;
-    color: var(--text-color) !important;
-    border-color: var(--text-secondary) !important;
-    transform: translateY(-1px) !important;
-}
-
-/* Ensure consistent styling with trades list buttons */
-html[data-bs-theme="dark"] .btn.btn-outline-secondary {
-    color: #c3c3c3 !important;
-    border-color: #43454b !important;
-}
-
-html[data-bs-theme="dark"] .btn.btn-outline-secondary:hover {
-    color: #fff !important;
-    border-color: #94a1b2 !important;
-    background-color: rgba(148, 161, 178, 0.1) !important;
-}
-
-/* Trading model detail page specific styles */
-.model-detail-analytics .card {
-    border: 1px solid var(--border-color);
-    transition: all 0.2s ease;
-}
-
-.model-detail-analytics .card:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.model-detail-analytics .card-header {
-    background-color: var(--sidebar-bg);
-    border-bottom: 1px solid var(--border-color);
-    padding: 0.5rem 0.75rem;
-}
-
-.model-detail-analytics .card-body {
-    background-color: var(--content-bg);
-}
-
-/* Ensure chart canvas is properly sized */
-#equityChart {
-    max-height: 250px !important;
-    width: 100% !important;
-}
-
-/* Compact table styling for model details */
-.model-detail-analytics .table-sm td {
-    padding: 0.25rem 0.5rem;
-    border-color: var(--border-color);
-    vertical-align: top;
-}
-
-.model-detail-analytics .table-sm td:first-child {
-    width: 40%;
-    font-weight: 500;
-}
-
-/* Responsive adjustments for analytics row */
-@media (max-width: 1200px) {
-    .model-detail-analytics .col-md-3 {
-        margin-bottom: 1rem;
-    }
-
-    .model-detail-analytics .col-md-2 {
-        margin-bottom: 1rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .model-detail-analytics .row {
-        flex-direction: column;
-    }
-
-    #equityChart {
-        max-height: 200px !important;
-    }
-}
-
-/* Alert styling for insights */
-.model-detail-analytics .alert {
-    border-radius: 0.375rem;
-    border: 1px solid;
-}
-
-.model-detail-analytics .alert-success {
-    background-color: rgba(25, 135, 84, 0.1);
-    border-color: rgba(25, 135, 84, 0.3);
-    color: var(--bs-success);
-}
-
-.model-detail-analytics .alert-warning {
-    background-color: rgba(255, 193, 7, 0.1);
-    border-color: rgba(255, 193, 7, 0.3);
-    color: var(--bs-warning);
-}
-
-/* Dark theme adjustments */
-html[data-bs-theme="dark"] .model-detail-analytics .alert-success {
-    background-color: rgba(25, 135, 84, 0.2);
-    border-color: rgba(25, 135, 84, 0.4);
-    color: #75b798;
-}
-
-html[data-bs-theme="dark"] .model-detail-analytics .alert-warning {
-    background-color: rgba(255, 193, 7, 0.2);
-    border-color: rgba(255, 193, 7, 0.4);
-    color: #ffda6a;
-}
-
-/* Trading Model Detail Analytics Styling */
-.model-analytics-dashboard .card {
-    border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.model-analytics-dashboard .card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    transform: translateY(-2px);
-}
-
-.model-analytics-dashboard .card-header {
-    font-weight: 600;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
-}
-
-.model-analytics-dashboard .metric-value {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: var(--bs-body-color);
-    line-height: 1.2;
-}
-
-.model-analytics-dashboard .metric-label {
-    font-size: 0.75rem;
-    color: var(--bs-secondary-color);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.model-analytics-dashboard .metric-list {
-    font-size: 0.875rem;
-}
-
-.model-analytics-dashboard .metric-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.375rem 0;
-    border-bottom: 1px solid rgba(var(--bs-border-color-rgb), 0.2);
-}
-
-.model-analytics-dashboard .metric-row:last-child {
-    border-bottom: none;
-}
-
-.model-analytics-dashboard .metric-row .metric-label {
-    font-weight: 500;
-    color: var(--bs-body-color);
-    text-transform: none;
-    flex: 1;
-}
-
-.model-analytics-dashboard .metric-row .metric-value {
-    font-weight: 600;
-    color: var(--bs-primary);
-    font-size: 0.875rem;
-    text-align: right;
-    flex: 0 0 auto;
-}
-
-/* Backtesting section styling */
-.feature-preview {
-    text-align: center;
-    padding: 1rem;
-    border-radius: 0.5rem;
-    background: rgba(var(--bs-light-rgb), 0.05);
-    margin-bottom: 1rem;
-    transition: all 0.2s ease;
-}
-
-.feature-preview:hover {
-    background: rgba(var(--bs-light-rgb), 0.1);
-    transform: translateY(-2px);
-}
-
-.bg-gradient-primary {
-    background: linear-gradient(135deg, var(--bs-primary), #9d8bf5) !important;
-}
-
-.bg-gradient-info {
-    background: linear-gradient(135deg, var(--bs-info), rgba(13, 202, 240, 0.8)) !important;
-}
-
-/* Dark theme adjustments */
-html[data-bs-theme="dark"] .feature-preview {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-html[data-bs-theme="dark"] .feature-preview:hover {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card {
-    background: rgba(var(--bs-primary-rgb), 0.15);
-    border-color: rgba(var(--bs-primary-rgb), 0.2);
-}
-
-html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card:hover {
-    background: rgba(var(--bs-primary-rgb), 0.25);
-}
-
-/* Responsive adjustments */
-@media (max-width: 1200px) {
-    .model-analytics-dashboard .col-lg-3 {
-        margin-bottom: 1rem;
-    }
-
-    .model-analytics-dashboard .col-lg-4 {
-        margin-bottom: 1rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .model-analytics-dashboard .metric-card {
-        padding: 0.5rem;
-    }
-
-    .model-analytics-dashboard .metric-value {
-        font-size: 1rem;
-    }
-
-    .model-analytics-dashboard .metric-label {
-        font-size: 0.7rem;
-    }
-
-    .feature-preview {
-        padding: 0.75rem;
-    }
-
-    .model-analytics-dashboard .metric-row {
-        padding: 0.25rem 0;
-    }
-}
-
-/* Ensure chart container sizing */
-.model-analytics-dashboard #equityChart {
-    height: 800px !important;
-    width: 100% !important;
-}
-
-@media (max-width: 768px) {
-    .model-analytics-dashboard #equityChart {
-        height: 200px !important;
-    }
-}
-
-/* Add these sections to your existing style.css file */
-
-/*
-================================================
-NESTED CARDS STYLING (Global)
-================================================
-*/
-
-/* MODEL DETAILS NESTED CARDS STYLING */
-.nested-card {
-    border: 1px solid var(--border-color);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: all 0.2s ease;
-    height: 100%;
-    min-height: 140px;
-    background-color: var(--content-bg);
-}
-
-.nested-card:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
-    /*border-color: var(--primary-color);*/
-}
-
-.nested-card .card-header {
-    font-size: 0.85em;
-    padding: 0.5rem 0.75rem;
-    background-color: var(--sidebar-bg);
-    border-bottom: 1px solid var(--border-color);
-    font-weight: 600;
-}
-
-.nested-card .card-header h6 {
-    font-size: 0.85em;
-    margin: 0;
-    line-height: 1.2;
-    color: var(--text-color);
-}
-
-.nested-card .card-body {
-    padding: 0.75rem;
-    background-color: var(--content-bg);
-}
-
-.nested-card .card-body ul {
-    font-size: 0.8em;
-    margin-bottom: 0;
-    line-height: 1.4;
-}
-
-.nested-card .card-body ul li {
-    margin-bottom: 3px;
-}
-
-.nested-card .card-body ul li strong {
-    color: var(--text-color);
-    font-weight: 600;
-}
-
-.nested-card .card-body p {
-    font-size: 0.8em;
-    margin-bottom: 0;
-    line-height: 1.4;
-    color: var(--text-secondary);
+.active-filters-indicator:hover {
+    transform: none !important;
 }
 
 /*
 ================================================
-ENHANCED ANALYTICS DASHBOARD STYLING (Global)
+END OF TRADING JOURNAL STYLESHEET
+================================================
+Random's (Matt Mickey) methodology implementation complete
+All card headers now have consistent sizing and no underlines
+Logic & Strategy text color fixed
+Fully responsive design with mobile support
 ================================================
 */
-
-.model-analytics-dashboard .metric-value {
-    font-weight: bold;
-    font-size: 1.1em;
-    line-height: 1.2;
-    margin-bottom: 2px;
-    color: var(--text-color);
-}
-
-.model-analytics-dashboard .metric-label {
-    font-size: 0.8em;
-    font-weight: 500;
-    line-height: 1.1;
-    opacity: 0.8;
-    color: var(--text-secondary);
-}
-
-/* Enhanced card hover effects for all analytics cards */
-.model-analytics-dashboard .card {
-    transition: all 0.2s ease;
-    border: 1px solid var(--border-color);
-    background-color: var(--content-bg);
-}
-
-.model-analytics-dashboard .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    /*border-color: var(--primary-color);*/
-}
-
-.model-analytics-dashboard .card-header {
-    background-color: var(--sidebar-bg);
-    border-bottom: 1px solid var(--border-color);
-    font-weight: 600;
-}
-
-.model-analytics-dashboard .card-body {
-    background-color: var(--content-bg);
-}
-
-/*
-================================================
-INSIGHT ITEMS STYLING (Global)
-================================================
-*/
-
-.insight-item {
-    background: rgba(40, 167, 69, 0.1);
-    border-radius: 4px;
-    padding: 6px;
-    border-left: 3px solid #28a745;
-    font-size: 0.75em;
-    line-height: 1.2;
-    margin-bottom: 8px;
-}
-
-.insight-item:last-child {
-    margin-bottom: 0 !important;
-}
-
-.insight-item i {
-    color: #28a745;
-}
-
-/* Dark theme adjustments */
-html[data-bs-theme="dark"] .insight-item {
-    background: rgba(40, 167, 69, 0.2);
-    color: #75b798;
-}
-/* COMPLETE METRIC CARD FIXES - Replace existing metric card styles */
-
-/*
-================================================
-METRIC CARDS - FIXED STYLING
-================================================
-*/
-
-/* Base metric card styling */
-.model-analytics-dashboard .metric-card {
-    padding: 12px 8px;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    transition: all 0.2s ease;
-    border: 1px solid var(--border-color); /* Uniform border thickness */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-/* Hover effect - NO border color change */
-.model-analytics-dashboard .metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-    /* NO border-color change */
-}
-
-/* POSITIVE CARDS - Green theme */
-.model-analytics-dashboard .metric-card.positive {
-    background: rgba(25, 135, 84, 0.1);
-    border: 1px solid var(--border-color); /* Same border as others */
-    color: #155724;
-}
-
-/* Dark theme positive cards */
-html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card.positive {
-    background: rgba(25, 135, 84, 0.2);
-    color: #75b798;
-    border: 1px solid var(--border-color);
-}
-
-/* NEGATIVE CARDS - Red theme */
-.model-analytics-dashboard .metric-card.negative {
-    background: rgba(220, 53, 69, 0.1);
-    border: 1px solid var(--border-color); /* Same border as others */
-    color: #721c24;
-}
-
-/* Dark theme negative cards */
-html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card.negative {
-    background: rgba(220, 53, 69, 0.2);
-    color: #f1919c;
-    border: 1px solid var(--border-color);
-}
-
-/* NEUTRAL CARDS - Blue theme */
-.model-analytics-dashboard .metric-card.neutral {
-    background: rgba(0, 123, 255, 0.1);
-    border: 1px solid var(--border-color); /* Same border as others */
-    color: #004085;
-}
-
-/* Dark theme neutral cards */
-html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card.neutral {
-    background: rgba(0, 123, 255, 0.2);
-    color: #9ec5fe;
-    border: 1px solid var(--border-color);
-}
-
-/* Metric card text styling */
-.model-analytics-dashboard .metric-value {
-    font-weight: bold;
-    font-size: 1.1em;
-    line-height: 1.2;
-    margin-bottom: 2px;
-    color: inherit; /* Use the card's color */
-}
-
-.model-analytics-dashboard .metric-label {
-    font-size: 0.8em;
-    font-weight: 500;
-    line-height: 1.1;
-    opacity: 0.8;
-    color: inherit; /* Use the card's color */
-}
-
-/*
-================================================
-SYSTEM QUALITY INSIGHTS - MATCHING COLORS
-================================================
-*/
-
-/* Insight items to match metric card styling */
-.insight-item {
-    background: rgba(40, 167, 69, 0.1);
-    border-radius: 4px;
-    padding: 6px;
-    border: 1px solid var(--border-color); /* Same border as metric cards */
-    font-size: 0.75em;
-    line-height: 1.2;
-    margin-bottom: 8px;
-    color: #155724; /* Match positive card text color */
-}
-
-.insight-item:last-child {
-    margin-bottom: 0 !important;
-}
-
-.insight-item i {
-    color: #28a745;
-}
-
-/* Dark theme insight items */
-html[data-bs-theme="dark"] .insight-item {
-    background: rgba(40, 167, 69, 0.2);
-    color: #75b798;
-    border: 1px solid var(--border-color);
-}
-
-html[data-bs-theme="dark"] .insight-item i {
-    color: #75b798;
-}
-/*
-================================================
-ENHANCED GENERAL CARD STYLING (Global)
-================================================
-*/
-
-/* Update existing card styling */
-.card {
-    border: 1px solid var(--border-color);
-    background-color: var(--content-bg);
-    transition: all 0.2s ease;
-}
-
-.card:hover {
-    /*border-color: var(--primary-color);*/
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.card-header {
-    background-color: var(--sidebar-bg);
-    border-bottom: 1px solid var(--border-color);
-    font-weight: 600;
-    color: var(--text-color);
-}
-
-.card-body {
-    background-color: var(--content-bg);
-    color: var(--text-color);
-}
-
-/* Configuration section styling */
-.card-body h6 {
-    color: var(--text-color);
-    font-weight: 600;
-    margin-bottom: 8px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.card-body ul {
-    font-size: 0.9em;
-    color: var(--text-color);
-}
-
-.card-body ul li {
-    margin-bottom: 3px;
-}
-
-.card-body ul li strong {
-    color: var(--text-color);
-    font-weight: 600;
-}
-
-/*
-================================================
-RESPONSIVE ADJUSTMENTS (Global)
-================================================
-*/
-
-/* Update existing responsive styles */
-@media (max-width: 1200px) {
-    .col-lg-3 {
-        flex: 0 0 50%;
-        max-width: 50%;
-    }
-
-    .nested-card {
-        margin-bottom: 1rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .nested-card {
-        margin-bottom: 1rem;
-        min-height: auto;
-    }
-
-    .nested-card .card-body {
-        padding: 0.5rem;
-    }
-
-    .nested-card .card-body ul {
-        font-size: 0.75em;
-    }
-
-    .nested-card .card-body p {
-        font-size: 0.75em;
-    }
-
-    .col-lg-3 {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
-
-    .model-analytics-dashboard .metric-card {
-        margin-bottom: 10px;
-    }
-
-    .model-analytics-dashboard .metric-value {
-        font-size: 1em;
-    }
-
-    .model-analytics-dashboard .metric-label {
-        font-size: 0.75em;
-    }
-}
-
-/*
-================================================
-CHART STYLING (Global)
-================================================
-*/
-
-/* Ensure chart containers are properly sized */
-canvas {
-    max-width: 100% !important;
-    height: auto !important;
-}
-
-#equityChart {
-    width: 100% !important;
-}
-
-/* Chart container styling */
-.chart-container {
-    position: relative;
-    background-color: var(--content-bg);
-    border-radius: 8px;
-    padding: 1rem;
-    border: 1px solid var(--border-color);
-    transition: all 0.2s ease;
-}
-
-.chart-container:hover {
-    /*border-color: var(--primary-color);*/
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/*
-================================================
-ENHANCED MODAL STYLING (Global)
-================================================
-*/
-
-/* Update existing modal styling */
-.modal-content {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    background-color: var(--content-bg);
-}
-
-.modal-header {
-    border-bottom: 1px solid var(--border-color);
-    background-color: var(--sidebar-bg);
-    border-radius: 12px 12px 0 0;
-    padding: 1.25rem;
-    color: var(--text-color);
-}
-
-.modal-body {
-    padding: 1.5rem;
-    color: var(--text-color);
-    background-color: var(--content-bg);
-}
-
-.modal-footer {
-    border-top: 1px solid var(--border-color);
-    background-color: var(--main-bg);
-    border-radius: 0 0 12px 12px;
-    padding: 1rem 1.5rem;
-}
-
-/* Modal accordion styling */
-.accordion-button {
-    font-weight: 600;
-    background-color: var(--content-bg);
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
-}
-
-.accordion-button:not(.collapsed) {
-    background-color: var(--sidebar-bg);
-    color: var(--text-color);
-    border-color: var(--border-color);
-}
-
-.accordion-body {
-    background-color: var(--content-bg);
-    color: var(--text-color);
-}
-
-.accordion-body dl {
-    margin-bottom: 0;
-}
-
-.accordion-body dt {
-    font-weight: 600;
-    color: var(--text-color);
-}
-
-.accordion-body dd {
-    color: var(--text-secondary);
-    margin-bottom: 8px;
-}
-
-/*
-================================================
-ENHANCED BUTTON STYLING (Global)
-================================================
-*/
-
-/* Update existing button styling to match model page */
-.btn-outline-info {
-    color: var(--bs-info);
-    border-color: var(--bs-info);
-    background-color: transparent;
-    transition: all 0.2s ease;
-}
-
-.btn-outline-info:hover {
-    color: var(--bs-white);
-    background-color: var(--bs-info);
-    border-color: var(--bs-info);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.btn-outline-primary {
-    color: var(--bs-primary);
-    border-color: var(--bs-primary);
-    background-color: transparent;
-    transition: all 0.2s ease;
-}
-
-.btn-outline-primary:hover {
-    color: var(--bs-white);
-    background-color: var(--bs-primary);
-    border-color: var(--bs-primary);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-.btn-outline-secondary {
-    color: var(--text-color);
-    border-color: var(--border-color);
-    background-color: transparent;
-    transition: all 0.2s ease;
-}
-
-.btn-outline-secondary:hover {
-    color: var(--text-color);
-    background-color: rgba(108, 117, 125, 0.1);
-    border-color: var(--text-secondary);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
-/*
-================================================
-UTILITY CLASSES (Global)
-================================================
-*/
-
-/* Enhanced background utilities */
-.bg-gradient-primary {
-    background: linear-gradient(45deg, var(--bs-primary), #0056b3) !important;
-}
-
-.bg-gradient-secondary {
-    background: linear-gradient(45deg, var(--bs-secondary), #5a6268) !important;
-}
-
-/* Enhanced text utilities */
-.text-success-custom {
-    color: #28a745 !important;
-}
-
-.text-danger-custom {
-    color: #dc3545 !important;
-}
-
-.text-warning-custom {
-    color: #ffc107 !important;
-}
-
-.text-info-custom {
-    color: #17a2b8 !important;
-}
-
-/* Dark theme text utilities */
-html[data-bs-theme="dark"] .text-success-custom {
-    color: #75b798 !important;
-}
-
-html[data-bs-theme="dark"] .text-danger-custom {
-    color: #f1919c !important;
-}
-
-html[data-bs-theme="dark"] .text-warning-custom {
-    color: #ffda6a !important;
-}
-
-html[data-bs-theme="dark"] .text-info-custom {
-    color: #6edff6 !important;
-}
