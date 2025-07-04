@@ -426,10 +426,9 @@ html[data-bs-theme="light"] .model-analytics-dashboard .card-header h6 {
 
 .nested-card .card-body ul li strong {
     color: var(--text-color);
-    font-weight: 800; /* Made even bolder - increased from 600 to 800 */
+    font-weight: 600;
     display: block; /* Put labels on their own line */
     margin-bottom: 3px; /* Space between label and content */
-    font-size: 0.9em; /* Slightly larger for better visibility */
 }
 
 /* Content after strong tags - indented and on new line */
@@ -452,12 +451,6 @@ html[data-bs-theme="light"] .model-analytics-dashboard .card-header h6 {
 .nested-card .card-body,
 .nested-card .card-body * {
     color: var(--text-color) !important; /* Force consistent color */
-}
-
-/* Make sure the strong tags in nested cards are extra bold */
-.nested-card .card-body strong {
-    font-weight: 800 !important; /* Extra bold with !important */
-    color: var(--text-color) !important;
 }
 
 /*
