@@ -8,25 +8,37 @@ body {
 a { text-decoration: none; }
 
 .navbar-brand-icon {
-    height: 30px;
+    height: 45px;
     width: auto;
     object-fit: contain;
 }
 
 /* Theme Variables */
 :root, html[data-bs-theme="dark"] {
-    --primary-color: #FFFF00; --primary-light: #9d8bf5; --secondary-color: #2cb67d;
-    --main-bg: #16161a; --content-bg: #242629;
+    --primary-color: #FFFF00;
+    --primary-light: #9d8bf5;
+    --secondary-color: #2cb67d;
+    --main-bg: #16161a;
+    --content-bg: #242629;
     --sidebar-bg: #1f2029;
-    --text-color: #c3c3c3; --text-secondary: #94a1b2; --border-color: #43454b;
-    --bs-body-color: var(--text-color); --bs-body-bg: var(--main-bg);
+    --text-color: #e9ecef;
+    --text-secondary: #e0e0e0;
+    --border-color: #43454b;
+    --bs-body-color: var(--text-color);
+    --bs-body-bg: var(--main-bg);
 }
 html[data-bs-theme="light"] {
-    --primary-color: #6200ea; --primary-light: #7e3ff2; --secondary-color: #007bff;
-    --main-bg: #f4f6f8; --content-bg: #ffffff;
+    --primary-color: #6200ea;
+    --primary-light: #7e3ff2;
+    --secondary-color: #007bff;
+    --main-bg: #f4f6f8;
+    --content-bg: #ffffff;
     --sidebar-bg: #f8f9fa;
-    --text-color: #212529; --text-secondary: #495057; --border-color: #dee2e6;
-    --bs-body-color: var(--text-color); --bs-body-bg: var(--main-bg);
+    --text-color: #212529;
+    --text-secondary: #495057;
+    --border-color: #dee2e6;
+    --bs-body-color: var(--text-color);
+    --bs-body-bg: var(--main-bg);
 }
 
 /* --- Core Layout --- */
@@ -119,22 +131,6 @@ html[data-bs-theme="light"] .sidebar-nav .submenu li a.active {
 .sidebar-nav .submenu.open { max-height: 500px; }
 .sidebar-nav .submenu li a { padding-left: 25px; font-size: 0.9em; border-left: 4px solid transparent; }
 .sidebar-nav .submenu li a:hover, .sidebar-nav .submenu li a.active { color: #fff; background-color: rgba(0,0,0,0.3); border-left-color: #FFFF00; }
-
-/* Ensure all submenu items get bright yellow on hover/active */
-html[data-bs-theme="dark"] .sidebar-nav .submenu li a:hover,
-html[data-bs-theme="dark"] .sidebar-nav .submenu li a.active {
-    color: #fff;
-    background-color: rgba(0,0,0,0.3);
-    border-left-color: #FFFF00 !important;
-}
-
-/* Force bright yellow for all sidebar hover states */
-.sidebar-nav li a:hover,
-.sidebar-nav li a.active,
-.sidebar-nav .submenu li a:hover,
-.sidebar-nav .submenu li a.active {
-    border-left-color: #FFFF00 !important;
-}
 
 /* Hide submenu when sidebar is icon-only, but show it on hover */
 .sidebar.desktop-icon-only .submenu.open { max-height: 0; }
@@ -434,20 +430,6 @@ Custom Flash Message (Notification) Styles
     border-color: rgba(13, 202, 240, 0.3);
     color: #055160;
 }
-
-/* REMOVE this old animation completely */
-/*
-@keyframes slideInFromRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-*/
 
 /* Dark theme flash messages - keep these */
 html[data-bs-theme="dark"] .flash-message.alert-success {
@@ -823,7 +805,6 @@ Trade Details and Cards Styling
 }
 
 /* Rating dots */
-/* Rating dots - Updated for new filled-X pattern */
 .rating-dots {
     display: flex;
     gap: 0.35rem;
@@ -1313,7 +1294,7 @@ html[data-bs-theme="dark"] .btn.btn-outline-secondary:hover {
 
 /* Ensure chart canvas is properly sized */
 #equityChart {
-    max-height: 800px !important;
+    max-height: 250px !important;
     width: 100% !important;
 }
 
@@ -1396,36 +1377,6 @@ html[data-bs-theme="dark"] .model-detail-analytics .alert-warning {
 .model-analytics-dashboard .card-header {
     font-weight: 600;
     border-bottom: 1px solid rgba(255,255,255,0.2);
-}
-
-.model-analytics-dashboard .metric-card {
-    background: rgba(var(--bs-primary-rgb), 0.1);
-    border-radius: 0.5rem;
-    padding: 0.75rem 0.5rem;
-    margin-bottom: 0.5rem;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
-}
-
-.model-analytics-dashboard .metric-card:hover {
-    background: rgba(var(--bs-primary-rgb), 0.15);
-    transform: translateY(-1px);
-    border-color: rgba(var(--bs-primary-rgb), 0.3);
-}
-
-.model-analytics-dashboard .metric-card.positive {
-    background: rgba(25, 135, 84, 0.1);
-    border-left: 3px solid #198754;
-}
-
-.model-analytics-dashboard .metric-card.negative {
-    background: rgba(220, 53, 69, 0.1);
-    border-left: 3px solid #dc3545;
-}
-
-.model-analytics-dashboard .metric-card.neutral {
-    background: rgba(108, 117, 125, 0.1);
-    border-left: 3px solid #6c757d;
 }
 
 .model-analytics-dashboard .metric-value {
@@ -1557,4 +1508,571 @@ html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card:hover {
     .model-analytics-dashboard #equityChart {
         height: 200px !important;
     }
+}
+
+/* Add these sections to your existing style.css file */
+
+/*
+================================================
+NESTED CARDS STYLING (Global)
+================================================
+*/
+
+/* MODEL DETAILS NESTED CARDS STYLING */
+.nested-card {
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    height: 100%;
+    min-height: 140px;
+    background-color: var(--content-bg);
+}
+
+.nested-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+    /*border-color: var(--primary-color);*/
+}
+
+.nested-card .card-header {
+    font-size: 0.85em;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--sidebar-bg);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+}
+
+.nested-card .card-header h6 {
+    font-size: 0.85em;
+    margin: 0;
+    line-height: 1.2;
+    color: var(--text-color);
+}
+
+.nested-card .card-body {
+    padding: 0.75rem;
+    background-color: var(--content-bg);
+}
+
+.nested-card .card-body ul {
+    font-size: 0.8em;
+    margin-bottom: 0;
+    line-height: 1.4;
+}
+
+.nested-card .card-body ul li {
+    margin-bottom: 3px;
+}
+
+.nested-card .card-body ul li strong {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.nested-card .card-body p {
+    font-size: 0.8em;
+    margin-bottom: 0;
+    line-height: 1.4;
+    color: var(--text-secondary);
+}
+
+/*
+================================================
+ENHANCED ANALYTICS DASHBOARD STYLING (Global)
+================================================
+*/
+
+.model-analytics-dashboard .metric-value {
+    font-weight: bold;
+    font-size: 1.1em;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    color: var(--text-color);
+}
+
+.model-analytics-dashboard .metric-label {
+    font-size: 0.8em;
+    font-weight: 500;
+    line-height: 1.1;
+    opacity: 0.8;
+    color: var(--text-secondary);
+}
+
+/* Enhanced card hover effects for all analytics cards */
+.model-analytics-dashboard .card {
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+    background-color: var(--content-bg);
+}
+
+.model-analytics-dashboard .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    /*border-color: var(--primary-color);*/
+}
+
+.model-analytics-dashboard .card-header {
+    background-color: var(--sidebar-bg);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+}
+
+.model-analytics-dashboard .card-body {
+    background-color: var(--content-bg);
+}
+
+/*
+================================================
+INSIGHT ITEMS STYLING (Global)
+================================================
+*/
+
+.insight-item {
+    background: rgba(40, 167, 69, 0.1);
+    border-radius: 4px;
+    padding: 6px;
+    border-left: 3px solid #28a745;
+    font-size: 0.75em;
+    line-height: 1.2;
+    margin-bottom: 8px;
+}
+
+.insight-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+.insight-item i {
+    color: #28a745;
+}
+
+/* Dark theme adjustments */
+html[data-bs-theme="dark"] .insight-item {
+    background: rgba(40, 167, 69, 0.2);
+    color: #75b798;
+}
+/* COMPLETE METRIC CARD FIXES - Replace existing metric card styles */
+
+/*
+================================================
+METRIC CARDS - FIXED STYLING
+================================================
+*/
+
+/* Base metric card styling */
+.model-analytics-dashboard .metric-card {
+    padding: 12px 8px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color); /* Uniform border thickness */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Hover effect - NO border color change */
+.model-analytics-dashboard .metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    /* NO border-color change */
+}
+
+/* POSITIVE CARDS - Green theme */
+.model-analytics-dashboard .metric-card.positive {
+    background: rgba(25, 135, 84, 0.1);
+    border: 1px solid var(--border-color); /* Same border as others */
+    color: #155724;
+}
+
+/* Dark theme positive cards */
+html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card.positive {
+    background: rgba(25, 135, 84, 0.2);
+    color: #75b798;
+    border: 1px solid var(--border-color);
+}
+
+/* NEGATIVE CARDS - Red theme */
+.model-analytics-dashboard .metric-card.negative {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid var(--border-color); /* Same border as others */
+    color: #721c24;
+}
+
+/* Dark theme negative cards */
+html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card.negative {
+    background: rgba(220, 53, 69, 0.2);
+    color: #f1919c;
+    border: 1px solid var(--border-color);
+}
+
+/* NEUTRAL CARDS - Blue theme */
+.model-analytics-dashboard .metric-card.neutral {
+    background: rgba(0, 123, 255, 0.1);
+    border: 1px solid var(--border-color); /* Same border as others */
+    color: #004085;
+}
+
+/* Dark theme neutral cards */
+html[data-bs-theme="dark"] .model-analytics-dashboard .metric-card.neutral {
+    background: rgba(0, 123, 255, 0.2);
+    color: #9ec5fe;
+    border: 1px solid var(--border-color);
+}
+
+/* Metric card text styling */
+.model-analytics-dashboard .metric-value {
+    font-weight: bold;
+    font-size: 1.1em;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    color: inherit; /* Use the card's color */
+}
+
+.model-analytics-dashboard .metric-label {
+    font-size: 0.8em;
+    font-weight: 500;
+    line-height: 1.1;
+    opacity: 0.8;
+    color: inherit; /* Use the card's color */
+}
+
+/*
+================================================
+SYSTEM QUALITY INSIGHTS - MATCHING COLORS
+================================================
+*/
+
+/* Insight items to match metric card styling */
+.insight-item {
+    background: rgba(40, 167, 69, 0.1);
+    border-radius: 4px;
+    padding: 6px;
+    border: 1px solid var(--border-color); /* Same border as metric cards */
+    font-size: 0.75em;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    color: #155724; /* Match positive card text color */
+}
+
+.insight-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+.insight-item i {
+    color: #28a745;
+}
+
+/* Dark theme insight items */
+html[data-bs-theme="dark"] .insight-item {
+    background: rgba(40, 167, 69, 0.2);
+    color: #75b798;
+    border: 1px solid var(--border-color);
+}
+
+html[data-bs-theme="dark"] .insight-item i {
+    color: #75b798;
+}
+/*
+================================================
+ENHANCED GENERAL CARD STYLING (Global)
+================================================
+*/
+
+/* Update existing card styling */
+.card {
+    border: 1px solid var(--border-color);
+    background-color: var(--content-bg);
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    /*border-color: var(--primary-color);*/
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    background-color: var(--sidebar-bg);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.card-body {
+    background-color: var(--content-bg);
+    color: var(--text-color);
+}
+
+/* Configuration section styling */
+.card-body h6 {
+    color: var(--text-color);
+    font-weight: 600;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-body ul {
+    font-size: 0.9em;
+    color: var(--text-color);
+}
+
+.card-body ul li {
+    margin-bottom: 3px;
+}
+
+.card-body ul li strong {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+/*
+================================================
+RESPONSIVE ADJUSTMENTS (Global)
+================================================
+*/
+
+/* Update existing responsive styles */
+@media (max-width: 1200px) {
+    .col-lg-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .nested-card {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .nested-card {
+        margin-bottom: 1rem;
+        min-height: auto;
+    }
+
+    .nested-card .card-body {
+        padding: 0.5rem;
+    }
+
+    .nested-card .card-body ul {
+        font-size: 0.75em;
+    }
+
+    .nested-card .card-body p {
+        font-size: 0.75em;
+    }
+
+    .col-lg-3 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+
+    .model-analytics-dashboard .metric-card {
+        margin-bottom: 10px;
+    }
+
+    .model-analytics-dashboard .metric-value {
+        font-size: 1em;
+    }
+
+    .model-analytics-dashboard .metric-label {
+        font-size: 0.75em;
+    }
+}
+
+/*
+================================================
+CHART STYLING (Global)
+================================================
+*/
+
+/* Ensure chart containers are properly sized */
+canvas {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+#equityChart {
+    width: 100% !important;
+}
+
+/* Chart container styling */
+.chart-container {
+    position: relative;
+    background-color: var(--content-bg);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.chart-container:hover {
+    /*border-color: var(--primary-color);*/
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/*
+================================================
+ENHANCED MODAL STYLING (Global)
+================================================
+*/
+
+/* Update existing modal styling */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    background-color: var(--content-bg);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--sidebar-bg);
+    border-radius: 12px 12px 0 0;
+    padding: 1.25rem;
+    color: var(--text-color);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    color: var(--text-color);
+    background-color: var(--content-bg);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+    background-color: var(--main-bg);
+    border-radius: 0 0 12px 12px;
+    padding: 1rem 1.5rem;
+}
+
+/* Modal accordion styling */
+.accordion-button {
+    font-weight: 600;
+    background-color: var(--content-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: var(--sidebar-bg);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+.accordion-body {
+    background-color: var(--content-bg);
+    color: var(--text-color);
+}
+
+.accordion-body dl {
+    margin-bottom: 0;
+}
+
+.accordion-body dt {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.accordion-body dd {
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+/*
+================================================
+ENHANCED BUTTON STYLING (Global)
+================================================
+*/
+
+/* Update existing button styling to match model page */
+.btn-outline-info {
+    color: var(--bs-info);
+    border-color: var(--bs-info);
+    background-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-info:hover {
+    color: var(--bs-white);
+    background-color: var(--bs-info);
+    border-color: var(--bs-info);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn-outline-primary {
+    color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    background-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-primary:hover {
+    color: var(--bs-white);
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn-outline-secondary {
+    color: var(--text-color);
+    border-color: var(--border-color);
+    background-color: transparent;
+    transition: all 0.2s ease;
+}
+
+.btn-outline-secondary:hover {
+    color: var(--text-color);
+    background-color: rgba(108, 117, 125, 0.1);
+    border-color: var(--text-secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/*
+================================================
+UTILITY CLASSES (Global)
+================================================
+*/
+
+/* Enhanced background utilities */
+.bg-gradient-primary {
+    background: linear-gradient(45deg, var(--bs-primary), #0056b3) !important;
+}
+
+.bg-gradient-secondary {
+    background: linear-gradient(45deg, var(--bs-secondary), #5a6268) !important;
+}
+
+/* Enhanced text utilities */
+.text-success-custom {
+    color: #28a745 !important;
+}
+
+.text-danger-custom {
+    color: #dc3545 !important;
+}
+
+.text-warning-custom {
+    color: #ffc107 !important;
+}
+
+.text-info-custom {
+    color: #17a2b8 !important;
+}
+
+/* Dark theme text utilities */
+html[data-bs-theme="dark"] .text-success-custom {
+    color: #75b798 !important;
+}
+
+html[data-bs-theme="dark"] .text-danger-custom {
+    color: #f1919c !important;
+}
+
+html[data-bs-theme="dark"] .text-warning-custom {
+    color: #ffda6a !important;
+}
+
+html[data-bs-theme="dark"] .text-info-custom {
+    color: #6edff6 !important;
 }
