@@ -1912,6 +1912,7 @@ html[data-bs-theme="dark"] .feature-preview:hover {
         color: black !important;
     }
 
+
     .trade-detail-card {
         border: 1px solid #ccc !important;
         break-inside: avoid;
