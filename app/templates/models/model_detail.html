@@ -73,14 +73,10 @@
             <h1>{{ model.name }}</h1>
             <p class="text-muted mb-0">
                 Version {{ model.version or '1.0' }} |
-                {{ 'Active' if model.is_active else 'Inactive' }} Model |
-                Based on Random's (Matt Mickey) Trading Methodology
+                {{ 'Active' if model.is_active else 'Inactive' }} Model
             </p>
         </div>
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#metricsExplanationModal">
-                <i class="fas fa-question-circle me-1"></i> Explain Metrics
-            </button>
             <a href="{{ url_for('trading_models.edit_trading_model', model_id=model.id) }}" class="btn btn-outline-primary">
                 <i class="fas fa-edit me-1"></i> Edit Model
             </a>
@@ -112,190 +108,98 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="fas fa-cog me-1"></i>Model Details, Configuration & Strategy</h6>
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0"><i class="fas fa-cogs me-2"></i>Model Details, Configuration & Strategy</h6>
                 </div>
                 <div class="card-body">
-                    <!-- Option 1: Clean List Layout with Sections -->
-                    <div class="model-details-clean">
-                        <div class="row">
-                            <!-- Left Column -->
-                            <div class="col-lg-6">
-                                <!-- Logic & Strategy Section -->
-                                <div class="detail-section mb-4">
-                                    <div class="section-header">
-                                        <i class="fas fa-brain text-primary me-2"></i>
-                                        <h6>Logic & Strategy</h6>
-                                    </div>
-                                    <div class="section-content">
-                                        <p>{{ model.overview_logic or 'No overview logic defined' }}</p>
-                                    </div>
+                    <div class="row mb-4 model-analytics-dashboard">
+                        <!-- Model Overview & Logic -->
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-dark text-white">
+                                    <h6 class="mb-0"><i class="fas fa-bullseye me-1"></i>Model Overview & Logic</h6>
                                 </div>
-
-
-                                <!-- Timeframes Section -->
-                                <div class="detail-section mb-4">
-                                    <div class="section-header">
-                                        <i class="fas fa-clock text-info me-2"></i>
-                                        <h6>Timeframes</h6>
-                                    </div>
-                                    <div class="section-content">
-                                        <div class="detail-row">
-                                            <span class="label">Primary Chart:</span>
-                                            <span class="value">{{ model.primary_chart_tf or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Execution Chart:</span>
-                                            <span class="value">{{ model.execution_chart_tf or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Context Chart:</span>
-                                            <span class="value">{{ model.context_chart_tf or 'Not specified' }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Technical Analysis Section -->
-                                <div class="detail-section mb-4">
-                                    <div class="section-header">
-                                        <i class="fas fa-chart-line text-success me-2"></i>
-                                        <h6>Technical Analysis</h6>
-                                    </div>
-                                    <div class="section-content">
-                                        <div class="detail-row">
-                                            <span class="label">Indicators:</span>
-                                            <span class="value">{{ model.technical_indicators_used or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Patterns:</span>
-                                            <span class="value">{{ model.chart_patterns_used or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Price Action:</span>
-                                            <span class="value">{{ model.price_action_signals or 'Not specified' }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Market Context Section -->
-                                <div class="detail-section mb-4">
-                                    <div class="section-header">
-                                        <i class="fas fa-globe text-warning me-2"></i>
-                                        <h6>Market Context</h6>
-                                    </div>
-                                    <div class="section-content">
-                                        <div class="detail-row">
-                                            <span class="label">Instruments:</span>
-                                            <span class="value">{{ model.instrument_applicability or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Sessions:</span>
-                                            <span class="value">{{ model.session_applicability or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Optimal Conditions:</span>
-                                            <span class="value">{{ model.optimal_market_conditions or 'Not specified' }}</span>
-                                        </div>
-                                    </div>
+                                <div class="card-body p-3">
+                                    <p class="indented-item">{{ model.overview_logic or 'No overview logic provided.' }}</p>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Right Column -->
-                            <div class="col-lg-6">
-                                <!-- Risk Management Section -->
-                                <div class="detail-section mb-4">
-                                    <div class="section-header">
-                                        <i class="fas fa-shield-alt text-danger me-2"></i>
-                                        <h6>Risk Management</h6>
-                                    </div>
-                                    <div class="section-content">
-                                        <div class="detail-row">
-                                            <span class="label">Min R:R Ratio:</span>
-                                            <span class="value">{{ model.min_risk_reward_ratio or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Stop Loss:</span>
-                                            <span class="value">{{ model.stop_loss_strategy or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Take Profit:</span>
-                                            <span class="value">{{ model.take_profit_strategy or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Position Size:</span>
-                                            <span class="value">{{ model.position_sizing_rules or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Max Loss/Trade:</span>
-                                            <span class="value">{{ model.model_max_loss_per_trade or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Max Daily Loss:</span>
-                                            <span class="value">{{ model.model_max_daily_loss or 'Not specified' }}</span>
-                                        </div>
-                                    </div>
+                        <!-- Risk Management -->
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-dark text-white">
+                                    <h6 class="mb-0"><i class="fas fa-shield-alt me-1"></i>Risk Management</h6>
                                 </div>
-
-                                <!-- Entry/Exit Strategy Section -->
-                                <div class="detail-section mb-4">
-                                    <div class="section-header">
-                                        <i class="fas fa-play text-primary me-2"></i>
-                                        <h6>Entry/Exit Strategy</h6>
-                                    </div>
-                                    <div class="section-content">
-                                        <div class="detail-row">
-                                            <span class="label">Entry Trigger:</span>
-                                            <span class="value">{{ model.entry_trigger_description or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Key Levels:</span>
-                                            <span class="value">{{ model.key_levels_identification or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Volume Analysis:</span>
-                                            <span class="value">{{ model.volume_analysis_notes or 'Not specified' }}</span>
-                                        </div>
-                                    </div>
+                                <div class="card-body p-3">
+                                    <p class="indented-item"><strong>Stop Loss Strategy:</strong> {{ model.stop_loss_strategy or 'Not set' }}</p>
+                                    <p class="indented-item"><strong>Take Profit Strategy:</strong> {{ model.take_profit_strategy or 'Not set' }}</p>
+                                    <p class="indented-item"><strong>Position Sizing:</strong> {{ model.position_sizing_rules or 'Not set' }}</p>
+                                    <p class="indented-item"><strong>Max Loss per Trade:</strong> {{ model.model_max_loss_per_trade or 'Not set' }}</p>
+                                    <p class="indented-item"><strong>Max Daily Loss:</strong> {{ model.model_max_daily_loss or 'Not set' }}</p>
+                                    <p class="indented-item"><strong>Min R:R Ratio:</strong> {{ model.min_risk_reward_ratio or 'Not set' }}</p>
                                 </div>
+                            </div>
+                        </div>
 
-                                <!-- Trade Management Section -->
-                                <div class="detail-section mb-4">
-                                    <div class="section-header">
-                                        <i class="fas fa-tools text-info me-2"></i>
-                                        <h6>Trade Management</h6>
-                                    </div>
-                                    <div class="section-content">
-                                        <div class="detail-row">
-                                            <span class="label">Breakeven Rules:</span>
-                                            <span class="value">{{ model.trade_management_breakeven_rules or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Scaling Rules:</span>
-                                            <span class="value">{{ model.scaling_in_out_rules or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Trailing Stop:</span>
-                                            <span class="value">{{ model.trade_management_trailing_stop_rules or 'Not specified' }}</span>
-                                        </div>
-                                    </div>
+                        <!-- Execution Strategy -->
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-dark text-white">
+                                    <h6 class="mb-0"><i class="fas fa-play me-1"></i>Execution Strategy</h6>
                                 </div>
+                                <div class="card-body p-3">
+                                    <p class="indented-item"><strong>Entry Trigger:</strong> {{ model.entry_trigger_description or 'Not specified' }}</p>
+                                    <p class="indented-item"><strong>Key Levels ID:</strong> {{ model.key_levels_identification or 'Not specified' }}</p>
+                                    <p class="indented-item"><strong>Volume Analysis:</strong> {{ model.volume_analysis_notes or 'Not specified' }}</p>
+                                    <hr class="indented-hr">
+                                    <p class="indented-item"><strong>Breakeven Rules:</strong> {{ model.trade_management_breakeven_rules or 'Not specified' }}</p>
+                                    <p class="indented-item"><strong>Scaling Rules:</strong> {{ model.scaling_in_out_rules or 'Not specified' }}</p>
+                                    <p class="indented-item"><strong>Trailing Stop:</strong> {{ model.trade_management_trailing_stop_rules or 'Not specified' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                                <!-- Assessment Section -->
-                                <div class="detail-section mb-4">
-                                    <div class="section-header">
-                                        <i class="fas fa-star text-warning me-2"></i>
-                                        <h6>Assessment</h6>
-                                    </div>
-                                    <div class="section-content">
-                                        <div class="detail-row">
-                                            <span class="label">Strengths:</span>
-                                            <span class="value">{{ model.strengths or 'Not specified' }}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="label">Weaknesses:</span>
-                                            <span class="value">{{ model.weaknesses or 'Not specified' }}</span>
-                                        </div>
-                                    </div>
+                    <!-- Second Row - Additional Details -->
+                    <div class="row model-analytics-dashboard">
+                        <!-- Timeframe Alignment -->
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-dark text-white">
+                                    <h6 class="mb-0"><i class="fas fa-clock me-1"></i>Timeframe Alignment</h6>
+                                </div>
+                                <div class="card-body p-3">
+                                    <p class="indented-item"><strong>Primary Chart:</strong> {{ model.primary_chart_tf or 'Not set' }}</p>
+                                    <p class="indented-item"><strong>Execution Chart:</strong> {{ model.execution_chart_tf or 'Not set' }}</p>
+                                    <p class="indented-item"><strong>Higher Timeframe Context:</strong> {{ model.context_chart_tf or 'Not set' }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Technical Analysis -->
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-dark text-white">
+                                    <h6 class="mb-0"><i class="fas fa-chart-line me-1"></i>Technical Analysis</h6>
+                                </div>
+                                <div class="card-body p-3">
+                                    <p class="indented-item"><strong>Indicators:</strong> {{ model.technical_indicators_used or 'Not specified' }}</p>
+                                    <p class="indented-item"><strong>Chart Patterns:</strong> {{ model.chart_patterns_used or 'Not specified' }}</p>
+                                    <p class="indented-item"><strong>Price Action:</strong> {{ model.price_action_signals or 'Not specified' }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Assessment -->
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header bg-dark text-white">
+                                    <h6 class="mb-0"><i class="fas fa-balance-scale me-1"></i>Assessment</h6>
+                                </div>
+                                <div class="card-body p-3">
+                                    <p class="indented-item"><strong>Strengths:</strong> {{ model.strengths or 'Not specified' }}</p>
+                                    <p class="indented-item"><strong>Weaknesses:</strong> {{ model.weaknesses or 'Not specified' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -312,8 +216,11 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card">
-                <div class="card-header bg-secondary text-white">
+                <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                     <h6 class="mb-0"><i class="fas fa-chart-bar me-1"></i>Analytics</h6>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#metricsExplanationModal">
+                        <i class="fas fa-question-circle me-1"></i> Explain Metrics
+                    </button>
                 </div>
                 <div class="card-body">
                     <!-- First Row - 4 Analytics Cards -->

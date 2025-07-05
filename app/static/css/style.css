@@ -47,6 +47,10 @@ a {
     --border-color: #43454b;
     --bs-body-color: var(--text-color);
     --bs-body-bg: var(--main-bg);
+    --primary-rgb: 255, 255, 0;      /* Corresponds to #FFFF00 */
+    --secondary-rgb: 44, 182, 125;   /* Corresponds to #2cb67d */
+    --info-rgb: 13, 202, 240;        /* Default Bootstrap Info, adjust if needed */
+    --border-color-light: rgba(255, 255, 255, 0.1); /* A softer border color */
 }
 
 html[data-bs-theme="light"] {
@@ -343,6 +347,43 @@ html[data-bs-theme="light"] .sidebar-nav .submenu li a.active {
     line-height: 1.2;
     color: #ffffff;
     font-weight: 600;
+}
+
+.detail-section .detail-row {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(var(--bs-border-color-rgb), 0.1);
+}
+
+.detail-section .detail-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.detail-section .detail-row .label {
+    font-weight: 700 !important;
+    color: var(--text-color);
+    font-size: 0.875rem;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.detail-section .detail-row .value {
+    font-weight: 400;
+    color: var(--text-color);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+/* NEW: Styling for indented items */
+.indented-item {
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+    padding-left: 1.25rem; /* This creates the "tabbed in" look */
+}
+
+.indented-item strong {
+    color: var(--text-color); /* Makes the label part stand out */
 }
 
 /* Analytics dashboard headers - Match main headers */
@@ -705,6 +746,16 @@ html[data-bs-theme="light"] .action-btn.btn-outline-primary:hover {
     background-color: #6200ea !important;
 }
 
+html[data-bs-theme="light"] .action-btn.btn-outline-secondary {
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+html[data-bs-theme="light"] .action-btn.btn-outline:hover {
+    color: var(--text-color);
+    background-color: var(--border-color);
+}
+
 html[data-bs-theme="light"] .action-btn.btn-outline-success {
     color: #198754 !important;
     border-color: #198754 !important;
@@ -756,6 +807,16 @@ html[data-bs-theme="dark"] .action-btn.btn-outline-primary:hover {
     background-color: #9d8bf5 !important;
 }
 
+html[data-bs-theme="dark"] .action-btn.btn-outline-secondary {
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+html[data-bs-theme="dark"] .action-btn.btn-outline:hover {
+    color: var(--text-color);
+    background-color: var(--border-color);
+}
+
 html[data-bs-theme="dark"] .action-btn.btn-outline-success {
     color: #75b798 !important;
     border-color: #75b798 !important;
@@ -794,22 +855,6 @@ html[data-bs-theme="dark"] .action-btn.btn-outline-danger {
 html[data-bs-theme="dark"] .action-btn.btn-outline-danger:hover {
     color: #000 !important;
     background-color: #ea868f !important;
-}
-
-/* Standard outline buttons */
-.btn-outline-secondary {
-    color: var(--text-color);
-    border-color: var(--border-color);
-    background-color: transparent;
-    transition: all 0.2s ease;
-}
-
-.btn-outline-secondary:hover {
-    color: var(--text-color);
-    background-color: rgba(108, 117, 125, 0.1);
-    border-color: var(--text-secondary);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 /*
@@ -1946,3 +1991,7 @@ Logic & Strategy text color fixed
 Fully responsive design with mobile support
 ================================================
 */
+/*
+================================================
+25. COMMAND CENTER LAYOUT (Revised)
+================================================
